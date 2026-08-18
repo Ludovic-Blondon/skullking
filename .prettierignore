@@ -12,3 +12,9 @@ PLAN.md
 
 # Assets générés par Icon Composer.
 assets/expo.icon/
+
+# Migrations et métadonnées générées par drizzle-kit.
+drizzle/
+
+# Flux Maestro : l'indentation YAML y est significative pour la lisibilité.
+.maestro/
