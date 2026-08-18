@@ -49,6 +49,25 @@ Deux règles d'architecture, héritées du plan :
 2. La saisie enregistre des **données brutes** (mises, plis, événements de bonus), jamais des
    points : corriger un barème et recalculer tout l'historique reste possible.
 
+## Moteur de score
+
+`src/core` est la pièce maîtresse : du TypeScript pur, sans React ni base de
+données, couvert à 100 % (branches comprises) et vérifié par une règle ESLint.
+
+```ts
+import { computeGame, scoreRound, validateRound, cardsDealtFor, DEFAULT_RULESET } from '@/core';
+
+cardsDealtFor(9, 8); // 8 — à 8 joueurs, les manches 9 et 10 tombent à 8 cartes
+validateRound(round, ruleset); // codes d'anomalie typés, `error` ou `warning`
+scoreRound(round, ruleset); // { base, bonus, lostBonus, rascalBet, custom, total } par joueur
+computeGame(rounds, ruleset); // cumuls, classement, égalité en tête
+```
+
+Le `Ruleset` porte tout ce qui change d'une table à l'autre : édition
+(`current` / `legacy`), cartes avancées, décompte (`classic` / `rascal` +
+Boulet de canon) et pouvoirs des pirates. Aucune valeur de barème ne doit être
+recopiée ailleurs : elles vivent toutes dans `src/core/rules/editions.ts`.
+
 ## Thème
 
 Les couleurs vivent en double : variables CSS dans `src/global.css` (consommées par NativeWind) et
