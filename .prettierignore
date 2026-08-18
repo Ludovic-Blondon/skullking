@@ -1,0 +1,14 @@
+node_modules/
+.expo/
+dist/
+coverage/
+ios/
+android/
+package-lock.json
+expo-env.d.ts
+
+# Document de cadrage : mise en forme manuelle (tableaux), à ne pas réécrire.
+PLAN.md
+
+# Assets générés par Icon Composer.
+assets/expo.icon/
