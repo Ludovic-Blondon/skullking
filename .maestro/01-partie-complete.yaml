@@ -1,0 +1,319 @@
+# Parcours ① du plan (§9) : une partie complète de 10 manches, jusqu'au podium.
+#
+# Table de trois joueurs. À chaque manche, Alice remporte tous les plis et les
+# deux autres annoncent 0 : la somme des plis tombe donc juste sans avoir à
+# raisonner, et le décompte est vérifiable de tête.
+#
+#   maestro test .maestro/01-partie-complete.yaml
+appId: com.lblondon.skullscores
+---
+- launchApp:
+    clearState: true
+# `clearState` efface aussi l'URL mémorisée par le client de développement :
+# on la lui redonne pour qu'il se rebranche sur Metro.
+- openLink: "com.lblondon.skullscores://expo-development-client/?url=http://localhost:8081"
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 90000
+# Le client de développement recharge son bundle une fois connecté à Metro :
+# on laisse ce rechargement passer avant de toucher quoi que ce soit.
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 30000
+
+# — Configuration : trois joueurs créés à la volée ————————————————————————
+- tapOn:
+    id: "new-game"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Alice"
+- tapOn:
+    id: "new-player-add"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Bob"
+- tapOn:
+    id: "new-player-add"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Chloe"
+- tapOn:
+    id: "new-player-add"
+- assertVisible:
+    id: "player-1"
+- assertVisible:
+    id: "player-2"
+- assertVisible:
+    id: "player-3"
+- tapOn:
+    id: "start-game"
+
+# — Manche 1 : 1 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 1 / 10"
+- repeat:
+    times: 1
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 1
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 2 : 2 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 2 / 10"
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 3 : 3 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 3 / 10"
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 4 : 4 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 4 / 10"
+- repeat:
+    times: 4
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 4
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 5 : 5 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 5 / 10"
+- repeat:
+    times: 5
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 5
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 6 : 6 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 6 / 10"
+- repeat:
+    times: 6
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 6
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 7 : 7 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 7 / 10"
+- repeat:
+    times: 7
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 7
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 8 : 8 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 8 / 10"
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 9 : 9 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 9 / 10"
+- repeat:
+    times: 9
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 9
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 10 : 10 carte(s) ————————————————————————————————————————
+- assertVisible: "Manche 10 / 10"
+- repeat:
+    times: 10
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "bid-2-minus"
+- tapOn:
+    id: "bid-3-minus"
+- tapOn:
+    id: "round-action"
+
+- repeat:
+    times: 10
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "tricks-2-minus"
+- tapOn:
+    id: "tricks-3-minus"
+- tapOn:
+    id: "round-action"
+
+# — Podium ————————————————————————————————————————————————————————————————
+# Alice a réussi ses dix annonces : 20 × (1+2+…+10) = 1100 points.
+# Bob et Chloé ont tenu leurs mises 0 : 10 × (1+2+…+10) = 550 points chacun.
+- assertVisible: "Alice"
+- assertVisible: "1100"
+- assertVisible:
+    id: "rematch"
