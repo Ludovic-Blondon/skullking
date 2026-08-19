@@ -78,9 +78,11 @@ export function toRoundInput(stored: StoredRound): RoundInput {
     players: stored.entries.map((entry) => ({
       playerId: String(entry.playerId),
       // Une manche en cours de saisie a des colonnes nulles : le moteur, lui,
-      // raisonne sur des nombres. 0 est la valeur neutre côté décompte.
+      // raisonne sur des nombres. 0 est la valeur neutre côté décompte, et
+      // `played` lui dit de ne pas confondre ce 0-là avec une mise 0 réussie.
       bid: entry.bid ?? 0,
       tricks: entry.tricks ?? 0,
+      played: entry.bid !== null && entry.tricks !== null,
       bidModifier: entry.bidModifier as BidModifier,
       rascalBet: entry.rascalBet as RascalBet,
       cannonball: entry.cannonball,

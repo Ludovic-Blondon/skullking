@@ -25,6 +25,24 @@ describe('computeGame', () => {
     expect(state.totals).toEqual({ alice: 0, bob: 30, chloe: 30 });
   });
 
+  /**
+   * Le bug de la manche vierge : la manche ouverte à l'écran ne doit pas peser
+   * sur les totaux affichés tant que personne n'a saisi ses plis.
+   */
+  it('n’ajoute rien au cumul pour une manche ouverte mais pas encore jouée', () => {
+    const pending = round(
+      [
+        player('alice', 0, 0, { played: false }),
+        player('bob', 0, 0, { played: false }),
+        player('chloe', 0, 0, { played: false }),
+      ],
+      { roundNumber: 3, cardsDealt: 3 },
+    );
+    const state = computeGame([...twoRounds, pending], classic);
+    expect(state.rounds[2].cumulative).toEqual(state.rounds[1].cumulative);
+    expect(state.totals).toEqual({ alice: 0, bob: 30, chloe: 30 });
+  });
+
   it('classe les joueurs et partage le rang en cas d’égalité', () => {
     const state = computeGame(twoRounds, classic);
     expect(state.standings).toEqual([

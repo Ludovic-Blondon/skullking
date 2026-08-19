@@ -1,5 +1,5 @@
 import { scoreRound } from '../scoring';
-import { player, round, rules } from './helpers';
+import { bonuses, player, round, rules } from './helpers';
 
 /** Score de base du décompte classique (PLAN.md §4.2 et annexe A). */
 describe('score de base — décompte classique', () => {
@@ -77,5 +77,38 @@ describe('score de base — décompte classique', () => {
     expect(exact[0].total).toBe(30);
     // L'ajustement manuel n'est pas un bonus : il s'applique quoi qu'il arrive.
     expect(missed[0].total).toBe(-20);
+  });
+});
+
+/**
+ * Une manche ouverte mais pas encore jouée a des colonnes nulles, que la
+ * persistance traduit en 0 (PLAN.md §5). Sans le drapeau `played`, ce 0-là se
+ * lisait « mise 0 réussie » et créditait toute la table de +10 × cartes.
+ */
+describe('saisie incomplète', () => {
+  const classic = rules();
+
+  it('ne décompte rien tant que l’annonce et les plis ne sont pas posés', () => {
+    const [score] = scoreRound(
+      round([player('a', 0, 0, { played: false })], { cardsDealt: 3 }),
+      classic,
+    );
+    expect(score).toMatchObject({ played: false, exact: false, base: 0, bonus: 0, total: 0 });
+  });
+
+  it('décompte dès que la saisie est complète', () => {
+    const [score] = scoreRound(round([player('a', 0, 0)], { cardsDealt: 3 }), classic);
+    expect(score).toMatchObject({ played: true, exact: true, base: 30, total: 30 });
+  });
+
+  it('laisse de côté bonus et ajustement manuel d’un joueur non saisi', () => {
+    const [score] = scoreRound(
+      round([player('a', 1, 1, { played: false, customBonus: 10, ...bonuses({ black14: 1 }) })], {
+        cardsDealt: 1,
+      }),
+      classic,
+    );
+    expect(score.total).toBe(0);
+    expect(score.lostBonus).toBe(0);
   });
 });
