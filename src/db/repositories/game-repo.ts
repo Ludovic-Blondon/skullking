@@ -5,7 +5,7 @@
  * la reprise après un kill de l'app exacte, sans état à restaurer.
  */
 
-import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { cardsDealtFor, computeGame, type Ruleset } from '@/core';
 
@@ -15,6 +15,7 @@ import {
   bonusEvents,
   gamePlayers,
   games,
+  players,
   roundEntries,
   rounds,
   type BonusEventType,
@@ -30,6 +31,34 @@ export async function getActiveGame(): Promise<Game | undefined> {
     .orderBy(desc(games.createdAt))
     .limit(1);
   return game;
+}
+
+/** Toutes les parties, la plus récente d'abord — à passer à `useLiveQuery` (§7.4). */
+export function gamesQuery() {
+  return db.select().from(games).orderBy(desc(games.createdAt));
+}
+
+/**
+ * Total figé de chaque joueur, par partie.
+ *
+ * Lu dans les snapshots de `round_entries` plutôt que recalculé : c'est
+ * exactement ce pour quoi ils existent (§5), et l'historique doit s'afficher
+ * sans rejouer le moteur sur chaque partie de la liste.
+ */
+export function gameTotalsQuery() {
+  return db
+    .select({
+      gameId: rounds.gameId,
+      playerId: roundEntries.playerId,
+      name: players.name,
+      emoji: players.emoji,
+      color: players.color,
+      total: sql<number>`coalesce(sum(${roundEntries.scoreTotal}), 0)`,
+    })
+    .from(roundEntries)
+    .innerJoin(rounds, eq(rounds.id, roundEntries.roundId))
+    .innerJoin(players, eq(players.id, roundEntries.playerId))
+    .groupBy(rounds.gameId, roundEntries.playerId);
 }
 
 export async function getGame(gameId: number): Promise<Game | undefined> {
