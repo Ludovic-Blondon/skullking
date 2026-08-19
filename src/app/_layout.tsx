@@ -78,7 +78,15 @@ export default function RootLayout() {
             />
             <Stack.Screen name="game/[id]/end" options={{ title: 'Fin de partie' }} />
             <Stack.Screen name="history/[id]" options={{ title: 'Détail de la partie' }} />
-            <Stack.Screen name="players/[id]" options={{ title: 'Fiche joueur' }} />
+            <Stack.Screen
+              // La fiche porte son propre titre : le prénom, éditable sur place.
+              name="players/[id]"
+              options={{
+                headerShown: false,
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+              }}
+            />
           </Stack>
         )}
       </ThemeProvider>
