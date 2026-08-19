@@ -5,7 +5,6 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hasBlockingIssues, scoreRound } from '@/core';
-import { allBidsPlaced, allTricksPlaced } from '@/db/mappers';
 import {
   setDestroyedTricks,
   setPhase,
@@ -79,12 +78,12 @@ export default function GameScreen() {
   const scores = scoreRound(current.input, game.ruleset);
   const scoreOf = (playerId: number) => scores.find((s) => s.playerId === String(playerId));
 
-  const bidsReady = allBidsPlaced(current.stored);
-  const tricksReady = allTricksPlaced(current.stored);
   // La cohérence de la manche est jugée par le moteur, pas refaite ici : il
   // connaît le Kraken, le fantôme à 2 joueurs et l'unicité des bonus (§4.4).
+  // Rien n'exige d'avoir touché chaque joueur : un compteur laissé à 0 est une
+  // saisie comme une autre (§7.2).
   const blocking = firstBlockingIssue(view.issues);
-  const roundOk = tricksReady && !hasBlockingIssues(view.issues);
+  const roundOk = !hasBlockingIssues(view.issues);
 
   async function launchRound() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -144,10 +143,10 @@ export default function GameScreen() {
           const extra = score ? score.bonus + score.custom : 0;
           const played = score?.played ?? false;
 
+          // En annonces, aucune couleur : rien n'est encore joué. En résultats,
+          // le liseré ne s'allume que pour les joueurs dont les plis sont saisis.
           const tone: PlayerRowTone = bidding
-            ? entry?.bid === null || entry?.bid === undefined
-              ? 'idle'
-              : 'bid'
+            ? 'idle'
             : !played
               ? 'idle'
               : score?.exact
@@ -158,7 +157,7 @@ export default function GameScreen() {
             <PlayerRow
               key={player.id}
               player={player}
-              value={entry?.bid ?? null}
+              value={entry?.bid ?? 0}
               onChange={(bid) => void updateEntry(round.id, player.id, { bid })}
               max={cardsDealt}
               label="Annonce"
@@ -172,7 +171,7 @@ export default function GameScreen() {
             <PlayerRow
               key={player.id}
               player={player}
-              value={entry?.tricks ?? null}
+              value={entry?.tricks ?? 0}
               onChange={(tricks) => void updateEntry(round.id, player.id, { tricks })}
               max={cardsDealt}
               label="Plis"
@@ -256,8 +255,7 @@ export default function GameScreen() {
                 : ''
           }`}
           tone={bidsTotal === cardsDealt ? 'ok' : 'warn'}
-          ok={bidsReady}
-          problem={bidsReady ? undefined : 'Toutes les annonces ne sont pas posées'}
+          ok
           actionLabel="Lancer la manche"
           onAction={() => void launchRound()}
         />
@@ -269,18 +267,12 @@ export default function GameScreen() {
               : `Σ plis ${tricksTotal} / ${cardsDealt}`
           }
           ok={roundOk}
-          problem={
-            !tricksReady
-              ? 'Tous les plis ne sont pas saisis'
-              : blocking
-                ? issueMessage(blocking)
-                : undefined
-          }
+          problem={blocking ? issueMessage(blocking) : undefined}
           actionLabel={
             round.roundNumber >= totalRounds ? 'Terminer la partie' : 'Valider la manche'
           }
           onAction={() => void confirmRound()}
-          onForce={tricksReady ? () => void confirmRound(true) : undefined}
+          onForce={() => void confirmRound(true)}
         />
       )}
     </View>

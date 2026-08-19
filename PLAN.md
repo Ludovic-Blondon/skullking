@@ -293,7 +293,7 @@ stateDiagram-v2
 ```
 
 - **En-tête** : « Manche 4 / 10 · 4 cartes », badge donneur, accès feuille de score (tiroir).
-- **Phase Annonces** : une carte par joueur avec **gros stepper 0…N** (cible tactile ≥ 44 pt, utilisable d'une main, verre de rhum dans l'autre). Indicateur live : « Σ annonces 6 / 4 plis — table sur-annoncée » (info que les joueurs adorent). → « Lancer la manche ».
+- **Phase Annonces** : une carte par joueur avec **gros stepper 0…N** (cible tactile ≥ 44 pt, utilisable d'une main, verre de rhum dans l'autre). **Tous les compteurs partent de 0** : autour de la table on ne touche que ce qui diffère, et annoncer 0 ne coûte aucun geste. Le 0 affiché n'est écrit en base qu'au moment où la manche avance — tant qu'il ne l'est pas, « pas encore saisi » et « a annoncé 0 » restent deux états distincts pour le moteur, ce qui empêche une manche ouverte de peser sur les totaux. Indicateur live : « Σ annonces 6 / 4 plis — table sur-annoncée » (info que les joueurs adorent). → « Lancer la manche ».
 - **Phase Résultats** : mêmes cartes joueur : stepper **plis remportés** + pastille **bonus** (affiche le total courant, ex. « +40 ») ouvrant la bottom sheet (§7.3). Contrôle de manche : compteur « pli détruit (Kraken/Baleine) » 0-2 ; à 2 joueurs, ligne fantôme « Barbe Grise » en lecture seule qui absorbe le solde.
 - **Barre de validation** : « Σ plis 3 + 1 détruit = 4 ✓ » — le bouton « Valider la manche » ne s'active que si c'est cohérent ; échappatoire « forcer » (avec marquage de la manche) pour les cas de table insolubles.
 - **Validation** → animation courte des deltas de score + haptique, puis phase Annonces de la manche suivante. Saisie complète d'une manche à 4 joueurs : **objectif < 30 s**.

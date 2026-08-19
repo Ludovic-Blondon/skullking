@@ -2,8 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, Text, View } from 'react-native';
 
 type StepperProps = {
-  /** `null` : rien n'est encore saisi — le premier geste tranche. */
-  value: number | null;
+  value: number;
   onChange: (value: number) => void;
   min?: number;
   max: number;
@@ -26,8 +25,7 @@ const SIZES = {
  * avancer la manche est le seul élément coloré de la ligne. Les pastilles font
  * moins de 44 pt à l'œil, le `hitSlop` ramène la cible au-dessus (§12.10).
  *
- * Sur une valeur non saisie, « − » pose directement le minimum et « + » la
- * première unité : annoncer 0 coûte un seul geste, comme annoncer 1.
+ * Tout part de 0 : autour de la table, on ne touche que ce qui diffère.
  */
 export function Stepper({
   value,
@@ -41,19 +39,14 @@ export function Stepper({
   const { button, glyph, value: valueText, track } = SIZES[size];
 
   function step(delta: number) {
-    if (value === null) {
-      onChange(delta > 0 ? Math.min(min + 1, max) : min);
-      Haptics.selectionAsync();
-      return;
-    }
     const next = Math.min(Math.max(value + delta, min), max);
     if (next === value) return;
     Haptics.selectionAsync();
     onChange(next);
   }
 
-  const disabledMinus = value !== null && value <= min;
-  const disabledPlus = value !== null && value >= max;
+  const disabledMinus = value <= min;
+  const disabledPlus = value >= max;
 
   return (
     <View className={`flex-row items-center rounded-full bg-surface-sunken ${track}`}>
@@ -73,10 +66,8 @@ export function Stepper({
 
       <Text
         testID={testID}
-        className={`min-w-6 text-center font-display tabular-nums ${valueText} ${
-          value === null ? 'text-content-muted' : 'text-content'
-        }`}>
-        {value === null ? '–' : value}
+        className={`min-w-6 text-center font-display tabular-nums text-content ${valueText}`}>
+        {value}
       </Text>
 
       <Pressable

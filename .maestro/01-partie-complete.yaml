@@ -4,6 +4,9 @@
 # deux autres annoncent 0 : la somme des plis tombe donc juste sans avoir à
 # raisonner, et le décompte est vérifiable de tête.
 #
+# Les compteurs partent de 0 (§7.2) : Bob et Chloé n'ont rien à toucher, ni en
+# annonces ni en résultats. Seule Alice est saisie.
+#
 #   maestro test .maestro/01-partie-complete.yaml
 appId: com.lblondon.skullscores
 ---
@@ -58,10 +61,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -69,10 +68,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -89,10 +84,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -100,10 +91,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -115,10 +102,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -126,10 +109,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -141,10 +120,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -152,10 +127,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -167,10 +138,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -178,10 +145,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -193,10 +156,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -204,10 +163,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -219,10 +174,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -230,10 +181,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -245,10 +192,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -256,10 +199,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -271,10 +210,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -282,10 +217,6 @@ appId: com.lblondon.skullscores
     commands:
       - tapOn:
           id: "tricks-1-plus"
-- tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
 - tapOn:
     id: "round-action"
 
@@ -297,10 +228,6 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "bid-1-plus"
 - tapOn:
-    id: "bid-2-minus"
-- tapOn:
-    id: "bid-3-minus"
-- tapOn:
     id: "round-action"
 
 - repeat:
@@ -309,16 +236,17 @@ appId: com.lblondon.skullscores
       - tapOn:
           id: "tricks-1-plus"
 - tapOn:
-    id: "tricks-2-minus"
-- tapOn:
-    id: "tricks-3-minus"
-- tapOn:
     id: "round-action"
 
 # — Podium ————————————————————————————————————————————————————————————————
 # Alice a réussi ses dix annonces : 20 × (1+2+…+10) = 1100 points.
 # Bob et Chloé ont tenu leurs mises 0 : 10 × (1+2+…+10) = 550 points chacun.
+#
+# Le 550 compte autant que le 1100 : Bob et Chloé n'ont pas été touchés une
+# seule fois de la partie. Il vérifie que le 0 affiché par défaut a bien été
+# enregistré à chaque manche, au lieu de laisser deux joueurs à zéro point.
 - assertVisible: "Alice"
 - assertVisible: "1100"
+- assertVisible: "550"
 - assertVisible:
     id: "rematch"
