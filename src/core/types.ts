@@ -75,6 +75,16 @@ export interface PlayerRoundInput {
   /** Mise annoncée, avant le pouvoir de Harry. */
   bid: number;
   tricks: number;
+  /**
+   * Saisie terminée pour ce joueur — annonce **et** plis posés (PLAN.md §5 :
+   * les deux colonnes sont nullables tant que la manche n'est pas jouée).
+   *
+   * Faux, le joueur ne marque rien : sans ce drapeau une manche vierge se lit
+   * « mise 0 réussie » et crédite tout le monde de +10 × cartes distribuées.
+   * Absent = saisie complète, pour ne rien changer aux appels qui n'ont que des
+   * nombres à fournir.
+   */
+  played?: boolean;
   /** Harry le Géant : ±1 sur la mise, un seul joueur par manche. */
   bidModifier?: BidModifier;
   /** Pari de Rascal : gagné si la mise effective est exacte, **débité** sinon. */
@@ -115,6 +125,8 @@ export interface PlayerRoundScore {
   /** Ajustement manuel repris tel quel. */
   custom: number;
   total: number;
+  /** Faux tant que la saisie du joueur est incomplète : tout est à zéro. */
+  played: boolean;
 }
 
 /** Résultat d'une manche, joueurs et fantôme confondus. */

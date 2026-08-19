@@ -115,6 +115,20 @@ describe('Butin', () => {
     expect(scores[2].bonus).toBe(0);
   });
 
+  /** Un allié dont la saisie est en cours n'est pas « exact » : rien n'est acquis. */
+  it('attend que les deux alliés soient saisis', () => {
+    const scores = scoreRound(
+      round([player('a', 1, 1), player('b', 2, 2, { played: false })], {
+        cardsDealt: 3,
+        lootAlliances: [{ playerId: 'a', allyId: 'b' }],
+      }),
+      classic,
+    );
+    expect(scores[0].bonus).toBe(0);
+    expect(scores[0].lostBonus).toBe(20);
+    expect(scores[1].total).toBe(0);
+  });
+
   it('est accessible à un joueur ayant misé 0', () => {
     const scores = scoreRound(
       round([player('a', 0, 0), player('b', 3, 3)], {

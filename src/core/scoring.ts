@@ -132,11 +132,32 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
   // le Butin dépend de l'exactitude de l'allié.
   const prepared = input.players.map((player) => {
     const effectiveBid = effectiveBidOf(player, cardsDealt, ruleset);
-    return { player, effectiveBid, exact: player.tricks === effectiveBid };
+    // Une saisie incomplète n'est jamais « exacte » : sinon un allié pas encore
+    // saisi ferait marquer le Butin par anticipation.
+    const played = player.played ?? true;
+    return { player, played, effectiveBid, exact: played && player.tricks === effectiveBid };
   });
   const exactByPlayer = new Map(prepared.map((entry) => [entry.player.playerId, entry.exact]));
 
-  return prepared.map(({ player, effectiveBid, exact }) => {
+  return prepared.map(({ player, played, effectiveBid, exact }) => {
+    // Manche pas encore jouée pour ce joueur : rien à décompter. Le zéro
+    // annoncé et le zéro « pas encore saisi » se ressemblent trop pour laisser
+    // le décompte trancher tout seul.
+    if (!played) {
+      return {
+        playerId: player.playerId,
+        effectiveBid,
+        exact: false,
+        base: 0,
+        bonus: 0,
+        lostBonus: 0,
+        rascalBet: 0,
+        custom: 0,
+        total: 0,
+        played: false,
+      };
+    }
+
     const useCannonball =
       ruleset.scoring === 'rascal' && ruleset.rascalCannonball && (player.cannonball ?? false);
     const base =
@@ -164,6 +185,7 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
       rascalBet: bet,
       custom,
       total: base + bonus + bet + custom,
+      played: true,
     };
   });
 }

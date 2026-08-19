@@ -69,6 +69,7 @@ describe('toRoundInput', () => {
           playerId: '7',
           bid: 2,
           tricks: 2,
+          played: true,
           bidModifier: 1,
           rascalBet: 20,
           cannonball: false,
@@ -79,6 +80,7 @@ describe('toRoundInput', () => {
           playerId: '9',
           bid: 0,
           tricks: 0,
+          played: true,
           bidModifier: 0,
           rascalBet: 0,
           cannonball: false,
@@ -119,7 +121,24 @@ describe('toRoundInput', () => {
       entries: [entry(1, { bid: null, tricks: null })],
       bonusEvents: [],
     };
-    expect(toRoundInput(stored).players[0]).toMatchObject({ bid: 0, tricks: 0 });
+    expect(toRoundInput(stored).players[0]).toMatchObject({ bid: 0, tricks: 0, played: false });
+  });
+
+  /**
+   * Le 0 de substitution ne doit pas se lire « mise 0 réussie » : c'est ce qui
+   * créditait toute la table d'une manche vierge.
+   */
+  it('marque le joueur comme non joué tant qu’une des deux colonnes manque', () => {
+    const stored: StoredRound = {
+      round: round(),
+      entries: [
+        entry(1, { bid: 0, tricks: null }),
+        entry(2, { bid: null, tricks: 0 }),
+        entry(3, { bid: 0, tricks: 0 }),
+      ],
+      bonusEvents: [],
+    };
+    expect(toRoundInput(stored).players.map((entry) => entry.played)).toEqual([false, false, true]);
   });
 
   it('produit une entrée directement exploitable par le moteur', () => {

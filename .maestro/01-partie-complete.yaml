@@ -78,6 +78,11 @@ appId: com.lblondon.skullscores
 
 # — Manche 2 : 2 carte(s) ————————————————————————————————————————
 - assertVisible: "Manche 2 / 10"
+# Le cumul affiché ne doit compter que la manche 1 : Alice 20, Bob et Chloé 10.
+# La manche 2 est ouverte mais vierge — la compter revenait à créditer la table
+# d'une mise 0 réussie que personne n'a annoncée.
+- assertVisible: "20 pts"
+- assertVisible: "10 pts"
 - repeat:
     times: 2
     commands:
