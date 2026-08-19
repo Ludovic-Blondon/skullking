@@ -18,7 +18,10 @@ export function Screen({ children, edgeToEdgeBottom = false, transparent = false
       className={`flex-1 ${transparent ? '' : 'bg-surface'}`}
       contentContainerClassName="gap-3 p-4"
       contentContainerStyle={{ paddingBottom: edgeToEdgeBottom ? insets.bottom + 16 : 16 }}
-      contentInsetAdjustmentBehavior="automatic">
+      contentInsetAdjustmentBehavior="automatic"
+      // Sans ça, clavier ouvert, le premier appui sur un bouton ne sert qu'à
+      // fermer le clavier : ajouter un joueur demandait deux gestes.
+      keyboardShouldPersistTaps="handled">
       {children}
     </ScrollView>
   );
