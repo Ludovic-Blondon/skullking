@@ -4,41 +4,57 @@
  * L'UI passe par NativeWind (`className="bg-surface"`) ; ce fichier ne sert
  * qu'aux APIs qui exigent une couleur JavaScript : thème de navigation,
  * barre d'état, graphiques (victory-native en P4). Toute modification de
- * couleur doit être répercutée des deux côtés.
+ * couleur doit être répercutée des deux côtés — un test le vérifie.
  */
 
 export const tokens = {
   light: {
-    surface: '#FAFAF9',
+    surface: '#F6F2EA',
     surfaceRaised: '#FFFFFF',
-    surfaceSunken: '#F0EFEC',
-    border: '#E2E0DB',
-    borderStrong: '#C9C6C0',
-    content: '#17191C',
-    contentMuted: '#5D6570',
-    primary: '#0F766E',
+    surfaceSunken: '#F1ECE2',
+    border: '#E5DED0',
+    borderStrong: '#CFC5B2',
+    content: '#1C2436',
+    contentMuted: '#7E8187',
+    primary: '#D5643F',
     primaryFg: '#FFFFFF',
-    accent: '#B45309',
+    accent: '#A8721F',
     accentFg: '#FFFFFF',
-    positive: '#15803D',
-    negative: '#B91C1C',
+    positive: '#3E8F68',
+    negative: '#B8222F',
   },
   dark: {
-    surface: '#0C0F12',
-    surfaceRaised: '#14181D',
-    surfaceSunken: '#090B0D',
-    border: '#232A31',
-    borderStrong: '#35404A',
-    content: '#F2F4F6',
-    contentMuted: '#98A2AE',
-    primary: '#2DD4BF',
-    primaryFg: '#04211E',
-    accent: '#F5B547',
-    accentFg: '#241703',
-    positive: '#4ADE80',
-    negative: '#F87171',
+    surface: '#0E1420',
+    surfaceRaised: '#1C2436',
+    surfaceSunken: '#141B2A',
+    border: '#212B40',
+    borderStrong: '#2E3A54',
+    content: '#F4F1EA',
+    contentMuted: '#8A90A0',
+    primary: '#E8785A',
+    primaryFg: '#0E1420',
+    accent: '#E8B84B',
+    accentFg: '#0E1420',
+    positive: '#5FB88A',
+    negative: '#F5A8A6',
   },
 } as const;
 
 export type ThemeName = keyof typeof tokens;
 export type Tokens = (typeof tokens)[ThemeName];
+
+/**
+ * Couleurs d'identité des joueurs, attribuées à la création (§7.1). Huit teintes
+ * sobres qui tiennent sur les deux thèmes — elles servent de pastille et de
+ * liseré, jamais de fond de texte.
+ */
+export const PLAYER_COLORS = [
+  '#E8785A',
+  '#4FA8A0',
+  '#D9A24E',
+  '#9083C7',
+  '#6BBF9C',
+  '#6C9BC9',
+  '#C97AA0',
+  '#B9A47E',
+] as const;
