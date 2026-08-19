@@ -20,7 +20,7 @@ const TONES: Record<PlayerRowTone, string> = {
 
 type PlayerRowProps = {
   player: SeatedPlayer;
-  value: number | null;
+  value: number;
   onChange: (value: number) => void;
   max: number;
   label: string;

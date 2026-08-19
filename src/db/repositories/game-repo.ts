@@ -5,7 +5,7 @@
  * la reprise après un kill de l'app exacte, sans état à restaurer.
  */
 
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 
 import { cardsDealtFor, computeGame, type Ruleset } from '@/core';
 
@@ -215,7 +215,41 @@ export async function removeLootAlliance(
 
 // — Progression ————————————————————————————————————————————————————————————
 
+/** Identifiant de la manche en cours de saisie. */
+async function currentRoundId(gameId: number): Promise<number | undefined> {
+  const game = await getGame(gameId);
+  if (!game) return undefined;
+  const [round] = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, game.currentRound)))
+    .limit(1);
+  return round?.id;
+}
+
+/**
+ * Pose 0 sur les cases qu'on n'a pas touchées.
+ *
+ * L'écran affiche 0 par défaut — autour de la table, on ne touche que ce qui
+ * diffère (§7.2). Ce 0-là n'est écrit qu'au moment où la manche avance : avant,
+ * `null` garde son sens de « pas encore saisi », qui empêche le moteur de
+ * décompter une manche que personne n'a jouée.
+ */
+async function fillBlanks(roundId: number, fields: ('bid' | 'tricks')[]): Promise<void> {
+  for (const field of fields) {
+    await db
+      .update(roundEntries)
+      .set({ [field]: 0 })
+      .where(and(eq(roundEntries.roundId, roundId), isNull(roundEntries[field])));
+  }
+}
+
 export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Promise<void> {
+  if (phase === 'results') {
+    const roundId = await currentRoundId(gameId);
+    // Les annonces laissées telles quelles valent 0 : c'est ce que la table a lu.
+    if (roundId !== undefined) await fillBlanks(roundId, ['bid']);
+  }
   await db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId));
 }
 
@@ -237,6 +271,15 @@ export async function validateRound(
       .set({ forced: true })
       .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
   }
+
+  // Ce qui reste vide vaut 0 : la manche est jouée, elle doit être décomptée
+  // en entier — y compris les joueurs qui n'ont pris aucun pli.
+  const [round] = await db
+    .select({ id: rounds.id })
+    .from(rounds)
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
+    .limit(1);
+  if (round) await fillBlanks(round.id, ['bid', 'tricks']);
 
   await persistScores(gameId);
 
