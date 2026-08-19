@@ -1,12 +1,6 @@
 import { scoreRound } from '@/core';
 
-import {
-  allBidsPlaced,
-  allTricksPlaced,
-  lootAlliancesOf,
-  toRoundInput,
-  type StoredRound,
-} from '../mappers';
+import { lootAlliancesOf, toRoundInput, type StoredRound } from '../mappers';
 import type { BonusEvent, Round, RoundEntry } from '../schema';
 
 function round(overrides: Partial<Round> = {}): Round {
@@ -201,33 +195,5 @@ describe('lootAlliancesOf', () => {
   it('ignore les captures et les lignes sans allié', () => {
     const events = [bonus(1, 'black14'), bonus(1, 'loot', { id: 2, allyPlayerId: null })];
     expect(lootAlliancesOf(events)).toEqual([]);
-  });
-});
-
-describe('progression de la saisie', () => {
-  it('détecte que toutes les annonces sont posées', () => {
-    const stored: StoredRound = {
-      round: round(),
-      entries: [entry(1, { bid: 1 }), entry(2, { bid: null })],
-      bonusEvents: [],
-    };
-    expect(allBidsPlaced(stored)).toBe(false);
-    expect(allBidsPlaced({ ...stored, entries: [entry(1), entry(2)] })).toBe(true);
-  });
-
-  it('détecte que tous les plis sont saisis', () => {
-    const stored: StoredRound = {
-      round: round(),
-      entries: [entry(1, { tricks: 1 }), entry(2, { tricks: null })],
-      bonusEvents: [],
-    };
-    expect(allTricksPlaced(stored)).toBe(false);
-    expect(allTricksPlaced({ ...stored, entries: [entry(1), entry(2)] })).toBe(true);
-  });
-
-  it('ne considère pas une manche vide comme complète', () => {
-    const empty: StoredRound = { round: round(), entries: [], bonusEvents: [] };
-    expect(allBidsPlaced(empty)).toBe(false);
-    expect(allTricksPlaced(empty)).toBe(false);
   });
 });

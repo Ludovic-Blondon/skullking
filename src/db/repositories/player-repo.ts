@@ -2,25 +2,19 @@
 
 import { asc, eq, isNull } from 'drizzle-orm';
 
+import { PLAYER_COLORS } from '@/ui/tokens';
+
 import { db } from '../client';
 import { players, type Player } from '../schema';
 
 /**
- * Palette d'identité attribuée à la création éclair d'un joueur (§7.1 :
- * « prénom → emoji/couleur auto »). Volontairement sobre, touches pirates
- * discrètes (§13.5).
+ * Identité attribuée à la création éclair d'un joueur (§7.1 : « prénom →
+ * emoji/couleur auto »). Emojis nautiques génériques, aucun artwork officiel.
  */
-const EMOJIS = ['🏴‍☠️', '⚓', '🦜', '🗡️', '🧭', '💰', '🐙', '🦈'];
-const COLORS = [
-  '#0F766E',
-  '#B45309',
-  '#7C3AED',
-  '#B91C1C',
-  '#0369A1',
-  '#4D7C0F',
-  '#BE185D',
-  '#475569',
-];
+const EMOJIS = ['🦜', '⚓', '🏴', '🗺️', '💎', '🔱', '🧭', '🐚'];
+// Les huit teintes viennent des jetons de design : une seule palette, qu'on la
+// regarde depuis une pastille de joueur ou depuis une colonne de feuille.
+const COLORS = PLAYER_COLORS;
 
 /** Requête des joueurs actifs — à passer à `useLiveQuery`. */
 export function activePlayersQuery() {

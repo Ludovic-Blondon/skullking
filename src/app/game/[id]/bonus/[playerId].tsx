@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -10,15 +9,15 @@ import {
   updateEntry,
 } from '@/db/repositories/game-repo';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
+import { Avatar } from '@/ui/avatar';
 import { Stepper } from '@/ui/stepper';
-import { useTokens } from '@/ui/use-tokens';
 
 /** Libellés de saisie — sémantiques, jamais des points bruts (PLAN.md §7.3). */
 const CAPTURE_LABELS: Record<BonusType, { emoji: string; label: string }> = {
   yellow14: { emoji: '🟡', label: '14 jaune' },
   green14: { emoji: '🟢', label: '14 vert' },
   purple14: { emoji: '🟣', label: '14 violet' },
-  black14: { emoji: '⚫', label: '14 noir (atout)' },
+  black14: { emoji: '⚫', label: '14 noir' },
   mermaidCapturesSkullKing: { emoji: '⚔️', label: 'Sirène capture le Skull King' },
   skullKingCapturesPirate: { emoji: '☠️', label: 'Skull King capture des pirates' },
   pirateCapturesMermaid: { emoji: '🧜', label: 'Pirate capture des sirènes' },
@@ -33,12 +32,29 @@ const TOGGLES: BonusType[] = [
 ];
 const COUNTERS: BonusType[] = ['skullKingCapturesPirate', 'pirateCapturesMermaid'];
 
+/**
+ * Ce que compte le compteur. La **valeur** vient toujours du barème du
+ * `Ruleset` — jamais d'ici (invariant AGENTS.md).
+ */
+const COUNTER_UNITS: Partial<Record<BonusType, string>> = {
+  skullKingCapturesPirate: 'pirate',
+  pirateCapturesMermaid: 'sirène',
+};
+
+/** Ligne de la feuille : un libellé à gauche, un contrôle à droite. */
+function Row({ children }: { children: React.ReactNode }) {
+  return (
+    <View className="min-h-touch flex-row items-center justify-between gap-3 rounded-field bg-surface-raised px-3 py-2">
+      {children}
+    </View>
+  );
+}
+
 export default function BonusScreen() {
   const { id, playerId } = useLocalSearchParams<{ id: string; playerId: string }>();
   const gameId = Number(id);
   const numericPlayerId = Number(playerId);
   const view = useGame(gameId);
-  const t = useTokens();
 
   if (!view.ready || !view.game || !view.current) return <View className="flex-1 bg-surface" />;
 
@@ -72,224 +88,257 @@ export default function BonusScreen() {
     .filter((allyId): allyId is number => allyId !== null);
   const lootCount = Math.ceil(events.filter((event) => event.type === 'loot').length / 2);
 
+  // Ce que la feuille rapporte à ce joueur, ajustement manuel compris. Les
+  // bonus d'une mise ratée restent affichés, mais ne comptent pas (§4.2).
+  const captured =
+    TOGGLES.concat(COUNTERS).reduce((sum, type) => {
+      const value = scale[type];
+      return value === null ? sum : sum + value * countOf(numericPlayerId, type);
+    }, 0) +
+    myAllies.length * scale.loot;
+  const sheetTotal = (exact ? captured : 0) + entry.customBonus;
+
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="gap-3 p-4 pb-8">
-      <View className="flex-row items-center gap-3">
-        <Text className="text-3xl">{player.emoji ?? '🏴‍☠️'}</Text>
-        <View className="flex-1">
-          <Text className="text-xl font-bold text-content">{player.name}</Text>
-          <Text className="text-sm text-content-muted">
-            Annonce {effectiveBid} · {entry.tricks ?? 0} pli{(entry.tricks ?? 0) > 1 ? 's' : ''}
-          </Text>
+    <View className="flex-1 bg-surface">
+      {/* Pas d'en-tête natif sur cette feuille : la marge haute dégage la poignée. */}
+      <ScrollView contentContainerClassName="gap-2.5 px-4 pb-8 pt-7">
+        <View className="flex-row items-center gap-2.5">
+          <Avatar emoji={player.emoji} color={player.color} size="sm" />
+          <Text className="font-title text-h2 text-content">Bonus — {player.name}</Text>
         </View>
-      </View>
 
-      {!exact && (
-        <View className="flex-row items-center gap-2 rounded-card border border-accent bg-accent/10 p-3">
-          <Ionicons name="information-circle-outline" size={20} color={t.accent} />
-          <Text className="flex-1 text-sm text-content">
-            Mise ratée : les bonus sont enregistrés mais sans effet sur le score.
-          </Text>
-        </View>
-      )}
-
-      {TOGGLES.map((type) => {
-        const value = scale[type];
-        if (value === null) return null;
-        const mine = countOf(numericPlayerId, type) > 0;
-        const holder = holderOf(type);
-        const locked = !mine && roundTotalOf(type) >= ROUND_BONUS_LIMITS[type];
-
-        return (
-          <Pressable
-            key={type}
-            onPress={() => void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1)}
-            disabled={locked}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: mine, disabled: locked }}
-            className={`min-h-touch flex-row items-center gap-3 rounded-card border p-3 active:opacity-70 ${
-              mine ? 'border-primary bg-primary/10' : 'border-border bg-surface-raised'
-            } ${locked ? 'opacity-50' : ''}`}>
-            <Text className="text-xl">{CAPTURE_LABELS[type].emoji}</Text>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-content">
-                {CAPTURE_LABELS[type].label}
-              </Text>
-              {locked && holder && (
-                <Text className="text-sm text-content-muted">Déjà attribué à {holder.name}</Text>
-              )}
-            </View>
-            <Text className={`text-base font-bold ${mine ? 'text-primary' : 'text-content-muted'}`}>
-              +{value}
+        {!exact && (
+          <View className="flex-row items-center gap-2 rounded-field border border-negative bg-negative/10 px-3 py-2.5">
+            <Text className="text-caption">⚠️</Text>
+            <Text className="flex-1 font-semi text-caption text-negative">
+              Mise ratée — bonus sans effet
             </Text>
-          </Pressable>
-        );
-      })}
-
-      {COUNTERS.map((type) => {
-        const value = scale[type];
-        if (value === null) return null;
-        const mine = countOf(numericPlayerId, type);
-        const others = roundTotalOf(type) - mine;
-        // Une sirène qui a pris le Skull King a gagné son pli : elle n'est plus
-        // capturable (invariant du moteur, §4.2).
-        const limit =
-          type === 'pirateCapturesMermaid'
-            ? Math.max(0, ROUND_BONUS_LIMITS[type] - roundTotalOf('mermaidCapturesSkullKing'))
-            : ROUND_BONUS_LIMITS[type];
-
-        return (
-          <View
-            key={type}
-            className="flex-row items-center gap-3 rounded-card border border-border bg-surface-raised p-3">
-            <Text className="text-xl">{CAPTURE_LABELS[type].emoji}</Text>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-content">
-                {CAPTURE_LABELS[type].label}
-              </Text>
-              <Text className="text-sm text-content-muted">+{value} chacun</Text>
-            </View>
-            <Stepper
-              value={mine}
-              onChange={(count) => void setCaptureBonus(round.id, numericPlayerId, type, count)}
-              max={Math.max(0, limit - others)}
-              label={CAPTURE_LABELS[type].label}
-            />
           </View>
-        );
-      })}
+        )}
 
-      {game.ruleset.advancedCards && seats.length > 2 && (
-        <View className="gap-2 rounded-card border border-border bg-surface-raised p-3">
-          <View className="flex-row items-center gap-3">
-            <Text className="text-xl">💰</Text>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-content">Butin</Text>
-              <Text className="text-sm text-content-muted">
-                +{scale.loot} chacun, si les deux annonces sont exactes
-              </Text>
-            </View>
-          </View>
-          <View className="flex-row flex-wrap gap-2">
-            {seats
-              .filter((seat) => seat.id !== numericPlayerId)
-              .map((ally) => {
-                const allied = myAllies.includes(ally.id);
-                const full = !allied && lootCount >= ROUND_BONUS_LIMITS.lootAlliances;
-                return (
-                  <Pressable
-                    key={ally.id}
-                    disabled={full}
-                    onPress={() =>
-                      void (allied
-                        ? removeLootAlliance(round.id, numericPlayerId, ally.id)
-                        : addLootAlliance(round.id, numericPlayerId, ally.id))
-                    }
-                    className={`min-h-touch justify-center rounded-full border px-4 active:opacity-70 ${
-                      allied ? 'border-accent bg-accent/10' : 'border-border'
-                    } ${full ? 'opacity-40' : ''}`}>
-                    <Text
-                      className={`text-sm font-semibold ${allied ? 'text-accent' : 'text-content'}`}>
-                      {ally.emoji} {ally.name}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-          </View>
+        <View className="flex-row flex-wrap gap-2">
+          {TOGGLES.map((type) => {
+            const value = scale[type];
+            if (value === null) return null;
+            const mine = countOf(numericPlayerId, type) > 0;
+            const holder = holderOf(type);
+            const locked = !mine && roundTotalOf(type) >= ROUND_BONUS_LIMITS[type];
+
+            return (
+              <Pressable
+                key={type}
+                onPress={() => void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1)}
+                disabled={locked}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: mine, disabled: locked }}
+                className={`min-h-touch flex-row items-center gap-1.5 rounded-full px-3.5 active:opacity-70 ${
+                  mine ? 'bg-accent' : 'bg-surface-raised'
+                } ${locked ? 'opacity-50' : ''}`}>
+                <Text className="text-caption">{CAPTURE_LABELS[type].emoji}</Text>
+                <Text
+                  className={`font-semi text-caption ${mine ? 'text-accent-fg' : 'text-content'} ${
+                    mine && !exact ? 'line-through' : ''
+                  }`}>
+                  {CAPTURE_LABELS[type].label} +{value}
+                </Text>
+                {locked && holder && (
+                  <Text className="font-body text-micro text-content-muted">· {holder.name}</Text>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
-      )}
 
-      {game.ruleset.pirateAbilities && (
-        <>
-          <View className="gap-2 rounded-card border border-border bg-surface-raised p-3">
-            <View className="flex-row items-center gap-3">
-              <Text className="text-xl">🏴</Text>
+        {COUNTERS.map((type) => {
+          const value = scale[type];
+          if (value === null) return null;
+          const mine = countOf(numericPlayerId, type);
+          const others = roundTotalOf(type) - mine;
+          // Une sirène qui a pris le Skull King a gagné son pli : elle n'est plus
+          // capturable (invariant du moteur, §4.2).
+          const limit =
+            type === 'pirateCapturesMermaid'
+              ? Math.max(0, ROUND_BONUS_LIMITS[type] - roundTotalOf('mermaidCapturesSkullKing'))
+              : ROUND_BONUS_LIMITS[type];
+
+          return (
+            <Row key={type}>
+              <Text className="flex-1 font-semi text-caption text-content">
+                {CAPTURE_LABELS[type].emoji} {CAPTURE_LABELS[type].label}{' '}
+                <Text className="font-body text-content-muted">
+                  +{value}/{COUNTER_UNITS[type]}
+                </Text>
+              </Text>
+              <Stepper
+                value={mine}
+                onChange={(count) => void setCaptureBonus(round.id, numericPlayerId, type, count)}
+                max={Math.max(0, limit - others)}
+                size="sm"
+                label={CAPTURE_LABELS[type].label}
+              />
+            </Row>
+          );
+        })}
+
+        {game.ruleset.advancedCards && seats.length > 2 && (
+          <View className="gap-2 rounded-field bg-surface-raised p-3">
+            <Text className="font-semi text-caption text-content">
+              💰 Butin <Text className="font-body text-content-muted">+{scale.loot} chacun</Text>
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {seats
+                .filter((seat) => seat.id !== numericPlayerId)
+                .map((ally) => {
+                  const allied = myAllies.includes(ally.id);
+                  const full = !allied && lootCount >= ROUND_BONUS_LIMITS.lootAlliances;
+                  return (
+                    <Pressable
+                      key={ally.id}
+                      disabled={full}
+                      onPress={() =>
+                        void (allied
+                          ? removeLootAlliance(round.id, numericPlayerId, ally.id)
+                          : addLootAlliance(round.id, numericPlayerId, ally.id))
+                      }
+                      className={`min-h-touch justify-center rounded-full px-3.5 active:opacity-70 ${
+                        allied ? 'bg-accent' : 'bg-surface-sunken'
+                      } ${full ? 'opacity-40' : ''}`}>
+                      <Text
+                        className={`font-semi text-caption ${
+                          allied ? 'text-accent-fg' : 'text-content-muted'
+                        }`}>
+                        {ally.emoji} {ally.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+            </View>
+          </View>
+        )}
+
+        {game.ruleset.pirateAbilities && (
+          <>
+            <Row>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-content">Harry le Géant</Text>
-                <Text className="text-sm text-content-muted">
+                <Text className="font-semi text-caption text-content">🏴 Harry le Géant</Text>
+                <Text className="font-body text-micro text-content-muted">
                   {entry.bidModifier === 0
                     ? 'Mise inchangée'
                     : `Mise ${entry.bid} → ${effectiveBid}`}
                 </Text>
               </View>
-            </View>
-            <View className="flex-row gap-2">
-              {([-1, 0, 1] as const).map((modifier) => (
-                <Pressable
-                  key={modifier}
-                  onPress={() =>
-                    void updateEntry(round.id, numericPlayerId, { bidModifier: modifier })
-                  }
-                  className={`min-h-touch flex-1 items-center justify-center rounded-card border active:opacity-70 ${
-                    entry.bidModifier === modifier
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border'
-                  }`}>
-                  <Text className="text-base font-semibold text-content">
-                    {modifier === 0 ? '=' : modifier > 0 ? '+1' : '−1'}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
+              <View className="flex-row items-center gap-1 rounded-full bg-surface-sunken p-1">
+                {([-1, 0, 1] as const).map((modifier) => (
+                  <Pressable
+                    key={modifier}
+                    onPress={() =>
+                      void updateEntry(round.id, numericPlayerId, { bidModifier: modifier })
+                    }
+                    className={`min-w-9 items-center justify-center rounded-full px-2 py-1.5 active:opacity-70 ${
+                      entry.bidModifier === modifier ? 'bg-primary' : ''
+                    }`}>
+                    <Text
+                      className={`font-title text-caption ${
+                        entry.bidModifier === modifier ? 'text-primary-fg' : 'text-content-muted'
+                      }`}>
+                      {modifier === 0 ? '=' : modifier > 0 ? '+1' : '−1'}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Row>
 
-          <View className="gap-2 rounded-card border border-border bg-surface-raised p-3">
-            <View className="flex-row items-center gap-3">
-              <Text className="text-xl">🎲</Text>
+            <Row>
               <View className="flex-1">
-                <Text className="text-base font-semibold text-content">Pari de Rascal</Text>
-                <Text className="text-sm text-content-muted">
+                <Text className="font-semi text-caption text-content">🎲 Pari de Rascal</Text>
+                <Text className="font-body text-micro text-content-muted">
                   Gagné si la mise est exacte, débité sinon
                 </Text>
               </View>
-            </View>
-            <View className="flex-row gap-2">
-              {([0, 10, 20] as const).map((bet) => (
-                <Pressable
-                  key={bet}
-                  onPress={() => void updateEntry(round.id, numericPlayerId, { rascalBet: bet })}
-                  className={`min-h-touch flex-1 items-center justify-center rounded-card border active:opacity-70 ${
-                    entry.rascalBet === bet ? 'border-primary bg-primary/10' : 'border-border'
-                  }`}>
-                  <Text className="text-base font-semibold text-content">
-                    {bet === 0 ? 'Aucun' : bet}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        </>
-      )}
+              <View className="flex-row gap-1.5">
+                {([0, 10, 20] as const).map((bet) => (
+                  <Pressable
+                    key={bet}
+                    onPress={() => void updateEntry(round.id, numericPlayerId, { rascalBet: bet })}
+                    className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
+                      entry.rascalBet === bet ? 'bg-primary' : 'bg-surface-sunken'
+                    }`}>
+                    <Text
+                      className={`font-semi text-caption ${
+                        entry.rascalBet === bet ? 'text-primary-fg' : 'text-content-muted'
+                      }`}>
+                      {bet === 0 ? 'aucun' : bet}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+            </Row>
+          </>
+        )}
 
-      <View className="flex-row items-center gap-3 rounded-card border border-border bg-surface-raised p-3">
-        <Text className="text-xl">✏️</Text>
-        <View className="flex-1">
-          <Text className="text-base font-semibold text-content">Ajustement manuel</Text>
-          <Text className="text-sm text-content-muted">Règle maison, cas non couvert</Text>
-        </View>
-        <View className="flex-row items-center gap-1">
-          <Pressable
-            onPress={() =>
-              void updateEntry(round.id, numericPlayerId, { customBonus: entry.customBonus - 10 })
-            }
-            accessibilityLabel="Retirer 10 points"
-            className="size-touch items-center justify-center rounded-l-card border border-border bg-surface-sunken active:opacity-60">
-            <Ionicons name="remove" size={22} color={t.content} />
-          </Pressable>
-          <Text className="min-w-touch text-center text-lg font-bold tabular-nums text-content">
-            {entry.customBonus > 0 ? '+' : ''}
-            {entry.customBonus}
+        <Row>
+          <View className="flex-1">
+            <Text className="font-semi text-caption text-content">
+              ✏️ Ajustement manuel <Text className="font-body text-content-muted">±10</Text>
+            </Text>
+            <Text className="font-body text-micro text-content-muted">
+              Règle maison, cas non couvert
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() =>
+                void updateEntry(round.id, numericPlayerId, {
+                  customBonus: entry.customBonus - 10,
+                })
+              }
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Retirer 10 points"
+              className="size-7 items-center justify-center rounded-full bg-border active:opacity-60">
+              <Text className="font-title text-caption text-content-muted">−</Text>
+            </Pressable>
+            <Text className="min-w-8 text-center font-display text-body tabular-nums text-content">
+              {entry.customBonus > 0 ? '+' : ''}
+              {entry.customBonus}
+            </Text>
+            <Pressable
+              onPress={() =>
+                void updateEntry(round.id, numericPlayerId, {
+                  customBonus: entry.customBonus + 10,
+                })
+              }
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Ajouter 10 points"
+              className="size-7 items-center justify-center rounded-full bg-primary active:opacity-60">
+              <Text className="font-title text-caption text-primary-fg">+</Text>
+            </Pressable>
+          </View>
+        </Row>
+
+        <View className="flex-row items-center justify-between px-1 pt-2">
+          <Text className="font-title text-h2 text-content">
+            Total{' '}
+            <Text
+              className={
+                sheetTotal > 0
+                  ? 'text-positive'
+                  : sheetTotal < 0
+                    ? 'text-negative'
+                    : 'text-content-muted'
+              }>
+              {sheetTotal > 0 ? '+' : ''}
+              {sheetTotal}
+            </Text>
           </Text>
-          <Pressable
-            onPress={() =>
-              void updateEntry(round.id, numericPlayerId, { customBonus: entry.customBonus + 10 })
-            }
-            accessibilityLabel="Ajouter 10 points"
-            className="size-touch items-center justify-center rounded-r-card border border-border bg-surface-sunken active:opacity-60">
-            <Ionicons name="add" size={22} color={t.content} />
-          </Pressable>
+          {!exact && captured > 0 && (
+            <Text className="font-body text-micro text-content-muted">
+              {captured} pts annulés par la mise ratée
+            </Text>
+          )}
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

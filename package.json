@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "0.1.0",
   "dependencies": {
+    "@expo-google-fonts/outfit": "^0.4.3",
     "@expo/ui": "~57.0.11",
     "@expo/vector-icons": "^15.0.2",
     "drizzle-orm": "^0.45.2",

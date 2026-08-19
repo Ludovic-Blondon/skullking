@@ -92,13 +92,3 @@ export function toRoundInput(stored: StoredRound): RoundInput {
     lootAlliances: lootAlliancesOf(stored.bonusEvents),
   };
 }
-
-/** Vrai quand toutes les annonces de la manche sont posées. */
-export function allBidsPlaced(stored: StoredRound): boolean {
-  return stored.entries.length > 0 && stored.entries.every((entry) => entry.bid !== null);
-}
-
-/** Vrai quand tous les plis de la manche sont saisis. */
-export function allTricksPlaced(stored: StoredRound): boolean {
-  return stored.entries.length > 0 && stored.entries.every((entry) => entry.tricks !== null);
-}
