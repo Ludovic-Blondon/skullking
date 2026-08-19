@@ -3,9 +3,10 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { reopenRound } from '@/db/repositories/game-repo';
 import { useGame } from '@/features/game/use-game';
+import { PLAYER_COLORS } from '@/ui/tokens';
 
-const NAME_COLUMN = 128;
-const SCORE_COLUMN = 72;
+const ROUND_COLUMN = 32;
+const SCORE_COLUMN = 58;
 
 /**
  * Feuille de score façon carnet papier (PLAN.md §7.2) : une colonne par joueur,
@@ -39,86 +40,82 @@ export default function ScoreSheetScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="p-4">
+    <ScrollView
+      className="flex-1 bg-surface"
+      contentContainerClassName="p-4"
+      contentInsetAdjustmentBehavior="automatic">
       <ScrollView horizontal showsHorizontalScrollIndicator contentContainerClassName="grow">
         <View>
-          <View className="flex-row border-b border-border-strong pb-2">
-            <Text
-              style={{ width: NAME_COLUMN }}
-              className="text-sm font-semibold text-content-muted">
-              Manche
-            </Text>
-            {seats.map((seat) => (
-              <Text
-                key={seat.id}
-                style={{ width: SCORE_COLUMN }}
-                numberOfLines={1}
-                className="text-center text-sm font-semibold text-content">
-                {seat.emoji} {seat.name}
-              </Text>
+          <View className="flex-row pb-2">
+            <View style={{ width: ROUND_COLUMN }} />
+            {seats.map((seat, index) => (
+              <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center gap-0.5">
+                <Text className="text-base">{seat.emoji ?? '🏴‍☠️'}</Text>
+                <Text
+                  numberOfLines={1}
+                  className="font-semi text-micro"
+                  style={{ color: seat.color ?? PLAYER_COLORS[index % PLAYER_COLORS.length] }}>
+                  {seat.name}
+                </Text>
+              </View>
             ))}
           </View>
 
-          {state.rounds.map((result, index) => {
-            const stored = storedRounds[index];
-            const played = stored.entries.every((entry) => entry.tricks !== null);
-            return (
-              <Pressable
-                key={result.roundNumber}
-                onPress={() => correctRound(result.roundNumber)}
-                accessibilityRole="button"
-                accessibilityLabel={`Corriger la manche ${result.roundNumber}`}
-                className="flex-row items-center border-b border-border py-2 active:opacity-60">
-                <View style={{ width: NAME_COLUMN }} className="flex-row items-baseline gap-2">
-                  <Text className="text-base font-semibold text-content">{result.roundNumber}</Text>
-                  <Text className="text-xs text-content-muted">
-                    {result.cardsDealt} c.
-                    {stored.round.forced ? ' · forcée' : ''}
+          <View className="gap-1 pb-2">
+            {state.rounds.map((result, index) => {
+              const stored = storedRounds[index];
+              const played = stored.entries.every((entry) => entry.tricks !== null);
+              return (
+                <Pressable
+                  key={result.roundNumber}
+                  onPress={() => correctRound(result.roundNumber)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Corriger la manche ${result.roundNumber}`}
+                  className="flex-row items-center active:opacity-60">
+                  <Text
+                    style={{ width: ROUND_COLUMN }}
+                    className="font-semi text-micro text-content-muted">
+                    {result.roundNumber}
+                    {stored.round.forced ? ' !' : ''}
                   </Text>
-                </View>
-                {seats.map((seat) => {
-                  const score = result.scores.find((s) => s.playerId === String(seat.id));
-                  if (!played || !score) {
+                  {seats.map((seat) => {
+                    const score = result.scores.find((s) => s.playerId === String(seat.id));
                     return (
-                      <Text
-                        key={seat.id}
-                        style={{ width: SCORE_COLUMN }}
-                        className="text-center text-base text-content-muted">
-                        –
-                      </Text>
+                      <View key={seat.id} style={{ width: SCORE_COLUMN }} className="px-0.5">
+                        <View className="items-center rounded-tile bg-surface-raised py-1.5">
+                          <Text
+                            className={`font-semi text-caption tabular-nums ${
+                              !played || !score
+                                ? 'text-content-muted'
+                                : score.total > 0
+                                  ? 'text-positive'
+                                  : score.total < 0
+                                    ? 'text-negative'
+                                    : 'text-content'
+                            }`}>
+                            {!played || !score
+                              ? '–'
+                              : `${score.total > 0 ? '+' : ''}${score.total}`}
+                          </Text>
+                        </View>
+                      </View>
                     );
-                  }
-                  return (
-                    <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">
-                      <Text
-                        className={`text-base font-semibold tabular-nums ${
-                          score.total >= 0 ? 'text-positive' : 'text-negative'
-                        }`}>
-                        {score.total > 0 ? '+' : ''}
-                        {score.total}
-                      </Text>
-                      <Text className="text-xs tabular-nums text-content-muted">
-                        {result.cumulative[String(seat.id)]}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </Pressable>
-            );
-          })}
+                  })}
+                </Pressable>
+              );
+            })}
+          </View>
 
-          <View className="mt-2 flex-row border-t-2 border-border-strong pt-2">
-            <Text style={{ width: NAME_COLUMN }} className="text-base font-bold text-content">
-              Total
-            </Text>
+          <View className="flex-row items-start border-t border-border pt-2">
+            <View style={{ width: ROUND_COLUMN }} />
             {seats.map((seat) => {
               const standing = state.standings.find((s) => s.playerId === String(seat.id));
               return (
                 <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">
-                  <Text className="text-lg font-bold tabular-nums text-content">
+                  <Text className="font-display text-h2 tabular-nums text-content">
                     {standing?.total ?? 0}
                   </Text>
-                  <Text className="text-xs text-content-muted">{standing?.rank}ᵉ</Text>
+                  <Text className="font-body text-micro text-content-muted">{standing?.rank}ᵉ</Text>
                 </View>
               );
             })}
@@ -126,7 +123,7 @@ export default function ScoreSheetScreen() {
         </View>
       </ScrollView>
 
-      <Text className="pt-4 text-sm text-content-muted">
+      <Text className="pt-4 font-body text-micro text-content-muted">
         Touchez une manche pour la corriger : les totaux suivants se recalculent tout seuls.
       </Text>
     </ScrollView>

@@ -13,17 +13,42 @@ import {
   validateRound as validateRoundInDb,
 } from '@/db/repositories/game-repo';
 import { firstBlockingIssue, issueMessage } from '@/features/game/issue-messages';
-import { PlayerRow } from '@/features/game/player-row';
+import { PlayerRow, type PlayerRowTone } from '@/features/game/player-row';
 import { useGame } from '@/features/game/use-game';
 import { ValidationBar } from '@/features/game/validation-bar';
+import { Avatar } from '@/ui/avatar';
+import { Watermark } from '@/ui/screen';
+import { Stepper } from '@/ui/stepper';
 import { useTokens } from '@/ui/use-tokens';
+
+/** Bouton d'en-tête : une icône, une cible tactile réglementaire. */
+function TopAction({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  const t = useTokens();
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      className="size-9 items-center justify-center rounded-full bg-surface-raised active:opacity-70">
+      <Ionicons name={icon} size={18} color={t.content} />
+    </Pressable>
+  );
+}
 
 export default function GameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Number(id);
   const view = useGame(gameId);
   const insets = useSafeAreaInsets();
-  const t = useTokens();
 
   if (!view.ready || !view.game || !view.current) {
     return (
@@ -76,33 +101,58 @@ export default function GameScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <Stack.Screen
-        options={{
-          title: `Manche ${round.roundNumber} / ${totalRounds}`,
-          headerRight: () => (
-            <Link href={{ pathname: '/game/[id]/scoresheet', params: { id } }} asChild>
-              <Pressable hitSlop={12} className="pr-1" accessibilityLabel="Feuille de score">
-                <Ionicons name="list-outline" size={22} color={t.content} />
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+      <Watermark />
 
-      <ScrollView contentContainerClassName="gap-3 p-4" contentInsetAdjustmentBehavior="automatic">
-        <View className="flex-row items-center justify-between rounded-card border border-border bg-surface-sunken px-4 py-3">
-          <Text className="text-base font-semibold text-content">
-            {cardsDealt} carte{cardsDealt > 1 ? 's' : ''} par joueur
+      <View style={{ paddingTop: insets.top + 6 }} className="gap-2 px-5 pb-3">
+        <View className="flex-row items-start justify-between gap-3">
+          <Text className="flex-1 font-title text-h1 text-content">
+            Manche {round.roundNumber}/{totalRounds} ·{' '}
+            {bidding ? `${cardsDealt} carte${cardsDealt > 1 ? 's' : ''}` : 'Résultats'}
           </Text>
-          {view.dealer && (
-            <Text className="text-sm text-content-muted">Donne : {view.dealer.name}</Text>
-          )}
+          <View className="flex-row gap-2">
+            <TopAction
+              icon="home-outline"
+              label="Retour à l’accueil"
+              onPress={() => router.replace('/')}
+            />
+            <TopAction
+              icon="list-outline"
+              label="Feuille de score"
+              onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
+            />
+          </View>
         </View>
 
+        {view.dealer && (
+          <View className="flex-row items-center gap-2">
+            <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />
+            <Text className="font-body text-caption text-content-muted">
+              {view.dealer.name} distribue
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <ScrollView contentContainerClassName="gap-2.5 px-4 pb-4">
         {seats.map((player) => {
           const entry = entryOf(player.id);
           const score = scoreOf(player.id);
           const total = state?.totals[String(player.id)] ?? 0;
+          // Bonus et ajustement manuel comptent ensemble : un ±10 posé à la main
+          // doit se voir depuis la manche, pas seulement depuis sa feuille.
+          const extra = score ? score.bonus + score.custom : 0;
+          const played = score?.played ?? false;
+
+          const tone: PlayerRowTone = bidding
+            ? entry?.bid === null || entry?.bid === undefined
+              ? 'idle'
+              : 'bid'
+            : !played
+              ? 'idle'
+              : score?.exact
+                ? 'exact'
+                : 'missed';
 
           return bidding ? (
             <PlayerRow
@@ -112,8 +162,11 @@ export default function GameScreen() {
               onChange={(bid) => void updateEntry(round.id, player.id, { bid })}
               max={cardsDealt}
               label="Annonce"
+              tone={tone}
               testID={`bid-${player.id}`}
-              subtitle={<Text className="text-sm text-content-muted">{total} pts</Text>}
+              subtitle={
+                <Text className="font-body text-micro text-content-muted">{total} pts</Text>
+              }
             />
           ) : (
             <PlayerRow
@@ -123,10 +176,12 @@ export default function GameScreen() {
               onChange={(tricks) => void updateEntry(round.id, player.id, { tricks })}
               max={cardsDealt}
               label="Plis"
+              tone={tone}
               testID={`tricks-${player.id}`}
               subtitle={
-                <Text className="text-sm text-content-muted">
-                  Annonce {entry?.bid ?? 0} · {total} pts
+                <Text className="font-body text-micro text-content-muted">
+                  annoncé {entry?.bid ?? 0}
+                  {played && score ? ` · ${score.total > 0 ? '+' : ''}${score.total} ce tour` : ''}
                 </Text>
               }
               trailing={
@@ -137,17 +192,20 @@ export default function GameScreen() {
                   }}
                   asChild>
                   <Pressable
+                    hitSlop={8}
                     accessibilityLabel={`Bonus de ${player.name}`}
-                    className={`min-h-touch min-w-touch items-center justify-center rounded-card border px-2 active:opacity-70 ${
-                      score && score.bonus > 0
-                        ? 'border-accent bg-accent/10'
-                        : 'border-border bg-surface-sunken'
-                    }`}>
-                    {score && score.bonus > 0 ? (
-                      <Text className="text-base font-bold text-accent">+{score.bonus}</Text>
-                    ) : (
-                      <Ionicons name="sparkles-outline" size={20} color={t.contentMuted} />
-                    )}
+                    className="min-w-9 items-end active:opacity-70">
+                    <Text
+                      className={`font-title text-caption ${
+                        extra > 0
+                          ? 'text-positive'
+                          : extra < 0
+                            ? 'text-negative'
+                            : 'text-content-muted'
+                      }`}>
+                      {extra >= 0 ? '+' : ''}
+                      {extra}
+                    </Text>
                   </Pressable>
                 </Link>
               }
@@ -156,72 +214,75 @@ export default function GameScreen() {
         })}
 
         {!bidding && game.ruleset.advancedCards && (
-          <PlayerRow
-            player={{
-              id: -1,
-              name: 'Pli détruit',
-              emoji: '🐙',
-              color: null,
-              seatIndex: -1,
-            }}
-            value={round.destroyedTricks}
-            onChange={(count) => void setDestroyedTricks(round.id, count)}
-            max={2}
-            label="Plis détruits"
-            subtitle={<Text className="text-sm text-content-muted">Kraken ou Baleine blanche</Text>}
-          />
+          <View className="flex-row items-center justify-between gap-3 px-1 pt-1">
+            <Text className="flex-1 font-body text-caption text-content-muted">
+              ☠️🐋 Plis détruits (Kraken / Baleine)
+            </Text>
+            <Stepper
+              value={round.destroyedTricks}
+              onChange={(count) => void setDestroyedTricks(round.id, count)}
+              max={2}
+              size="sm"
+              label="Plis détruits"
+            />
+          </View>
         )}
 
         {!bidding && seats.length === 2 && (
-          <View className="flex-row items-center gap-3 rounded-card border border-dashed border-border bg-surface-sunken p-3">
-            <Text className="text-2xl">👻</Text>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-content-muted">Barbe Grise</Text>
-              <Text className="text-sm text-content-muted">Ne mise pas, ne marque pas</Text>
+          <View className="flex-row items-center gap-3 rounded-card border-[1.5px] border-dashed border-border p-3">
+            <View className="size-9 items-center justify-center rounded-full bg-surface-sunken">
+              <Text className="text-base">👻</Text>
             </View>
-            <Text className="text-2xl font-bold tabular-nums text-content-muted">
+            <View className="flex-1">
+              <Text className="font-semi text-body text-content-muted">Barbe Grise</Text>
+              <Text className="font-body text-micro text-content-muted">
+                Ne mise pas, ne marque pas
+              </Text>
+            </View>
+            <Text className="font-display text-h2 tabular-nums text-content-muted">
               {ghostTricks}
             </Text>
           </View>
         )}
       </ScrollView>
 
-      <View style={{ paddingBottom: insets.bottom }}>
-        {bidding ? (
-          <ValidationBar
-            summary={`Σ annonces ${bidsTotal} pour ${cardsDealt} pli${cardsDealt > 1 ? 's' : ''}${
-              bidsTotal > cardsDealt
-                ? ' — table sur-annoncée'
-                : bidsTotal < cardsDealt
-                  ? ' — table sous-annoncée'
-                  : ''
-            }`}
-            ok={bidsReady}
-            problem={bidsReady ? undefined : 'Toutes les annonces ne sont pas posées'}
-            actionLabel="Lancer la manche"
-            onAction={() => void launchRound()}
-          />
-        ) : (
-          <ValidationBar
-            summary={`Σ plis ${tricksTotal}${
-              round.destroyedTricks > 0 ? ` + ${round.destroyedTricks} détruit` : ''
-            } = ${accounted} / ${cardsDealt}`}
-            ok={roundOk}
-            problem={
-              !tricksReady
-                ? 'Tous les plis ne sont pas saisis'
-                : blocking
-                  ? issueMessage(blocking)
-                  : undefined
-            }
-            actionLabel={
-              round.roundNumber >= totalRounds ? 'Terminer la partie' : 'Valider la manche'
-            }
-            onAction={() => void confirmRound()}
-            onForce={tricksReady ? () => void confirmRound(true) : undefined}
-          />
-        )}
-      </View>
+      {bidding ? (
+        <ValidationBar
+          summary={`Σ annonces ${bidsTotal} / ${cardsDealt} pli${cardsDealt > 1 ? 's' : ''}${
+            bidsTotal > cardsDealt
+              ? ' — table sur-annoncée'
+              : bidsTotal < cardsDealt
+                ? ' — table sous-annoncée'
+                : ''
+          }`}
+          tone={bidsTotal === cardsDealt ? 'ok' : 'warn'}
+          ok={bidsReady}
+          problem={bidsReady ? undefined : 'Toutes les annonces ne sont pas posées'}
+          actionLabel="Lancer la manche"
+          onAction={() => void launchRound()}
+        />
+      ) : (
+        <ValidationBar
+          summary={
+            round.destroyedTricks > 0
+              ? `Σ plis ${tricksTotal} + ${round.destroyedTricks} détruit = ${accounted} / ${cardsDealt}`
+              : `Σ plis ${tricksTotal} / ${cardsDealt}`
+          }
+          ok={roundOk}
+          problem={
+            !tricksReady
+              ? 'Tous les plis ne sont pas saisis'
+              : blocking
+                ? issueMessage(blocking)
+                : undefined
+          }
+          actionLabel={
+            round.roundNumber >= totalRounds ? 'Terminer la partie' : 'Valider la manche'
+          }
+          onAction={() => void confirmRound()}
+          onForce={tricksReady ? () => void confirmRound(true) : undefined}
+        />
+      )}
     </View>
   );
 }

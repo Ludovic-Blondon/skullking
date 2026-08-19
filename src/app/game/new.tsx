@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -7,7 +6,8 @@ import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS } from '@/core';
 import { createGame } from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
-import { Body, Card, Screen, Title } from '@/ui/screen';
+import { Avatar } from '@/ui/avatar';
+import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 import { useTokens } from '@/ui/use-tokens';
 
 export default function NewGameScreen() {
@@ -17,6 +17,9 @@ export default function NewGameScreen() {
   const [name, setName] = useState('');
 
   const enough = selected.length >= MIN_PLAYERS;
+  const seated = selected
+    .map((id) => players.find((player) => player.id === id))
+    .filter((player): player is (typeof players)[number] => player !== undefined);
 
   function toggle(playerId: number) {
     setSelected((current) =>
@@ -54,46 +57,16 @@ export default function NewGameScreen() {
 
   return (
     <Screen edgeToEdgeBottom>
-      <Card>
-        <Title>Qui joue ?</Title>
-        <Body>
-          De {MIN_PLAYERS} à {MAX_PLAYERS} joueurs. L&apos;ordre de sélection est l&apos;ordre
-          autour de la table.
-        </Body>
-      </Card>
-
-      <View className="flex-row items-center gap-2">
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          onSubmitEditing={addPlayer}
-          placeholder="Ajouter un joueur"
-          placeholderTextColor={t.contentMuted}
-          returnKeyType="done"
-          autoCapitalize="words"
-          testID="new-player-name"
-          className="min-h-touch flex-1 rounded-card border border-border bg-surface-raised px-4 text-base text-content"
-        />
-        <Pressable
-          onPress={() => void addPlayer()}
-          disabled={!name.trim()}
-          accessibilityRole="button"
-          accessibilityLabel="Ajouter ce joueur"
-          testID="new-player-add"
-          className="size-touch items-center justify-center rounded-card bg-primary active:opacity-80 disabled:opacity-40">
-          <Ionicons name="add" size={24} color={t.primaryFg} />
-        </Pressable>
-      </View>
+      <SectionLabel>
+        Qui joue ? De {MIN_PLAYERS} à {MAX_PLAYERS} joueurs
+      </SectionLabel>
 
       {players.length === 0 ? (
-        <Card>
-          <Body>
-            Aucun joueur enregistré pour l&apos;instant. Ajoutez les prénoms de la table : ils
-            seront réutilisables d&apos;une partie à l&apos;autre.
-          </Body>
-        </Card>
+        <EmptyState emoji="🗺️" title="Aucun joueur enregistré">
+          Ajoutez les prénoms de la table : ils seront réutilisables d’une partie à l’autre.
+        </EmptyState>
       ) : (
-        <View className="gap-2">
+        <View className="flex-row flex-wrap gap-2">
           {players.map((player) => {
             const rank = selected.indexOf(player.id);
             const isSelected = rank >= 0;
@@ -105,22 +78,72 @@ export default function NewGameScreen() {
                 accessibilityLabel={player.name}
                 accessibilityState={{ checked: isSelected }}
                 testID={`player-${player.id}`}
-                className={`min-h-touch flex-row items-center gap-3 rounded-card border p-3 active:opacity-70 ${
-                  isSelected
-                    ? 'border-primary bg-surface-raised'
-                    : 'border-border bg-surface-raised'
+                className={`min-h-touch flex-row items-center gap-2 rounded-full px-3 active:opacity-70 ${
+                  isSelected ? 'bg-primary' : 'bg-surface-raised'
                 }`}>
-                <Text className="text-2xl">{player.emoji ?? '🏴‍☠️'}</Text>
-                <Text className="flex-1 text-base font-semibold text-content">{player.name}</Text>
-                {isSelected && (
-                  <View className="size-7 items-center justify-center rounded-full bg-primary">
-                    <Text className="text-sm font-bold text-primary-fg">{rank + 1}</Text>
-                  </View>
-                )}
+                <Text className="text-base">{player.emoji ?? '🏴‍☠️'}</Text>
+                <Text
+                  className={`font-semi text-body ${
+                    isSelected ? 'text-primary-fg' : 'text-content'
+                  }`}>
+                  {player.name}
+                </Text>
               </Pressable>
             );
           })}
         </View>
+      )}
+
+      <View className="flex-row items-center gap-2">
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          onSubmitEditing={addPlayer}
+          placeholder="Ajouter un joueur"
+          placeholderTextColor={t.contentMuted}
+          returnKeyType="done"
+          autoCapitalize="words"
+          testID="new-player-name"
+          className="min-h-touch flex-1 rounded-full bg-surface-raised px-4 font-body text-body text-content"
+        />
+        <Pressable
+          onPress={() => void addPlayer()}
+          disabled={!name.trim()}
+          accessibilityRole="button"
+          accessibilityLabel="Ajouter ce joueur"
+          testID="new-player-add"
+          className={`size-touch items-center justify-center rounded-full active:opacity-80 ${
+            name.trim() ? 'bg-primary' : 'bg-border'
+          }`}>
+          <Text
+            className={`font-title text-h1 ${
+              name.trim() ? 'text-primary-fg' : 'text-content-muted'
+            }`}>
+            +
+          </Text>
+        </Pressable>
+      </View>
+
+      {seated.length > 0 && (
+        <>
+          <SectionLabel>Ordre à table</SectionLabel>
+          <View className="gap-2">
+            {seated.map((player, index) => (
+              <View
+                key={player.id}
+                className="flex-row items-center gap-3 rounded-field bg-surface-raised p-2.5">
+                <Text className="w-4 text-center font-title text-caption text-content-muted">
+                  {index + 1}
+                </Text>
+                <Avatar emoji={player.emoji} color={player.color} size="sm" />
+                <Text className="flex-1 font-semi text-body text-content">{player.name}</Text>
+                {index === 0 && (
+                  <Text className="font-body text-micro text-content-muted">1ʳᵉ donne</Text>
+                )}
+              </View>
+            ))}
+          </View>
+        </>
       )}
 
       <Pressable
@@ -135,9 +158,10 @@ export default function NewGameScreen() {
         testID="start-game"
         accessibilityRole="button"
         accessibilityLabel="Démarrer la partie"
-        className="min-h-touch flex-row items-center justify-center gap-2 rounded-card bg-primary p-4 active:opacity-80 disabled:opacity-40">
-        <Ionicons name="play" size={20} color={t.primaryFg} />
-        <Text className="text-lg font-semibold text-primary-fg">
+        className={`mt-2 min-h-touch items-center justify-center rounded-card p-4 active:opacity-80 ${
+          enough ? 'bg-primary' : 'bg-border'
+        }`}>
+        <Text className={`font-title text-h2 ${enough ? 'text-primary-fg' : 'text-content-muted'}`}>
           C&apos;est parti{enough ? ` — ${selected.length} joueurs` : ''}
         </Text>
       </Pressable>

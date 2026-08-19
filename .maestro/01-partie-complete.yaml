@@ -51,7 +51,7 @@ appId: com.lblondon.skullscores
     id: "start-game"
 
 # — Manche 1 : 1 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 1 / 10"
+- assertVisible: "Manche 1/10"
 - repeat:
     times: 1
     commands:
@@ -77,7 +77,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 2 : 2 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 2 / 10"
+- assertVisible: "Manche 2/10"
 # Le cumul affiché ne doit compter que la manche 1 : Alice 20, Bob et Chloé 10.
 # La manche 2 est ouverte mais vierge — la compter revenait à créditer la table
 # d'une mise 0 réussie que personne n'a annoncée.
@@ -108,7 +108,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 3 : 3 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 3 / 10"
+- assertVisible: "Manche 3/10"
 - repeat:
     times: 3
     commands:
@@ -134,7 +134,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 4 : 4 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 4 / 10"
+- assertVisible: "Manche 4/10"
 - repeat:
     times: 4
     commands:
@@ -160,7 +160,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 5 : 5 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 5 / 10"
+- assertVisible: "Manche 5/10"
 - repeat:
     times: 5
     commands:
@@ -186,7 +186,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 6 : 6 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 6 / 10"
+- assertVisible: "Manche 6/10"
 - repeat:
     times: 6
     commands:
@@ -212,7 +212,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 7 : 7 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 7 / 10"
+- assertVisible: "Manche 7/10"
 - repeat:
     times: 7
     commands:
@@ -238,7 +238,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 8 : 8 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 8 / 10"
+- assertVisible: "Manche 8/10"
 - repeat:
     times: 8
     commands:
@@ -264,7 +264,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 9 : 9 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 9 / 10"
+- assertVisible: "Manche 9/10"
 - repeat:
     times: 9
     commands:
@@ -290,7 +290,7 @@ appId: com.lblondon.skullscores
     id: "round-action"
 
 # — Manche 10 : 10 carte(s) ————————————————————————————————————————
-- assertVisible: "Manche 10 / 10"
+- assertVisible: "Manche 10/10"
 - repeat:
     times: 10
     commands:
