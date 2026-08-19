@@ -25,16 +25,19 @@ function TopAction({
   icon,
   label,
   onPress,
+  testID,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  testID?: string;
 }) {
   const t = useTokens();
   return (
     <Pressable
       onPress={onPress}
       hitSlop={8}
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       className="size-9 items-center justify-center rounded-full bg-surface-raised active:opacity-70">
@@ -90,6 +93,16 @@ export default function GameScreen() {
     await setPhase(gameId, 'results');
   }
 
+  /**
+   * Retour à la phase Annonces. Une annonce mal saisie était sans recours :
+   * la feuille de score ne rouvre une manche qu'en Résultats (§7.2). Rien
+   * n'est détruit — les plis déjà posés restent, le moteur repasse dessus.
+   */
+  async function backToBids() {
+    await Haptics.selectionAsync();
+    await setPhase(gameId, 'bidding');
+  }
+
   async function confirmRound(forced = false) {
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const { finished } = await validateRoundInDb(gameId, round.roundNumber, { forced });
@@ -110,6 +123,14 @@ export default function GameScreen() {
             {bidding ? `${cardsDealt} carte${cardsDealt > 1 ? 's' : ''}` : 'Résultats'}
           </Text>
           <View className="flex-row gap-2">
+            {!bidding && (
+              <TopAction
+                icon="arrow-undo-outline"
+                label="Revenir aux annonces"
+                testID="back-to-bids"
+                onPress={() => void backToBids()}
+              />
+            )}
             <TopAction
               icon="home-outline"
               label="Retour à l’accueil"

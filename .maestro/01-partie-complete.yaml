@@ -63,6 +63,15 @@ appId: com.lblondon.skullscores
 - tapOn:
     id: "round-action"
 
+# Aller-retour vers les annonces : une annonce mal saisie doit rester
+# corrigeable une fois la manche lancée, sinon elle est figée pour la manche.
+- assertVisible: "Manche 1/10 · Résultats"
+- tapOn:
+    id: "back-to-bids"
+- assertVisible: "Manche 1/10 · 1 carte"
+- tapOn:
+    id: "round-action"
+
 - repeat:
     times: 1
     commands:
