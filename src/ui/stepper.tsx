@@ -1,8 +1,5 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { Pressable, Text, View } from 'react-native';
-
-import { useTokens } from './use-tokens';
 
 type StepperProps = {
   /** `null` : rien n'est encore saisi — le premier geste tranche. */
@@ -12,18 +9,36 @@ type StepperProps = {
   max: number;
   /** Libellé lu par les lecteurs d'écran (« Annonce de Chloé »). */
   label: string;
+  /** `sm` pour les compteurs secondaires (Kraken, bonus, ajustement). */
+  size?: 'sm' | 'md';
   testID?: string;
 };
 
+const SIZES = {
+  sm: { button: 26, glyph: 'text-caption', value: 'text-body', track: 'gap-2 px-1.5 py-1' },
+  md: { button: 32, glyph: 'text-h2', value: 'text-h1', track: 'gap-2.5 px-2 py-1.5' },
+} as const;
+
 /**
- * Compteur ±, gros et utilisable d'une main autour de la table.
- * Cibles tactiles ≥ 44 pt (PLAN.md §12.10), aucun clavier.
+ * Compteur ±, gros et utilisable d'une main autour de la table (PLAN.md §7.2).
+ *
+ * Le rail creusé et le « + » corail viennent de la maquette : le geste qui fait
+ * avancer la manche est le seul élément coloré de la ligne. Les pastilles font
+ * moins de 44 pt à l'œil, le `hitSlop` ramène la cible au-dessus (§12.10).
  *
  * Sur une valeur non saisie, « − » pose directement le minimum et « + » la
  * première unité : annoncer 0 coûte un seul geste, comme annoncer 1.
  */
-export function Stepper({ value, onChange, min = 0, max, label, testID }: StepperProps) {
-  const t = useTokens();
+export function Stepper({
+  value,
+  onChange,
+  min = 0,
+  max,
+  label,
+  size = 'md',
+  testID,
+}: StepperProps) {
+  const { button, glyph, value: valueText, track } = SIZES[size];
 
   function step(delta: number) {
     if (value === null) {
@@ -41,37 +56,41 @@ export function Stepper({ value, onChange, min = 0, max, label, testID }: Steppe
   const disabledPlus = value !== null && value >= max;
 
   return (
-    <View className="flex-row items-center gap-1">
+    <View className={`flex-row items-center rounded-full bg-surface-sunken ${track}`}>
       <Pressable
         onPress={() => step(-1)}
         disabled={disabledMinus}
-        hitSlop={6}
+        hitSlop={12}
         testID={testID ? `${testID}-minus` : undefined}
         accessibilityRole="button"
         accessibilityLabel={`${label} : retirer`}
-        className="size-touch items-center justify-center rounded-l-card border border-border bg-surface-sunken active:opacity-60">
-        <Ionicons name="remove" size={22} color={disabledMinus ? t.borderStrong : t.content} />
+        style={{ width: button, height: button }}
+        className={`items-center justify-center rounded-full bg-surface-raised active:opacity-60 dark:bg-border ${
+          disabledMinus ? 'opacity-40' : ''
+        }`}>
+        <Text className={`font-title text-content ${glyph}`}>−</Text>
       </Pressable>
 
-      <View className="min-w-touch items-center justify-center px-1">
-        <Text
-          testID={testID}
-          className={`text-2xl font-bold tabular-nums ${
-            value === null ? 'text-content-muted' : 'text-content'
-          }`}>
-          {value === null ? '–' : value}
-        </Text>
-      </View>
+      <Text
+        testID={testID}
+        className={`min-w-6 text-center font-display tabular-nums ${valueText} ${
+          value === null ? 'text-content-muted' : 'text-content'
+        }`}>
+        {value === null ? '–' : value}
+      </Text>
 
       <Pressable
         onPress={() => step(1)}
         disabled={disabledPlus}
-        hitSlop={6}
+        hitSlop={12}
         testID={testID ? `${testID}-plus` : undefined}
         accessibilityRole="button"
         accessibilityLabel={`${label} : ajouter`}
-        className="size-touch items-center justify-center rounded-r-card border border-border bg-surface-sunken active:opacity-60">
-        <Ionicons name="add" size={22} color={disabledPlus ? t.borderStrong : t.content} />
+        style={{ width: button, height: button }}
+        className={`items-center justify-center rounded-full bg-primary active:opacity-60 ${
+          disabledPlus ? 'opacity-40' : ''
+        }`}>
+        <Text className={`font-title text-primary-fg ${glyph}`}>+</Text>
       </Pressable>
     </View>
   );
