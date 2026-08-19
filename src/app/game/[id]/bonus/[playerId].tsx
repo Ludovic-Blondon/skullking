@@ -8,20 +8,10 @@ import {
   setCaptureBonus,
   updateEntry,
 } from '@/db/repositories/game-repo';
+import { CAPTURE_LABELS, COUNTER_UNITS } from '@/features/game/bonus-labels';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
 import { Avatar } from '@/ui/avatar';
 import { Stepper } from '@/ui/stepper';
-
-/** Libellés de saisie — sémantiques, jamais des points bruts (PLAN.md §7.3). */
-const CAPTURE_LABELS: Record<BonusType, { emoji: string; label: string }> = {
-  yellow14: { emoji: '🟡', label: '14 jaune' },
-  green14: { emoji: '🟢', label: '14 vert' },
-  purple14: { emoji: '🟣', label: '14 violet' },
-  black14: { emoji: '⚫', label: '14 noir' },
-  mermaidCapturesSkullKing: { emoji: '⚔️', label: 'Sirène capture le Skull King' },
-  skullKingCapturesPirate: { emoji: '☠️', label: 'Skull King capture des pirates' },
-  pirateCapturesMermaid: { emoji: '🧜', label: 'Pirate capture des sirènes' },
-};
 
 const TOGGLES: BonusType[] = [
   'yellow14',
@@ -31,15 +21,6 @@ const TOGGLES: BonusType[] = [
   'mermaidCapturesSkullKing',
 ];
 const COUNTERS: BonusType[] = ['skullKingCapturesPirate', 'pirateCapturesMermaid'];
-
-/**
- * Ce que compte le compteur. La **valeur** vient toujours du barème du
- * `Ruleset` — jamais d'ici (invariant AGENTS.md).
- */
-const COUNTER_UNITS: Partial<Record<BonusType, string>> = {
-  skullKingCapturesPirate: 'pirate',
-  pirateCapturesMermaid: 'sirène',
-};
 
 /** Ligne de la feuille : un libellé à gauche, un contrôle à droite. */
 function Row({ children }: { children: React.ReactNode }) {
