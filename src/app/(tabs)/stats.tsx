@@ -1,11 +1,13 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { db } from '@/db/client';
 import { players } from '@/db/schema';
 import { MIN_GAMES_FOR_RATES } from '@/features/stats/compute';
 import { useStats } from '@/features/stats/use-stats';
+import { useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 
@@ -14,18 +16,19 @@ import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
  * classement all-time.
  */
 export default function StatsScreen() {
+  const t = useT();
   const { data: roster } = useLiveQuery(db.select().from(players));
   const { global } = useStats();
 
   const playerOf = (playerId: number) => roster.find((player) => player.id === playerId);
-  const nameOf = (playerId: number) => playerOf(playerId)?.name ?? `Joueur ${playerId}`;
+  const nameOf = (playerId: number) =>
+    playerOf(playerId)?.name ?? t('stats.unknownPlayer', { id: playerId });
 
   if (global.finishedGames === 0) {
     return (
       <Screen>
-        <EmptyState emoji="📊" title="Pas encore de statistiques">
-          Terminez une partie : les records et le classement se remplissent tout seuls. Les parties
-          abandonnées, elles, ne comptent pas.
+        <EmptyState emoji="📊" title={t('stats.globalEmpty')}>
+          {t('stats.globalEmptyHint')}
         </EmptyState>
       </Screen>
     );
@@ -39,19 +42,18 @@ export default function StatsScreen() {
             {global.finishedGames}
           </Text>
           <Text className="font-body text-micro text-content-muted">
-            partie{global.finishedGames > 1 ? 's' : ''} terminée
-            {global.finishedGames > 1 ? 's' : ''}
+            {t('stats.finishedGames', { count: global.finishedGames })}
           </Text>
         </View>
         <View className="flex-1 gap-0.5 rounded-field bg-surface-raised p-3">
           <Text className="font-display text-h1 tabular-nums text-content">
             {global.playedRounds}
           </Text>
-          <Text className="font-body text-micro text-content-muted">manches jouées</Text>
+          <Text className="font-body text-micro text-content-muted">{t('stats.playedRounds')}</Text>
         </View>
       </View>
 
-      <SectionLabel>Records</SectionLabel>
+      <SectionLabel>{t('stats.records')}</SectionLabel>
       <View className="gap-2">
         {global.bestGame && (
           <View className="flex-row items-center gap-3 rounded-field bg-surface-raised p-3">
@@ -60,9 +62,7 @@ export default function StatsScreen() {
               <Text className="font-semi text-body text-content">
                 {nameOf(global.bestGame.playerId)}
               </Text>
-              <Text className="font-body text-micro text-content-muted">
-                meilleur score sur une partie
-              </Text>
+              <Text className="font-body text-micro text-content-muted">{t('stats.bestGame')}</Text>
             </View>
             <Text className="font-display text-h2 tabular-nums text-primary">
               {global.bestGame.score}
@@ -77,8 +77,10 @@ export default function StatsScreen() {
                 {nameOf(global.bestRound.playerId)}
               </Text>
               <Text className="font-body text-micro text-content-muted">
-                meilleure manche — la {global.bestRound.roundNumber}
-                {global.bestRound.roundNumber === 1 ? 'ʳᵉ' : 'ᵉ'}
+                {t('stats.bestRound', {
+                  round: global.bestRound.roundNumber,
+                  suffix: global.bestRound.roundNumber === 1 ? 'ʳᵉ' : 'ᵉ',
+                })}
               </Text>
             </View>
             <Text className="font-display text-h2 tabular-nums text-primary">
@@ -88,12 +90,10 @@ export default function StatsScreen() {
         )}
       </View>
 
-      <SectionLabel>Classement all-time</SectionLabel>
+      <SectionLabel>{t('stats.allTime')}</SectionLabel>
       {global.ranking.length === 0 ? (
         <Text className="px-1 font-body text-caption text-content-muted">
-          Le classement se trie au <Text className="font-semi text-content">score moyen</Text>, pas
-          au cumul — sinon il récompenserait l’assiduité plutôt que le jeu. Il s’ouvre aux joueurs
-          ayant terminé {MIN_GAMES_FOR_RATES} parties.
+          {t('stats.rankingEmpty', { min: MIN_GAMES_FOR_RATES })}
         </Text>
       ) : (
         <>
@@ -107,7 +107,7 @@ export default function StatsScreen() {
                   asChild>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Fiche de ${nameOf(row.playerId)}`}
+                    accessibilityLabel={t('players.sheetOf', { name: nameOf(row.playerId) })}
                     className="min-h-touch flex-row items-center gap-3 rounded-card bg-surface-raised p-3 active:opacity-70">
                     <Text className="w-5 text-center font-title text-caption text-content-muted">
                       {index + 1}
@@ -118,7 +118,7 @@ export default function StatsScreen() {
                         {nameOf(row.playerId)}
                       </Text>
                       <Text className="font-body text-micro text-content-muted">
-                        {row.games} parties terminées
+                        {t('stats.rankingGames', { count: row.games })}
                       </Text>
                     </View>
                     <Text className="font-display text-h2 tabular-nums text-content">
@@ -130,8 +130,7 @@ export default function StatsScreen() {
             })}
           </View>
           <Text className="px-1 font-body text-micro text-content-muted">
-            Classement au score moyen par partie, pas au cumul : sinon il récompenserait l’assiduité
-            plutôt que le jeu. À partir de {MIN_GAMES_FOR_RATES} parties terminées.
+            {t('stats.rankingHint', { min: MIN_GAMES_FOR_RATES })}
           </Text>
         </>
       )}

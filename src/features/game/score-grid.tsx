@@ -1,7 +1,9 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 import type { GameState } from '@/core';
 import type { StoredRound } from '@/db/mappers';
+import { useT } from '@/i18n';
 import { PLAYER_COLORS } from '@/ui/tokens';
 
 import type { SeatedPlayer } from './use-game';
@@ -25,6 +27,7 @@ type ScoreGridProps = {
  * de l'historique : la même grille, lue à deux moments différents.
  */
 export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGridProps) {
+  const t = useT();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator contentContainerClassName="grow">
       <View>
@@ -54,7 +57,7 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
                 disabled={!onPressRound}
                 accessibilityRole={onPressRound ? 'button' : undefined}
                 accessibilityLabel={
-                  onPressRound ? `Corriger la manche ${result.roundNumber}` : undefined
+                  onPressRound ? t('sheet.correctRound', { round: result.roundNumber }) : undefined
                 }
                 className="flex-row items-center active:opacity-60">
                 <Text
@@ -69,6 +72,7 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
                     <View key={seat.id} style={{ width: SCORE_COLUMN }} className="px-0.5">
                       <View className="items-center rounded-tile bg-surface-raised py-1.5">
                         <Text
+                          maxFontSizeMultiplier={DENSE_MAX_SCALE}
                           className={`font-semi text-caption tabular-nums ${
                             !played || !score
                               ? 'text-content-muted'
@@ -95,7 +99,9 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
             const standing = state.standings.find((s) => s.playerId === String(seat.id));
             return (
               <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">
-                <Text className="font-display text-h2 tabular-nums text-content">
+                <Text
+                  maxFontSizeMultiplier={DENSE_MAX_SCALE}
+                  className="font-display text-h2 tabular-nums text-content">
                   {standing?.total ?? 0}
                 </Text>
                 <Text className="font-body text-micro text-content-muted">{standing?.rank}ᵉ</Text>

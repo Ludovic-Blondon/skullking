@@ -1,31 +1,34 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS, type Ruleset } from '@/core';
 import { createGame } from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
 import { RulesetOptions } from '@/features/game/ruleset-options';
+import { useT, type Translate } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 import { useTokens } from '@/ui/use-tokens';
 
 /** Résumé d'une ligne des règles choisies, pour le repli des options. */
-function summarizeRuleset(ruleset: Ruleset): string {
-  const parts = [ruleset.scoring === 'rascal' ? 'Rascal' : 'classique'];
-  if (ruleset.rascalCannonball) parts.push('boulet de canon');
-  if (ruleset.pirateAbilities) parts.push('pouvoirs');
-  if (!ruleset.advancedCards) parts.push('sans cartes avancées');
-  if (ruleset.edition === 'legacy') parts.push('ancienne édition');
+function summarizeRuleset(ruleset: Ruleset, t: Translate): string {
+  const parts = [t(ruleset.scoring === 'rascal' ? 'rules.rascal' : 'rules.classic')];
+  if (ruleset.rascalCannonball) parts.push(t('rules.summaryCannonball'));
+  if (ruleset.pirateAbilities) parts.push(t('rules.summaryPowers'));
+  if (!ruleset.advancedCards) parts.push(t('rules.summaryNoAdvanced'));
+  if (ruleset.edition === 'legacy') parts.push(t('rules.summaryLegacy'));
   if (ruleset.roundsPlan.length !== DEFAULT_RULESET.roundsPlan.length) {
-    parts.push(`${ruleset.roundsPlan.length} manches`);
+    parts.push(t('rules.summaryRounds', { count: ruleset.roundsPlan.length }));
   }
   return parts.join(', ');
 }
 
 export default function NewGameScreen() {
-  const t = useTokens();
+  const tokens = useTokens();
+  const t = useT();
   const { data: players } = useLiveQuery(activePlayersQuery());
   const [selected, setSelected] = useState<number[]>([]);
   const [name, setName] = useState('');
@@ -61,10 +64,7 @@ export default function NewGameScreen() {
     } catch (error) {
       // Une écriture qui échoue en silence est le pire des cas : l'utilisateur
       // retape son prénom sans comprendre pourquoi rien ne se passe.
-      Alert.alert(
-        'Impossible d’ajouter ce joueur',
-        error instanceof Error ? error.message : String(error),
-      );
+      Alert.alert(t('new.addFailed'), error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -75,13 +75,11 @@ export default function NewGameScreen() {
 
   return (
     <Screen edgeToEdgeBottom>
-      <SectionLabel>
-        Qui joue ? De {MIN_PLAYERS} à {MAX_PLAYERS} joueurs
-      </SectionLabel>
+      <SectionLabel>{t('new.who', { min: MIN_PLAYERS, max: MAX_PLAYERS })}</SectionLabel>
 
       {players.length === 0 ? (
-        <EmptyState emoji="🗺️" title="Aucun joueur enregistré">
-          Ajoutez les prénoms de la table : ils seront réutilisables d’une partie à l’autre.
+        <EmptyState emoji="🗺️" title={t('new.noPlayer')}>
+          {t('new.noPlayerHint')}
         </EmptyState>
       ) : (
         <View className="flex-row flex-wrap gap-2">
@@ -117,8 +115,9 @@ export default function NewGameScreen() {
           value={name}
           onChangeText={setName}
           onSubmitEditing={addPlayer}
-          placeholder="Ajouter un joueur"
-          placeholderTextColor={t.contentMuted}
+          placeholder={t('new.addPlayer')}
+          placeholderTextColor={tokens.contentMuted}
+          maxFontSizeMultiplier={1.5}
           returnKeyType="done"
           autoCapitalize="words"
           testID="new-player-name"
@@ -128,7 +127,7 @@ export default function NewGameScreen() {
           onPress={() => void addPlayer()}
           disabled={!name.trim()}
           accessibilityRole="button"
-          accessibilityLabel="Ajouter ce joueur"
+          accessibilityLabel={t('new.addThisPlayer')}
           testID="new-player-add"
           className={`size-touch items-center justify-center rounded-full active:opacity-80 ${
             name.trim() ? 'bg-primary' : 'bg-border'
@@ -144,7 +143,7 @@ export default function NewGameScreen() {
 
       {seated.length > 0 && (
         <>
-          <SectionLabel>Ordre à table</SectionLabel>
+          <SectionLabel>{t('new.seating')}</SectionLabel>
           <View className="gap-2">
             {seated.map((player, index) => (
               <View
@@ -156,7 +155,9 @@ export default function NewGameScreen() {
                 <Avatar emoji={player.emoji} color={player.color} size="sm" />
                 <Text className="flex-1 font-semi text-body text-content">{player.name}</Text>
                 {index === 0 && (
-                  <Text className="font-body text-micro text-content-muted">1ʳᵉ donne</Text>
+                  <Text className="font-body text-micro text-content-muted">
+                    {t('new.firstDealer')}
+                  </Text>
                 )}
               </View>
             ))}
@@ -168,11 +169,13 @@ export default function NewGameScreen() {
         onPress={() => setShowOptions((open) => !open)}
         accessibilityRole="button"
         accessibilityState={{ expanded: showOptions }}
-        accessibilityLabel="Options de règles"
+        accessibilityLabel={t('new.options')}
         testID="toggle-options"
         className="min-h-touch flex-row items-center justify-between gap-2 px-1 active:opacity-70">
         <Text className="font-semi text-caption text-content-muted">
-          Options de règles{showOptions ? '' : ` — ${summarizeRuleset(ruleset)}`}
+          {showOptions
+            ? t('new.options')
+            : t('new.optionsSummary', { summary: summarizeRuleset(ruleset, t) })}
         </Text>
         <Text className="font-title text-caption text-content-muted">
           {showOptions ? '▴' : '▾'}
@@ -184,7 +187,7 @@ export default function NewGameScreen() {
       <Pressable
         onPress={() => {
           if (!enough) {
-            Alert.alert('Il faut au moins deux joueurs', 'Sélectionnez les joueurs de la table.');
+            Alert.alert(t('new.needTwo'), t('new.needTwoBody'));
             return;
           }
           void start();
@@ -192,12 +195,12 @@ export default function NewGameScreen() {
         disabled={!enough}
         testID="start-game"
         accessibilityRole="button"
-        accessibilityLabel="Démarrer la partie"
+        accessibilityLabel={t('new.startLabel')}
         className={`mt-2 min-h-touch items-center justify-center rounded-card p-4 active:opacity-80 ${
           enough ? 'bg-primary' : 'bg-border'
         }`}>
         <Text className={`font-title text-h2 ${enough ? 'text-primary-fg' : 'text-content-muted'}`}>
-          C&apos;est parti{enough ? ` — ${selected.length} joueurs` : ''}
+          {enough ? t('new.startCount', { count: selected.length }) : t('new.start')}
         </Text>
       </Pressable>
     </Screen>

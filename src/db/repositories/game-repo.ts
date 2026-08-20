@@ -276,8 +276,14 @@ async function fillBlanks(roundId: number, fields: ('bid' | 'tricks')[]): Promis
 export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Promise<void> {
   if (phase === 'results') {
     const roundId = await currentRoundId(gameId);
-    // Les annonces laissées telles quelles valent 0 : c'est ce que la table a lu.
-    if (roundId !== undefined) await fillBlanks(roundId, ['bid']);
+    // Annonces **et** plis : à partir d'ici, le 0 affiché est la valeur, et
+    // l'aperçu doit calculer exactement ce que la validation calculera.
+    //
+    // Ne matérialiser que les annonces laissait un joueur qui annonce 0 et ne
+    // prend aucun pli — donc ne touche rien — hors du décompte : il n'était pas
+    // « exact » aux yeux du moteur, et son alliance de Butin tombait à l'écran
+    // alors qu'elle tenait après validation.
+    if (roundId !== undefined) await fillBlanks(roundId, ['bid', 'tricks']);
   }
   await db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId));
 }

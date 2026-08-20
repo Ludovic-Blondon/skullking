@@ -1,5 +1,7 @@
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { BONUS_POINTS, RASCAL_POINTS, ROUND_BONUS_LIMITS, type BonusType } from '@/core';
 import {
@@ -10,7 +12,10 @@ import {
 } from '@/db/repositories/game-repo';
 import { CAPTURE_LABELS, COUNTER_UNITS } from '@/features/game/bonus-labels';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
+import { useT } from '@/i18n';
+import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 import { Avatar } from '@/ui/avatar';
+import { AnimatedNumber } from '@/ui/animated-number';
 import { Stepper } from '@/ui/stepper';
 
 const TOGGLES: BonusType[] = [
@@ -32,6 +37,7 @@ function Row({ children }: { children: React.ReactNode }) {
 }
 
 export default function BonusScreen() {
+  const t = useT();
   const { id, playerId } = useLocalSearchParams<{ id: string; playerId: string }>();
   const gameId = Number(id);
   const numericPlayerId = Number(playerId);
@@ -82,18 +88,20 @@ export default function BonusScreen() {
   return (
     <View className="flex-1 bg-surface">
       {/* Pas d'en-tête natif sur cette feuille : la marge haute dégage la poignée. */}
-      <ScrollView contentContainerClassName="gap-2.5 px-4 pb-8 pt-7">
+      <ScrollView
+        contentContainerClassName="mx-auto w-full gap-2.5 px-4 pb-8 pt-7"
+        contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
         <View className="flex-row items-center gap-2.5">
           <Avatar emoji={player.emoji} color={player.color} size="sm" />
-          <Text className="font-title text-h2 text-content">Bonus — {player.name}</Text>
+          <Text className="font-title text-h2 text-content">
+            {t('bonus.title', { name: player.name })}
+          </Text>
         </View>
 
         {!exact && (
           <View className="flex-row items-center gap-2 rounded-field border border-negative bg-negative/10 px-3 py-2.5">
             <Text className="text-caption">⚠️</Text>
-            <Text className="flex-1 font-semi text-caption text-negative">
-              Mise ratée — bonus sans effet
-            </Text>
+            <Text className="flex-1 font-semi text-caption text-negative">{t('bonus.missed')}</Text>
           </View>
         )}
 
@@ -108,7 +116,10 @@ export default function BonusScreen() {
             return (
               <Pressable
                 key={type}
-                onPress={() => void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1)}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1);
+                }}
                 disabled={locked}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: mine, disabled: locked }}
@@ -120,10 +131,12 @@ export default function BonusScreen() {
                   className={`font-semi text-caption ${mine ? 'text-accent-fg' : 'text-content'} ${
                     mine && !exact ? 'line-through' : ''
                   }`}>
-                  {CAPTURE_LABELS[type].label} +{value}
+                  {t(CAPTURE_LABELS[type].key)} {t('bonus.value', { value })}
                 </Text>
                 {locked && holder && (
-                  <Text className="font-body text-micro text-content-muted">· {holder.name}</Text>
+                  <Text className="font-body text-micro text-content-muted">
+                    {t('bonus.takenBy', { name: holder.name })}
+                  </Text>
                 )}
               </Pressable>
             );
@@ -145,9 +158,12 @@ export default function BonusScreen() {
           return (
             <Row key={type}>
               <Text className="flex-1 font-semi text-caption text-content">
-                {CAPTURE_LABELS[type].emoji} {CAPTURE_LABELS[type].label}{' '}
+                {CAPTURE_LABELS[type].emoji} {t(CAPTURE_LABELS[type].key)}{' '}
                 <Text className="font-body text-content-muted">
-                  +{value}/{COUNTER_UNITS[type]}
+                  {t('bonus.per', {
+                    value,
+                    unit: COUNTER_UNITS[type] ? t(COUNTER_UNITS[type]) : '',
+                  })}
                 </Text>
               </Text>
               <Stepper
@@ -155,7 +171,7 @@ export default function BonusScreen() {
                 onChange={(count) => void setCaptureBonus(round.id, numericPlayerId, type, count)}
                 max={Math.max(0, limit - others)}
                 size="sm"
-                label={CAPTURE_LABELS[type].label}
+                label={t(CAPTURE_LABELS[type].key)}
               />
             </Row>
           );
@@ -164,7 +180,10 @@ export default function BonusScreen() {
         {game.ruleset.advancedCards && seats.length > 2 && (
           <View className="gap-2 rounded-field bg-surface-raised p-3">
             <Text className="font-semi text-caption text-content">
-              💰 Butin <Text className="font-body text-content-muted">+{scale.loot} chacun</Text>
+              💰 {t('bonus.loot')}{' '}
+              <Text className="font-body text-content-muted">
+                {t('bonus.each', { value: scale.loot })}
+              </Text>
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {seats
@@ -176,11 +195,15 @@ export default function BonusScreen() {
                     <Pressable
                       key={ally.id}
                       disabled={full}
-                      onPress={() =>
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: allied, disabled: full }}
+                      accessibilityLabel={`${t('bonus.loot')} — ${ally.name}`}
+                      onPress={() => {
+                        void Haptics.selectionAsync();
                         void (allied
                           ? removeLootAlliance(round.id, numericPlayerId, ally.id)
-                          : addLootAlliance(round.id, numericPlayerId, ally.id))
-                      }
+                          : addLootAlliance(round.id, numericPlayerId, ally.id));
+                      }}
                       className={`min-h-touch justify-center rounded-full px-3.5 active:opacity-70 ${
                         allied ? 'bg-accent' : 'bg-surface-sunken'
                       } ${full ? 'opacity-40' : ''}`}>
@@ -200,10 +223,9 @@ export default function BonusScreen() {
         {game.ruleset.scoring === 'rascal' && game.ruleset.rascalCannonball && (
           <Row>
             <View className="flex-1">
-              <Text className="font-semi text-caption text-content">💣 Boulet de canon</Text>
+              <Text className="font-semi text-caption text-content">{t('bonus.cannonball')}</Text>
               <Text className="font-body text-micro text-content-muted">
-                Tout ou rien : {RASCAL_POINTS.cannonballPerCard} par carte si la mise est exacte,
-                rien sinon
+                {t('bonus.cannonballHint', { value: RASCAL_POINTS.cannonballPerCard })}
               </Text>
             </View>
             <View className="flex-row gap-1.5">
@@ -213,7 +235,9 @@ export default function BonusScreen() {
                   onPress={() => void updateEntry(round.id, numericPlayerId, { cannonball: armed })}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: entry.cannonball === armed }}
-                  accessibilityLabel={`Boulet de canon : ${armed ? 'armé' : 'non'}`}
+                  accessibilityLabel={t('bonus.cannonballChoice', {
+                    state: t(armed ? 'bonus.armed' : 'bonus.notArmed'),
+                  })}
                   className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
                     entry.cannonball === armed ? 'bg-primary' : 'bg-surface-sunken'
                   }`}>
@@ -221,7 +245,7 @@ export default function BonusScreen() {
                     className={`font-semi text-caption ${
                       entry.cannonball === armed ? 'text-primary-fg' : 'text-content-muted'
                     }`}>
-                    {armed ? 'Armé' : 'Non'}
+                    {t(armed ? 'bonus.armed' : 'bonus.notArmed')}
                   </Text>
                 </Pressable>
               ))}
@@ -233,17 +257,22 @@ export default function BonusScreen() {
           <>
             <Row>
               <View className="flex-1">
-                <Text className="font-semi text-caption text-content">🏴 Harry le Géant</Text>
+                <Text className="font-semi text-caption text-content">{t('bonus.harry')}</Text>
                 <Text className="font-body text-micro text-content-muted">
                   {entry.bidModifier === 0
-                    ? 'Mise inchangée'
-                    : `Mise ${entry.bid} → ${effectiveBid}`}
+                    ? t('bonus.harryUnchanged')
+                    : t('bonus.harryShift', { from: entry.bid ?? 0, to: effectiveBid })}
                 </Text>
               </View>
               <View className="flex-row items-center gap-1 rounded-full bg-surface-sunken p-1">
                 {([-1, 0, 1] as const).map((modifier) => (
                   <Pressable
                     key={modifier}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: entry.bidModifier === modifier }}
+                    accessibilityLabel={`${t('bonus.harry')} : ${
+                      modifier === 0 ? '=' : modifier > 0 ? '+1' : '−1'
+                    }`}
                     onPress={() =>
                       void updateEntry(round.id, numericPlayerId, { bidModifier: modifier })
                     }
@@ -263,15 +292,20 @@ export default function BonusScreen() {
 
             <Row>
               <View className="flex-1">
-                <Text className="font-semi text-caption text-content">🎲 Pari de Rascal</Text>
+                <Text className="font-semi text-caption text-content">{t('bonus.rascal')}</Text>
                 <Text className="font-body text-micro text-content-muted">
-                  Gagné si la mise est exacte, débité sinon
+                  {t('bonus.rascalHint')}
                 </Text>
               </View>
               <View className="flex-row gap-1.5">
                 {([0, 10, 20] as const).map((bet) => (
                   <Pressable
                     key={bet}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: entry.rascalBet === bet }}
+                    accessibilityLabel={`${t('bonus.rascal')} : ${
+                      bet === 0 ? t('bonus.rascalNone') : bet
+                    }`}
                     onPress={() => void updateEntry(round.id, numericPlayerId, { rascalBet: bet })}
                     className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
                       entry.rascalBet === bet ? 'bg-primary' : 'bg-surface-sunken'
@@ -280,7 +314,7 @@ export default function BonusScreen() {
                       className={`font-semi text-caption ${
                         entry.rascalBet === bet ? 'text-primary-fg' : 'text-content-muted'
                       }`}>
-                      {bet === 0 ? 'aucun' : bet}
+                      {bet === 0 ? t('bonus.rascalNone') : bet}
                     </Text>
                   </Pressable>
                 ))}
@@ -292,11 +326,10 @@ export default function BonusScreen() {
         <Row>
           <View className="flex-1">
             <Text className="font-semi text-caption text-content">
-              ✏️ Ajustement manuel <Text className="font-body text-content-muted">±10</Text>
+              {t('bonus.custom')}{' '}
+              <Text className="font-body text-content-muted">{t('bonus.customUnit')}</Text>
             </Text>
-            <Text className="font-body text-micro text-content-muted">
-              Règle maison, cas non couvert
-            </Text>
+            <Text className="font-body text-micro text-content-muted">{t('bonus.customHint')}</Text>
           </View>
           <View className="flex-row items-center gap-2">
             <Pressable
@@ -307,7 +340,7 @@ export default function BonusScreen() {
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Retirer 10 points"
+              accessibilityLabel={t('bonus.remove10')}
               className="size-7 items-center justify-center rounded-full bg-border active:opacity-60">
               <Text className="font-title text-caption text-content-muted">−</Text>
             </Pressable>
@@ -323,7 +356,7 @@ export default function BonusScreen() {
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Ajouter 10 points"
+              accessibilityLabel={t('bonus.add10')}
               className="size-7 items-center justify-center rounded-full bg-primary active:opacity-60">
               <Text className="font-title text-caption text-primary-fg">+</Text>
             </Pressable>
@@ -331,23 +364,23 @@ export default function BonusScreen() {
         </Row>
 
         <View className="flex-row items-center justify-between px-1 pt-2">
-          <Text className="font-title text-h2 text-content">
-            Total{' '}
-            <Text
-              className={
+          <View className="flex-row items-baseline gap-1.5">
+            <Text className="font-title text-h2 text-content">{t('bonus.total')}</Text>
+            <AnimatedNumber
+              value={sheetTotal}
+              format={(points) => `${points > 0 ? '+' : ''}${points}`}
+              className={`font-title text-h2 ${
                 sheetTotal > 0
                   ? 'text-positive'
                   : sheetTotal < 0
                     ? 'text-negative'
                     : 'text-content-muted'
-              }>
-              {sheetTotal > 0 ? '+' : ''}
-              {sheetTotal}
-            </Text>
-          </Text>
+              }`}
+            />
+          </View>
           {!exact && captured > 0 && (
             <Text className="font-body text-micro text-content-muted">
-              {captured} pts annulés par la mise ratée
+              {t('bonus.lostToMiss', { points: captured })}
             </Text>
           )}
         </View>
