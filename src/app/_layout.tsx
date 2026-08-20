@@ -11,15 +11,23 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
+import { useEffect } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import migrations from '../../drizzle/migrations';
 import { db } from '@/db/client';
+import { useSettings } from '@/features/settings/use-settings';
+import { useT } from '@/i18n';
 import { navigationThemes } from '@/ui/navigation-theme';
 
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const { theme } = useSettings();
+  const t = useT();
+  // Le thème choisi dans les réglages pilote NativeWind ; « système » lui rend
+  // la main.
+  useEffect(() => setColorScheme(theme), [theme, setColorScheme]);
   const scheme = colorScheme === 'dark' ? 'dark' : 'light';
   // Migrations versionnées, embarquées dans le bundle (PLAN.md §5).
   const { success, error } = useMigrations(db, migrations);
@@ -37,9 +45,7 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         {error ? (
           <View className="flex-1 items-center justify-center gap-2 bg-surface p-8">
-            <Text className="text-center font-title text-h2 text-negative">
-              La base de données n&apos;a pas pu être préparée
-            </Text>
+            <Text className="text-center font-title text-h2 text-negative">{t('db.failed')}</Text>
             <Text className="text-center font-body text-caption text-content-muted">
               {error.message}
             </Text>
@@ -51,9 +57,9 @@ export default function RootLayout() {
         ) : (
           <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'Outfit_700Bold' } }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="settings" options={{ title: 'Réglages' }} />
-            <Stack.Screen name="rules" options={{ title: 'Aide-mémoire du barème' }} />
-            <Stack.Screen name="game/new" options={{ title: 'Nouvelle partie' }} />
+            <Stack.Screen name="settings" options={{ title: t('route.settings') }} />
+            <Stack.Screen name="rules" options={{ title: t('route.rules') }} />
+            <Stack.Screen name="game/new" options={{ title: t('route.newGame') }} />
             <Stack.Screen
               // L'écran porte son propre en-tête (« Manche 4/10 · 4 cartes ») :
               // le déclarer ici plutôt que dans l'écran évite que l'en-tête
@@ -64,7 +70,7 @@ export default function RootLayout() {
             <Stack.Screen
               name="game/[id]/scoresheet"
               options={{
-                title: 'Feuille de score',
+                title: t('route.scoresheet'),
                 presentation: 'formSheet',
                 sheetGrabberVisible: true,
               }}
@@ -79,8 +85,8 @@ export default function RootLayout() {
                 sheetGrabberVisible: true,
               }}
             />
-            <Stack.Screen name="game/[id]/end" options={{ title: 'Fin de partie' }} />
-            <Stack.Screen name="history/[id]" options={{ title: 'Détail de la partie' }} />
+            <Stack.Screen name="game/[id]/end" options={{ title: t('route.gameEnd') }} />
+            <Stack.Screen name="history/[id]" options={{ title: t('route.gameDetail') }} />
             <Stack.Screen
               // La fiche porte son propre titre : le prénom, éditable sur place.
               name="players/[id]"

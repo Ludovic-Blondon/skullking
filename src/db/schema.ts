@@ -27,6 +27,16 @@ import type { BonusType, Ruleset } from '@/core';
 /** Types d'événements stockés : les captures du moteur, plus le Butin. */
 export type BonusEventType = BonusType | 'loot';
 
+/**
+ * Préférences de l'app, en clé/valeur (PLAN.md §7.4 : langue, thème, écran
+ * allumé). Une table plutôt qu'un stockage à part : tout ce que l'app retient
+ * vit déjà dans cette base, et l'export les emportera le jour où ce sera utile.
+ */
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export const players = sqliteTable('players', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
@@ -166,6 +176,7 @@ export const bonusEventsRelations = relations(bonusEvents, ({ one }) => ({
   player: one(players, { fields: [bonusEvents.playerId], references: [players.id] }),
 }));
 
+export type Setting = typeof settings.$inferSelect;
 export type Player = typeof players.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type Round = typeof rounds.$inferSelect;
