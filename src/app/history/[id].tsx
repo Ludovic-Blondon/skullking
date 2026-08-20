@@ -7,7 +7,7 @@ import { ScoreGrid } from '@/features/game/score-grid';
 import { useGame } from '@/features/game/use-game';
 import { useLanguage, useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
-import { SectionLabel } from '@/ui/screen';
+import { SectionLabel, CONTENT_MAX_WIDTH } from '@/ui/screen';
 
 const STATUS_KEYS = {
   in_progress: 'history.statusInProgress',
@@ -68,7 +68,8 @@ export default function GameHistoryDetailScreen() {
   return (
     <ScrollView
       className="flex-1 bg-surface"
-      contentContainerClassName="gap-3 p-4 pb-8"
+      contentContainerClassName="mx-auto w-full gap-3 p-4 pb-8"
+      contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}
       contentInsetAdjustmentBehavior="automatic">
       <View className="gap-1 rounded-card bg-surface-raised p-4">
         <Text className="font-body text-micro uppercase tracking-widest text-content-muted">

@@ -10,14 +10,26 @@ type ScreenProps = {
   transparent?: boolean;
 };
 
+/**
+ * Largeur maximale du contenu.
+ *
+ * Un téléphone en portrait est déjà plus étroit : le plafond ne change rien
+ * pour lui. Il n'agit que sur iPad et en paysage, où une ligne courant d'un
+ * bord à l'autre devient pénible à lire et à viser du pouce.
+ */
+export const CONTENT_MAX_WIDTH = 600;
+
 /** Conteneur d'écran : fond thémé, scroll, marges cohérentes. */
 export function Screen({ children, edgeToEdgeBottom = false, transparent = false }: ScreenProps) {
   const insets = useSafeAreaInsets();
   return (
     <ScrollView
       className={`flex-1 ${transparent ? '' : 'bg-surface'}`}
-      contentContainerClassName="gap-3 p-4"
-      contentContainerStyle={{ paddingBottom: edgeToEdgeBottom ? insets.bottom + 16 : 16 }}
+      contentContainerClassName="mx-auto w-full gap-3 p-4"
+      contentContainerStyle={{
+        maxWidth: CONTENT_MAX_WIDTH,
+        paddingBottom: edgeToEdgeBottom ? insets.bottom + 16 : 16,
+      }}
       contentInsetAdjustmentBehavior="automatic"
       // Sans ça, clavier ouvert, le premier appui sur un bouton ne sert qu'à
       // fermer le clavier : ajouter un joueur demandait deux gestes.

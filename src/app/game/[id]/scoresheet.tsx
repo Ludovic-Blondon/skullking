@@ -5,6 +5,7 @@ import { reopenRound } from '@/db/repositories/game-repo';
 import { ScoreGrid } from '@/features/game/score-grid';
 import { useGame } from '@/features/game/use-game';
 import { useT } from '@/i18n';
+import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 
 /**
  * Feuille de score de la partie en cours (PLAN.md §7.2). Taper une manche la
@@ -36,7 +37,8 @@ export default function ScoreSheetScreen() {
   return (
     <ScrollView
       className="flex-1 bg-surface"
-      contentContainerClassName="p-4"
+      contentContainerClassName="mx-auto w-full p-4"
+      contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}
       contentInsetAdjustmentBehavior="automatic">
       <ScoreGrid
         seats={seats}
