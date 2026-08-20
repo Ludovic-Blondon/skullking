@@ -157,7 +157,7 @@ describe('précision d’annonce', () => {
     // Pouvoirs désactivés : le modificateur est ignoré, la mise reste 2.
     const withoutPowers: StatsInput = {
       ...input,
-      games: [{ ...input.games[0], ruleset: DEFAULT_RULESET }],
+      games: [{ ...input.games[0], ruleset: { ...DEFAULT_RULESET, pirateAbilities: false } }],
     };
     expect(computeStats(withoutPowers).players.get(1)).toMatchObject({ exactRounds: 0 });
   });

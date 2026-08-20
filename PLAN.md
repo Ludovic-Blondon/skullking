@@ -280,6 +280,8 @@ flowchart LR
 
 **Configuration de partie** : sélection dans le roster (tri par fréquence de jeu) + création éclair d'un joueur (prénom → emoji/couleur auto), ordre autour de la table par glisser-déposer (détermine la rotation du donneur), options repliées par défaut : édition de règles, cartes avancées, pouvoirs des pirates, variante de score (classique/Rascal), nb de manches. Un joueur qui découvre l'app ne voit que : joueurs → « C'est parti ».
 
+Les options **partent de la dernière partie créée** (ajouté le 20/08) : une table rejoue presque toujours de la même façon, et re-cocher les mêmes cases chaque soir est une corvée sans contrepartie. Les règles d'usine, elles, penchent vers « tout est là » — cartes avancées **et pouvoirs des pirates activés** : une table qui joue les pouvoirs sans les trouver dans l'app est bloquée en pleine manche, alors qu'une table qui ne les joue pas laisse simplement un bouton de côté. Le repli des options affiche un résumé des seuls **écarts** au défaut (« sans pouvoirs », « ancienne édition »…).
+
 ### 7.2 La partie — l'écran cœur
 
 Un seul écran, deux phases par manche, la feuille de score toujours accessible :
@@ -325,7 +327,7 @@ Bottom sheet par joueur, en phase Résultats. **Saisie sémantique, pas de calcu
 - **Fin de partie** : podium animé, courbe d'évolution des scores (victory-native), **awards** auto (§8), gestion d'égalité (« manche supplémentaire » officielle ou co-vainqueurs), partage de la feuille de score en image (backlog v1.1), « revanche » (relance avec les mêmes joueurs).
 - **Historique** : liste antichronologique (date, joueurs, vainqueur, score), détail = feuille de score complète + bonus par manche ; correction possible même après coup ; suppression.
 - **Joueurs** : roster persistant (création à la volée pendant une config de partie, ou gestion dédiée), fiche joueur = identité + stats (§8) ; archivage.
-- **Réglages** : langue (FR/EN), thème (système/clair/sombre), keep-awake, édition de règles par défaut, export/import JSON, aide-mémoire du barème, à-propos + mention « non affilié à Grandpa Beck's Games ».
+- **Réglages** : langue (FR/EN), thème (système/clair/sombre), keep-awake, règles par défaut (reprises de la dernière partie, §7.1 — pas d'écran dédié), export/import JSON, aide-mémoire du barème, à-propos + mention « non affilié à Grandpa Beck's Games ».
 
 ---
 
