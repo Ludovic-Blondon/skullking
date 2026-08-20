@@ -14,6 +14,7 @@ import {
 import { firstBlockingIssue, issueMessage } from '@/features/game/issue-messages';
 import { PlayerRow, type PlayerRowTone } from '@/features/game/player-row';
 import { useGame } from '@/features/game/use-game';
+import { useKeepScreenAwake } from '@/features/settings/use-keep-awake';
 import { ValidationBar } from '@/features/game/validation-bar';
 import { Avatar } from '@/ui/avatar';
 import { Watermark } from '@/ui/screen';
@@ -51,6 +52,7 @@ export default function GameScreen() {
   const gameId = Number(id);
   const view = useGame(gameId);
   const insets = useSafeAreaInsets();
+  useKeepScreenAwake();
 
   if (!view.ready || !view.game || !view.current) {
     return (
