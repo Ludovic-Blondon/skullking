@@ -70,7 +70,7 @@ describe('Harry le Géant', () => {
   it('est sans effet quand les pouvoirs des pirates sont désactivés', () => {
     const [score] = scoreRound(
       round([player('a', 2, 3, { bidModifier: 1 })], { cardsDealt: 5 }),
-      rules(),
+      rules({ pirateAbilities: false }),
     );
     expect(score.effectiveBid).toBe(2);
     expect(score.exact).toBe(false);
@@ -115,7 +115,7 @@ describe('pari de Rascal le Flambeur', () => {
   it('est ignoré quand les pouvoirs des pirates sont désactivés', () => {
     const [score] = scoreRound(
       round([player('a', 2, 1, { rascalBet: 20 })], { cardsDealt: 4 }),
-      rules(),
+      rules({ pirateAbilities: false }),
     );
     expect(score.rascalBet).toBe(0);
     expect(score.total).toBe(-10);

@@ -139,7 +139,7 @@ describe('validateRound — pouvoirs des pirates', () => {
       round([player('a', 1, 1, { bidModifier: 1 }), player('b', 0, 0, { rascalBet: 10 })], {
         cardsDealt: 1,
       }),
-      rules(),
+      rules({ pirateAbilities: false }),
     );
     expect(codes(issues).filter((code) => code === 'pirateAbilitiesDisabled')).toHaveLength(2);
   });
