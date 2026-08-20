@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 
 import { DEFAULT_ROUNDS_PLAN, type Ruleset } from '@/core';
+import { useT } from '@/i18n';
 import { Stepper } from '@/ui/stepper';
 
 /** Un choix parmi deux ou trois, façon segmenté. */
@@ -64,22 +65,21 @@ export function RulesetOptions({
   ruleset: Ruleset;
   onChange: (ruleset: Ruleset) => void;
 }) {
+  const t = useT();
   const patch = (values: Partial<Ruleset>) => onChange({ ...ruleset, ...values });
   const rounds = ruleset.roundsPlan.length;
 
   return (
     <View className="gap-2">
       <Segmented
-        label="Variante de score"
-        hint={
-          ruleset.scoring === 'classic'
-            ? 'Barème du livret : 20 par pli annoncé, ±10 par carte sur une mise 0'
-            : 'Rascal le Flambeur : un potentiel par manche, jamais de score négatif'
-        }
+        label={t('rules.scoring')}
+        hint={t(
+          ruleset.scoring === 'classic' ? 'rules.scoringClassicHint' : 'rules.scoringRascalHint',
+        )}
         value={ruleset.scoring}
         options={[
-          { value: 'classic', label: 'Classique' },
-          { value: 'rascal', label: 'Rascal' },
+          { value: 'classic', label: t('rules.classic') },
+          { value: 'rascal', label: t('rules.rascal') },
         ]}
         onChange={(scoring) =>
           // Le Boulet de canon n'existe que dans le décompte Rascal : revenir au
@@ -90,60 +90,56 @@ export function RulesetOptions({
 
       {ruleset.scoring === 'rascal' && (
         <Segmented
-          label="Boulet de canon"
-          hint="Tout ou rien : le potentiel monte, mais un pli d’écart ne rapporte plus rien"
+          label={t('rules.cannonball')}
+          hint={t('rules.cannonballHint')}
           value={ruleset.rascalCannonball}
           options={[
-            { value: false, label: 'Sans' },
-            { value: true, label: 'Avec' },
+            { value: false, label: t('rules.without') },
+            { value: true, label: t('rules.with') },
           ]}
           onChange={(rascalCannonball) => patch({ rascalCannonball })}
         />
       )}
 
       <Segmented
-        label="Pouvoirs des pirates"
-        hint="Harry le Géant (mise ±1) et le pari de Rascal (±10 / ±20)"
+        label={t('rules.powers')}
+        hint={t('rules.powersHint')}
         value={ruleset.pirateAbilities}
         options={[
-          { value: false, label: 'Sans' },
-          { value: true, label: 'Avec' },
+          { value: false, label: t('rules.without') },
+          { value: true, label: t('rules.with') },
         ]}
         onChange={(pirateAbilities) => patch({ pirateAbilities })}
       />
 
       <Segmented
-        label="Cartes avancées"
-        hint="Kraken, Baleine blanche et Butin"
+        label={t('rules.advanced')}
+        hint={t('rules.advancedHint')}
         value={ruleset.advancedCards}
         options={[
-          { value: false, label: 'Sans' },
-          { value: true, label: 'Avec' },
+          { value: false, label: t('rules.without') },
+          { value: true, label: t('rules.with') },
         ]}
         onChange={(advancedCards) => patch({ advancedCards })}
       />
 
       <Segmented
-        label="Édition"
-        hint={
-          ruleset.edition === 'current'
-            ? 'Boîte 2021 et suivantes'
-            : 'Avant 2021 : Sirène qui capture le Skull King à +50, pas de « Pirate capture Sirène »'
-        }
+        label={t('rules.edition')}
+        hint={t(
+          ruleset.edition === 'current' ? 'rules.editionCurrentHint' : 'rules.editionLegacyHint',
+        )}
         value={ruleset.edition}
         options={[
-          { value: 'current', label: '2021+' },
-          { value: 'legacy', label: 'Ancienne' },
+          { value: 'current', label: t('rules.editionCurrent') },
+          { value: 'legacy', label: t('rules.editionLegacy') },
         ]}
         onChange={(edition) => patch({ edition })}
       />
 
       <View className="min-h-touch flex-row items-center justify-between gap-3 rounded-field bg-surface-raised p-3">
         <View className="flex-1">
-          <Text className="font-semi text-caption text-content">Nombre de manches</Text>
-          <Text className="font-body text-micro text-content-muted">
-            La manche N distribue N cartes
-          </Text>
+          <Text className="font-semi text-caption text-content">{t('rules.rounds')}</Text>
+          <Text className="font-body text-micro text-content-muted">{t('rules.roundsHint')}</Text>
         </View>
         <Stepper
           value={rounds}
@@ -153,7 +149,7 @@ export function RulesetOptions({
           min={1}
           max={DEFAULT_ROUNDS_PLAN.length}
           size="sm"
-          label="Nombre de manches"
+          label={t('rules.rounds')}
         />
       </View>
     </View>

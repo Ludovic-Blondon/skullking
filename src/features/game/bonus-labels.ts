@@ -1,31 +1,31 @@
 import type { BonusType } from '@/core';
+import type { MessageKey } from '@/i18n';
 
 /**
  * Libellés de bonus — sémantiques, jamais des points bruts (PLAN.md §7.3).
  * Les valeurs, elles, viennent toujours du barème du `Ruleset`.
  *
- * Partagés entre la saisie (bottom sheet de manche) et la lecture (détail
- * d'une partie dans l'historique) : un bonus doit se nommer pareil des deux
- * côtés. Ils partiront dans les fichiers de traduction en P6.
+ * Ce module ne renvoie que des **clés** : la saisie et la lecture nomment ainsi
+ * un bonus de la même façon, dans la langue de l'utilisateur.
  */
-export const CAPTURE_LABELS: Record<BonusType, { emoji: string; label: string }> = {
-  yellow14: { emoji: '🟡', label: '14 jaune' },
-  green14: { emoji: '🟢', label: '14 vert' },
-  purple14: { emoji: '🟣', label: '14 violet' },
-  black14: { emoji: '⚫', label: '14 noir' },
-  mermaidCapturesSkullKing: { emoji: '⚔️', label: 'Sirène capture le Skull King' },
-  skullKingCapturesPirate: { emoji: '☠️', label: 'Skull King capture des pirates' },
-  pirateCapturesMermaid: { emoji: '🧜', label: 'Pirate capture des sirènes' },
+export const CAPTURE_LABELS: Record<BonusType, { emoji: string; key: MessageKey }> = {
+  yellow14: { emoji: '🟡', key: 'bonus.yellow14' },
+  green14: { emoji: '🟢', key: 'bonus.green14' },
+  purple14: { emoji: '🟣', key: 'bonus.purple14' },
+  black14: { emoji: '⚫', key: 'bonus.black14' },
+  mermaidCapturesSkullKing: { emoji: '⚔️', key: 'bonus.mermaidCapturesSkullKing' },
+  skullKingCapturesPirate: { emoji: '☠️', key: 'bonus.skullKingCapturesPirate' },
+  pirateCapturesMermaid: { emoji: '🧜', key: 'bonus.pirateCapturesMermaid' },
 };
 
 /** Ce que compte un compteur de bonus, la valeur venant du barème. */
-export const COUNTER_UNITS: Partial<Record<BonusType, string>> = {
-  skullKingCapturesPirate: 'pirate',
-  pirateCapturesMermaid: 'sirène',
+export const COUNTER_UNITS: Partial<Record<BonusType, MessageKey>> = {
+  skullKingCapturesPirate: 'bonus.unit.pirate',
+  pirateCapturesMermaid: 'bonus.unit.mermaid',
 };
 
 /** Libellé d'un événement stocké, Butin compris. */
-export function bonusLabel(type: string): { emoji: string; label: string } {
-  if (type === 'loot') return { emoji: '💰', label: 'Butin' };
-  return CAPTURE_LABELS[type as BonusType] ?? { emoji: '✨', label: type };
+export function bonusLabel(type: string): { emoji: string; key: MessageKey } {
+  if (type === 'loot') return { emoji: '💰', key: 'bonus.loot' };
+  return CAPTURE_LABELS[type as BonusType] ?? { emoji: '✨', key: 'bonus.loot' };
 }

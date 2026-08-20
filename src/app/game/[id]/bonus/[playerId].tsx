@@ -10,6 +10,7 @@ import {
 } from '@/db/repositories/game-repo';
 import { CAPTURE_LABELS, COUNTER_UNITS } from '@/features/game/bonus-labels';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
+import { useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { Stepper } from '@/ui/stepper';
 
@@ -32,6 +33,7 @@ function Row({ children }: { children: React.ReactNode }) {
 }
 
 export default function BonusScreen() {
+  const t = useT();
   const { id, playerId } = useLocalSearchParams<{ id: string; playerId: string }>();
   const gameId = Number(id);
   const numericPlayerId = Number(playerId);
@@ -85,15 +87,15 @@ export default function BonusScreen() {
       <ScrollView contentContainerClassName="gap-2.5 px-4 pb-8 pt-7">
         <View className="flex-row items-center gap-2.5">
           <Avatar emoji={player.emoji} color={player.color} size="sm" />
-          <Text className="font-title text-h2 text-content">Bonus — {player.name}</Text>
+          <Text className="font-title text-h2 text-content">
+            {t('bonus.title', { name: player.name })}
+          </Text>
         </View>
 
         {!exact && (
           <View className="flex-row items-center gap-2 rounded-field border border-negative bg-negative/10 px-3 py-2.5">
             <Text className="text-caption">⚠️</Text>
-            <Text className="flex-1 font-semi text-caption text-negative">
-              Mise ratée — bonus sans effet
-            </Text>
+            <Text className="flex-1 font-semi text-caption text-negative">{t('bonus.missed')}</Text>
           </View>
         )}
 
@@ -120,10 +122,12 @@ export default function BonusScreen() {
                   className={`font-semi text-caption ${mine ? 'text-accent-fg' : 'text-content'} ${
                     mine && !exact ? 'line-through' : ''
                   }`}>
-                  {CAPTURE_LABELS[type].label} +{value}
+                  {t(CAPTURE_LABELS[type].key)} {t('bonus.value', { value })}
                 </Text>
                 {locked && holder && (
-                  <Text className="font-body text-micro text-content-muted">· {holder.name}</Text>
+                  <Text className="font-body text-micro text-content-muted">
+                    {t('bonus.takenBy', { name: holder.name })}
+                  </Text>
                 )}
               </Pressable>
             );
@@ -145,9 +149,12 @@ export default function BonusScreen() {
           return (
             <Row key={type}>
               <Text className="flex-1 font-semi text-caption text-content">
-                {CAPTURE_LABELS[type].emoji} {CAPTURE_LABELS[type].label}{' '}
+                {CAPTURE_LABELS[type].emoji} {t(CAPTURE_LABELS[type].key)}{' '}
                 <Text className="font-body text-content-muted">
-                  +{value}/{COUNTER_UNITS[type]}
+                  {t('bonus.per', {
+                    value,
+                    unit: COUNTER_UNITS[type] ? t(COUNTER_UNITS[type]) : '',
+                  })}
                 </Text>
               </Text>
               <Stepper
@@ -155,7 +162,7 @@ export default function BonusScreen() {
                 onChange={(count) => void setCaptureBonus(round.id, numericPlayerId, type, count)}
                 max={Math.max(0, limit - others)}
                 size="sm"
-                label={CAPTURE_LABELS[type].label}
+                label={t(CAPTURE_LABELS[type].key)}
               />
             </Row>
           );
@@ -164,7 +171,10 @@ export default function BonusScreen() {
         {game.ruleset.advancedCards && seats.length > 2 && (
           <View className="gap-2 rounded-field bg-surface-raised p-3">
             <Text className="font-semi text-caption text-content">
-              💰 Butin <Text className="font-body text-content-muted">+{scale.loot} chacun</Text>
+              💰 {t('bonus.loot')}{' '}
+              <Text className="font-body text-content-muted">
+                {t('bonus.each', { value: scale.loot })}
+              </Text>
             </Text>
             <View className="flex-row flex-wrap gap-2">
               {seats
@@ -200,10 +210,9 @@ export default function BonusScreen() {
         {game.ruleset.scoring === 'rascal' && game.ruleset.rascalCannonball && (
           <Row>
             <View className="flex-1">
-              <Text className="font-semi text-caption text-content">💣 Boulet de canon</Text>
+              <Text className="font-semi text-caption text-content">{t('bonus.cannonball')}</Text>
               <Text className="font-body text-micro text-content-muted">
-                Tout ou rien : {RASCAL_POINTS.cannonballPerCard} par carte si la mise est exacte,
-                rien sinon
+                {t('bonus.cannonballHint', { value: RASCAL_POINTS.cannonballPerCard })}
               </Text>
             </View>
             <View className="flex-row gap-1.5">
@@ -213,7 +222,9 @@ export default function BonusScreen() {
                   onPress={() => void updateEntry(round.id, numericPlayerId, { cannonball: armed })}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: entry.cannonball === armed }}
-                  accessibilityLabel={`Boulet de canon : ${armed ? 'armé' : 'non'}`}
+                  accessibilityLabel={t('bonus.cannonballChoice', {
+                    state: t(armed ? 'bonus.armed' : 'bonus.notArmed'),
+                  })}
                   className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
                     entry.cannonball === armed ? 'bg-primary' : 'bg-surface-sunken'
                   }`}>
@@ -221,7 +232,7 @@ export default function BonusScreen() {
                     className={`font-semi text-caption ${
                       entry.cannonball === armed ? 'text-primary-fg' : 'text-content-muted'
                     }`}>
-                    {armed ? 'Armé' : 'Non'}
+                    {t(armed ? 'bonus.armed' : 'bonus.notArmed')}
                   </Text>
                 </Pressable>
               ))}
@@ -233,11 +244,11 @@ export default function BonusScreen() {
           <>
             <Row>
               <View className="flex-1">
-                <Text className="font-semi text-caption text-content">🏴 Harry le Géant</Text>
+                <Text className="font-semi text-caption text-content">{t('bonus.harry')}</Text>
                 <Text className="font-body text-micro text-content-muted">
                   {entry.bidModifier === 0
-                    ? 'Mise inchangée'
-                    : `Mise ${entry.bid} → ${effectiveBid}`}
+                    ? t('bonus.harryUnchanged')
+                    : t('bonus.harryShift', { from: entry.bid ?? 0, to: effectiveBid })}
                 </Text>
               </View>
               <View className="flex-row items-center gap-1 rounded-full bg-surface-sunken p-1">
@@ -263,9 +274,9 @@ export default function BonusScreen() {
 
             <Row>
               <View className="flex-1">
-                <Text className="font-semi text-caption text-content">🎲 Pari de Rascal</Text>
+                <Text className="font-semi text-caption text-content">{t('bonus.rascal')}</Text>
                 <Text className="font-body text-micro text-content-muted">
-                  Gagné si la mise est exacte, débité sinon
+                  {t('bonus.rascalHint')}
                 </Text>
               </View>
               <View className="flex-row gap-1.5">
@@ -280,7 +291,7 @@ export default function BonusScreen() {
                       className={`font-semi text-caption ${
                         entry.rascalBet === bet ? 'text-primary-fg' : 'text-content-muted'
                       }`}>
-                      {bet === 0 ? 'aucun' : bet}
+                      {bet === 0 ? t('bonus.rascalNone') : bet}
                     </Text>
                   </Pressable>
                 ))}
@@ -292,11 +303,10 @@ export default function BonusScreen() {
         <Row>
           <View className="flex-1">
             <Text className="font-semi text-caption text-content">
-              ✏️ Ajustement manuel <Text className="font-body text-content-muted">±10</Text>
+              {t('bonus.custom')}{' '}
+              <Text className="font-body text-content-muted">{t('bonus.customUnit')}</Text>
             </Text>
-            <Text className="font-body text-micro text-content-muted">
-              Règle maison, cas non couvert
-            </Text>
+            <Text className="font-body text-micro text-content-muted">{t('bonus.customHint')}</Text>
           </View>
           <View className="flex-row items-center gap-2">
             <Pressable
@@ -307,7 +317,7 @@ export default function BonusScreen() {
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Retirer 10 points"
+              accessibilityLabel={t('bonus.remove10')}
               className="size-7 items-center justify-center rounded-full bg-border active:opacity-60">
               <Text className="font-title text-caption text-content-muted">−</Text>
             </Pressable>
@@ -323,7 +333,7 @@ export default function BonusScreen() {
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Ajouter 10 points"
+              accessibilityLabel={t('bonus.add10')}
               className="size-7 items-center justify-center rounded-full bg-primary active:opacity-60">
               <Text className="font-title text-caption text-primary-fg">+</Text>
             </Pressable>
@@ -332,7 +342,7 @@ export default function BonusScreen() {
 
         <View className="flex-row items-center justify-between px-1 pt-2">
           <Text className="font-title text-h2 text-content">
-            Total{' '}
+            {t('bonus.total')}{' '}
             <Text
               className={
                 sheetTotal > 0
@@ -347,7 +357,7 @@ export default function BonusScreen() {
           </Text>
           {!exact && captured > 0 && (
             <Text className="font-body text-micro text-content-muted">
-              {captured} pts annulés par la mise ratée
+              {t('bonus.lostToMiss', { points: captured })}
             </Text>
           )}
         </View>

@@ -2,6 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import type { GameState } from '@/core';
 import type { StoredRound } from '@/db/mappers';
+import { useT } from '@/i18n';
 import { PLAYER_COLORS } from '@/ui/tokens';
 
 import type { SeatedPlayer } from './use-game';
@@ -25,6 +26,7 @@ type ScoreGridProps = {
  * de l'historique : la même grille, lue à deux moments différents.
  */
 export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGridProps) {
+  const t = useT();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator contentContainerClassName="grow">
       <View>
@@ -54,7 +56,7 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
                 disabled={!onPressRound}
                 accessibilityRole={onPressRound ? 'button' : undefined}
                 accessibilityLabel={
-                  onPressRound ? `Corriger la manche ${result.roundNumber}` : undefined
+                  onPressRound ? t('sheet.correctRound', { round: result.roundNumber }) : undefined
                 }
                 className="flex-row items-center active:opacity-60">
                 <Text

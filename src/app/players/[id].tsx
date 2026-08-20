@@ -16,6 +16,7 @@ import { gamePlayers, players, type Player } from '@/db/schema';
 import { AccuracyBars } from '@/features/stats/accuracy-bars';
 import { MIN_GAMES_FOR_RATES, type PlayerStats } from '@/features/stats/compute';
 import { useStats } from '@/features/stats/use-stats';
+import { useT, type Translate } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { SectionLabel } from '@/ui/screen';
 import { PLAYER_COLORS } from '@/ui/tokens';
@@ -62,17 +63,14 @@ const percent = (value: number | null) => (value === null ? '–' : `${Math.roun
  * victoires » sur une partie est un mensonge statistique. Les compteurs bruts,
  * eux, restent justes dès la première.
  */
-function PlayerStatsSection({ stats }: { stats: PlayerStats | undefined }) {
+function PlayerStatsSection({ stats, t }: { stats: PlayerStats | undefined; t: Translate }) {
   const games = stats?.games ?? 0;
 
   if (games === 0) {
     return (
       <View className="gap-1 rounded-card bg-surface-raised p-4">
-        <Text className="font-semi text-body text-content">Aucune partie terminée</Text>
-        <Text className="font-body text-caption text-content-muted">
-          Les statistiques arrivent dès qu’une partie va jusqu’au bout. Les parties abandonnées
-          n’entrent pas dans les moyennes.
-        </Text>
+        <Text className="font-semi text-body text-content">{t('stats.noGame')}</Text>
+        <Text className="font-body text-caption text-content-muted">{t('stats.noGameHint')}</Text>
       </View>
     );
   }
@@ -85,45 +83,43 @@ function PlayerStatsSection({ stats }: { stats: PlayerStats | undefined }) {
       <View className="flex-row items-end gap-4 rounded-card bg-surface-raised p-4">
         <View className="flex-1">
           <Text className="font-body text-micro uppercase tracking-widest text-content-muted">
-            Score moyen
+            {t('stats.averageScore')}
           </Text>
           <Text className="font-display text-display tabular-nums text-content">
             {average === null || average === undefined ? '–' : Math.round(average)}
           </Text>
           <Text className="font-body text-micro text-content-muted">
-            sur {games} partie{games > 1 ? 's' : ''} terminée{games > 1 ? 's' : ''}
+            {t('stats.on', { count: games })}
           </Text>
         </View>
         <View className="items-end">
           <Text className="font-display text-h1 tabular-nums text-primary">
             {stats?.bestScore ?? '–'}
           </Text>
-          <Text className="font-body text-micro text-content-muted">meilleur score</Text>
+          <Text className="font-body text-micro text-content-muted">{t('stats.best')}</Text>
         </View>
       </View>
 
       <View className="flex-row flex-wrap gap-2">
-        <Tile value={enough ? percent(stats?.winRate ?? null) : '–'} label="Victoires" />
+        <Tile value={enough ? percent(stats?.winRate ?? null) : '–'} label={t('stats.wins')} />
         <Tile
           value={
             enough && stats?.averageRank ? stats.averageRank.toFixed(1).replace('.', ',') : '–'
           }
-          label="Position moyenne"
+          label={t('stats.averageRank')}
         />
-        <Tile value={percent(stats?.accuracy ?? null)} label="Annonces exactes" />
+        <Tile value={percent(stats?.accuracy ?? null)} label={t('stats.accuracy')} />
         <Tile
           value={
             stats?.averageGap === null ? '–' : (stats?.averageGap ?? 0).toFixed(1).replace('.', ',')
           }
-          label="Écart moyen"
+          label={t('stats.averageGap')}
         />
       </View>
 
       {!enough && (
         <Text className="px-1 font-body text-micro text-content-muted">
-          Victoires et position moyenne s’affichent à partir de {MIN_GAMES_FOR_RATES} parties
-          terminées : sur une seule, elles ne diraient rien. La précision, elle, se mesure sur
-          chaque manche.
+          {t('stats.threshold', { min: MIN_GAMES_FOR_RATES })}
         </Text>
       )}
 
@@ -131,14 +127,19 @@ function PlayerStatsSection({ stats }: { stats: PlayerStats | undefined }) {
 
       <View className="gap-2 rounded-field bg-surface-raised p-3">
         <Text className="font-body text-caption text-content-muted">
-          <Text className="font-semi text-content">Mises 0</Text> — {stats?.zeroBids ?? 0} tentée
-          {(stats?.zeroBids ?? 0) > 1 ? 's' : ''}, {stats?.zeroBidsWon ?? 0} tenue
-          {(stats?.zeroBidsWon ?? 0) > 1 ? 's' : ''}
+          <Text className="font-semi text-content">{t('stats.zeroBids')}</Text>
+          {t('stats.zeroBidsDetail', {
+            tried: stats?.zeroBids ?? 0,
+            won: stats?.zeroBidsWon ?? 0,
+          })}
         </Text>
         <Text className="font-body text-caption text-content-muted">
-          <Text className="font-semi text-content">Bonus</Text> — {stats?.bonusPoints ?? 0} points
-          marqués sur {stats?.rounds ?? 0} manche{(stats?.rounds ?? 0) > 1 ? 's' : ''} jouée
-          {(stats?.rounds ?? 0) > 1 ? 's' : ''}
+          <Text className="font-semi text-content">{t('stats.bonusLine')}</Text>
+          {t('stats.bonusDetail', {
+            count: stats?.rounds ?? 0,
+            points: stats?.bonusPoints ?? 0,
+            rounds: stats?.rounds ?? 0,
+          })}
         </Text>
       </View>
     </>
@@ -147,7 +148,8 @@ function PlayerStatsSection({ stats }: { stats: PlayerStats | undefined }) {
 
 function PlayerForm({ player, played }: { player: Player; played: number }) {
   const playerId = player.id;
-  const t = useTokens();
+  const tokens = useTokens();
+  const t = useT();
   const stats = useStats().players.get(playerId);
   // Le champ n'est pas piloté par la base : une écriture par frappe ferait
   // sauter le curseur à chaque rafraîchissement de la requête vive.
@@ -159,22 +161,18 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
   }
 
   function askDelete() {
-    Alert.alert(
-      `Supprimer ${player.name} ?`,
-      "Ce joueur n'a jamais joué : sa suppression ne retire rien d'un historique.",
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => {
-            void deletePlayer(playerId).then((done) => {
-              if (done) router.back();
-            });
-          },
+    Alert.alert(t('players.deleteTitle', { name: player.name }), t('players.deleteBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () => {
+          void deletePlayer(playerId).then((done) => {
+            if (done) router.back();
+          });
         },
-      ],
-    );
+      },
+    ]);
   }
 
   return (
@@ -187,31 +185,29 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
             onChangeText={setName}
             onBlur={saveName}
             onSubmitEditing={saveName}
-            placeholder="Prénom"
-            placeholderTextColor={t.contentMuted}
+            placeholder={t('players.firstName')}
+            placeholderTextColor={tokens.contentMuted}
             returnKeyType="done"
             autoCapitalize="words"
             testID="player-name"
             className="min-h-touch rounded-field bg-surface-raised px-3 font-title text-h2 text-content"
           />
           <Text className="font-body text-micro text-content-muted">
-            {played === 0
-              ? 'Aucune partie jouée'
-              : `${played} partie${played > 1 ? 's' : ''} jouée${played > 1 ? 's' : ''}`}
+            {played === 0 ? t('players.noGame') : t('players.played', { count: played })}
           </Text>
         </View>
       </View>
 
-      <PlayerStatsSection stats={stats} />
+      <PlayerStatsSection stats={stats} t={t} />
 
-      <SectionLabel>Emoji</SectionLabel>
+      <SectionLabel>{t('players.emoji')}</SectionLabel>
       <View className="flex-row flex-wrap gap-2">
         {PLAYER_EMOJIS.map((emoji) => (
           <Pressable
             key={emoji}
             onPress={() => void updatePlayer(playerId, { emoji })}
             accessibilityRole="button"
-            accessibilityLabel={`Emoji ${emoji}`}
+            accessibilityLabel={t('players.emojiChoice', { emoji })}
             accessibilityState={{ selected: player.emoji === emoji }}
             className={`size-touch items-center justify-center rounded-field active:opacity-70 ${
               player.emoji === emoji ? 'bg-primary' : 'bg-surface-raised'
@@ -221,14 +217,14 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
         ))}
       </View>
 
-      <SectionLabel>Couleur</SectionLabel>
+      <SectionLabel>{t('players.color')}</SectionLabel>
       <View className="flex-row flex-wrap gap-2">
         {PLAYER_COLORS.map((color) => (
           <Pressable
             key={color}
             onPress={() => void updatePlayer(playerId, { color })}
             accessibilityRole="button"
-            accessibilityLabel={`Couleur ${color}`}
+            accessibilityLabel={t('players.colorChoice', { color })}
             accessibilityState={{ selected: player.color === color }}
             className="size-touch items-center justify-center rounded-field active:opacity-70"
             style={{ backgroundColor: `${color}22` }}>
@@ -237,7 +233,7 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
               style={{
                 backgroundColor: color,
                 borderWidth: player.color === color ? 3 : 0,
-                borderColor: t.content,
+                borderColor: tokens.content,
               }}
             />
           </Pressable>
@@ -249,17 +245,17 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
           <Pressable
             onPress={() => void archivePlayer(playerId).then(() => router.back())}
             accessibilityRole="button"
-            accessibilityLabel="Archiver ce joueur"
+            accessibilityLabel={t('players.archiveLabel')}
             className="min-h-touch items-center justify-center rounded-card bg-surface-raised p-3 active:opacity-70">
-            <Text className="font-semi text-body text-content">Archiver</Text>
+            <Text className="font-semi text-body text-content">{t('players.archive')}</Text>
           </Pressable>
         ) : (
           <Pressable
             onPress={() => void restorePlayer(playerId).then(() => router.back())}
             accessibilityRole="button"
-            accessibilityLabel="Réactiver ce joueur"
+            accessibilityLabel={t('players.restoreLabel')}
             className="min-h-touch items-center justify-center rounded-card bg-primary p-3 active:opacity-80">
-            <Text className="font-semi text-body text-primary-fg">Réactiver</Text>
+            <Text className="font-semi text-body text-primary-fg">{t('players.restore')}</Text>
           </Pressable>
         )}
 
@@ -267,16 +263,16 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
           <Pressable
             onPress={askDelete}
             accessibilityRole="button"
-            accessibilityLabel="Supprimer ce joueur"
+            accessibilityLabel={t('players.deleteLabel')}
             className="min-h-touch items-center justify-center p-3 active:opacity-70">
-            <Text className="font-semi text-caption text-negative">Supprimer définitivement</Text>
+            <Text className="font-semi text-caption text-negative">
+              {t('players.deleteForever')}
+            </Text>
           </Pressable>
         )}
 
         <Text className="px-2 font-body text-micro text-content-muted">
-          {played === 0
-            ? 'Un joueur qui n’a jamais joué peut être supprimé ; sinon, l’archivage le retire des listes sans toucher à son historique.'
-            : 'Un joueur ayant des parties n’est jamais supprimé : l’archivage le retire des listes sans rien perdre de son historique.'}
+          {t(played === 0 ? 'players.deletableHint' : 'players.archiveHint')}
         </Text>
       </View>
     </ScrollView>

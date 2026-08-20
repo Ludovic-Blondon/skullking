@@ -14,49 +14,32 @@
  */
 
 import type { PlayerId, RoundInput, RoundResult } from '@/core';
+import type { MessageKey, PluralKey } from '@/i18n';
 
 export type AwardId = 'visionary' | 'daredevil' | 'bounty' | 'zeroAdmiral';
 
 export interface Award {
   id: AwardId;
   emoji: string;
-  label: string;
-  /** Ce que le titre récompense, dit en clair (« 6 annonces exactes »). */
-  detail: string;
+  /** Clés du catalogue : le module ne connaît aucune langue. */
+  labelKey: MessageKey;
+  detailKey: PluralKey | MessageKey;
+  /** Ce que le titre récompense — le compte à interpoler. */
+  value: number;
   playerIds: PlayerId[];
 }
 
-interface AwardSpec {
-  id: AwardId;
-  emoji: string;
-  label: string;
-  detail: (value: number) => string;
-}
-
-const SPECS: Record<AwardId, AwardSpec> = {
-  visionary: {
-    id: 'visionary',
-    emoji: '🎯',
-    label: 'Visionnaire',
-    detail: (value) => `${value} annonce${value > 1 ? 's' : ''} exacte${value > 1 ? 's' : ''}`,
-  },
-  daredevil: {
-    id: 'daredevil',
-    emoji: '🔥',
-    label: 'Tête brûlée',
-    detail: (value) => `${value} pli${value > 1 ? 's' : ''} d’écart cumulé`,
-  },
-  bounty: {
-    id: 'bounty',
-    emoji: '💰',
-    label: 'Chasseur de primes',
-    detail: (value) => `${value} points de bonus`,
-  },
+const SPECS: Record<
+  AwardId,
+  { emoji: string; labelKey: MessageKey; detailKey: MessageKey | PluralKey }
+> = {
+  visionary: { emoji: '🎯', labelKey: 'award.visionary', detailKey: 'award.visionaryDetail' },
+  daredevil: { emoji: '🔥', labelKey: 'award.daredevil', detailKey: 'award.daredevilDetail' },
+  bounty: { emoji: '💰', labelKey: 'award.bounty', detailKey: 'award.bountyDetail' },
   zeroAdmiral: {
-    id: 'zeroAdmiral',
     emoji: '⚓',
-    label: 'Amiral du zéro',
-    detail: (value) => `${value} mise${value > 1 ? 's' : ''} 0 tenue${value > 1 ? 's' : ''}`,
+    labelKey: 'award.zeroAdmiral',
+    detailKey: 'award.zeroAdmiralDetail',
   },
 };
 
@@ -114,14 +97,6 @@ export function computeAwards(rounds: RoundResult[], inputs: RoundInput[]): Awar
     const winner = winnersOf(scores);
     if (!winner) return [];
     const spec = SPECS[id];
-    return [
-      {
-        id,
-        emoji: spec.emoji,
-        label: spec.label,
-        detail: spec.detail(winner.value),
-        playerIds: winner.playerIds,
-      },
-    ];
+    return [{ id, ...spec, value: winner.value, playerIds: winner.playerIds }];
   });
 }

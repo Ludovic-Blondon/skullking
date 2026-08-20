@@ -1,5 +1,7 @@
 import { Text, View } from 'react-native';
 
+import { useT } from '@/i18n';
+
 import type { PlayerStats } from './compute';
 
 const TRACK_HEIGHT = 64;
@@ -19,6 +21,7 @@ const TRACK_HEIGHT = 64;
  * chose en clair.
  */
 export function AccuracyBars({ stats }: { stats: PlayerStats }) {
+  const t = useT();
   if (stats.rounds === 0) return null;
 
   const lastRound = Math.max(...stats.byRound.map((bucket) => bucket.roundNumber));
@@ -35,8 +38,11 @@ export function AccuracyBars({ stats }: { stats: PlayerStats }) {
     <View
       className="gap-2 rounded-field bg-surface-raised p-3"
       accessible
-      accessibilityLabel={`Précision par manche : ${stats.exactRounds} manches exactes sur ${stats.rounds} jouées`}>
-      <Text className="font-semi text-caption text-content">Précision par manche</Text>
+      accessibilityLabel={t('stats.accuracyLabel', {
+        exact: stats.exactRounds,
+        played: stats.rounds,
+      })}>
+      <Text className="font-semi text-caption text-content">{t('stats.accuracyByRound')}</Text>
 
       <View className="flex-row items-end gap-2" style={{ height: TRACK_HEIGHT }}>
         {columns.map((column) => (
@@ -60,13 +66,20 @@ export function AccuracyBars({ stats }: { stats: PlayerStats }) {
       </View>
 
       <View className="flex-row justify-between">
-        <Text className="font-body text-micro text-content-muted">manche 1</Text>
-        <Text className="font-body text-micro text-content-muted">manche {lastRound}</Text>
+        <Text className="font-body text-micro text-content-muted">
+          {t('stats.roundNumber', { round: 1 })}
+        </Text>
+        <Text className="font-body text-micro text-content-muted">
+          {t('stats.roundNumber', { round: lastRound })}
+        </Text>
       </View>
 
       <Text className="font-body text-micro text-content-muted">
-        {stats.exactRounds} manche{stats.exactRounds > 1 ? 's' : ''} exacte
-        {stats.exactRounds > 1 ? 's' : ''} sur {stats.rounds} jouée{stats.rounds > 1 ? 's' : ''}
+        {t('stats.exactOutOf', {
+          count: stats.exactRounds,
+          exact: stats.exactRounds,
+          played: stats.rounds,
+        })}
       </Text>
     </View>
   );

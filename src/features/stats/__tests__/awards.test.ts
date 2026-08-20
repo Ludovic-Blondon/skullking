@@ -23,8 +23,12 @@ function awardsOf(inputs: RoundInput[]): Award[] {
 }
 
 function labels(awards: Award[]): Record<string, { players: string[]; detail: string }> {
+  // Le module ne renvoie que des clés : le test lit la clé et son compte.
   return Object.fromEntries(
-    awards.map((award) => [award.id, { players: award.playerIds, detail: award.detail }]),
+    awards.map((award) => [
+      award.id,
+      { players: award.playerIds, detail: `${award.detailKey}=${award.value}` },
+    ]),
   );
 }
 
@@ -41,8 +45,8 @@ describe('awards de fin de partie', () => {
       ]),
     ]);
 
-    expect(labels(awards).visionary).toEqual({ players: ['a'], detail: '2 annonces exactes' });
-    expect(labels(awards).daredevil).toEqual({ players: ['b'], detail: '2 plis d’écart cumulé' });
+    expect(labels(awards).visionary).toEqual({ players: ['a'], detail: 'award.visionaryDetail=2' });
+    expect(labels(awards).daredevil).toEqual({ players: ['b'], detail: 'award.daredevilDetail=2' });
   });
 
   it('couronne le chasseur de primes et l’amiral du zéro', () => {
@@ -57,8 +61,11 @@ describe('awards de fin de partie', () => {
       ]),
     ]);
 
-    expect(labels(awards).bounty).toEqual({ players: ['b'], detail: '20 points de bonus' });
-    expect(labels(awards).zeroAdmiral).toEqual({ players: ['a'], detail: '2 mises 0 tenues' });
+    expect(labels(awards).bounty).toEqual({ players: ['b'], detail: 'award.bountyDetail=20' });
+    expect(labels(awards).zeroAdmiral).toEqual({
+      players: ['a'],
+      detail: 'award.zeroAdmiralDetail=2',
+    });
   });
 
   /** Un titre que personne n'a mérité ne se décerne pas. */
@@ -72,7 +79,7 @@ describe('awards de fin de partie', () => {
 
     expect(labels(awards).bounty).toBeUndefined();
     expect(labels(awards).zeroAdmiral).toBeUndefined();
-    expect(labels(awards).visionary).toEqual({ players: ['a'], detail: '1 annonce exacte' });
+    expect(labels(awards).visionary).toEqual({ players: ['a'], detail: 'award.visionaryDetail=1' });
   });
 
   /** Un titre que toute la table mérite ne distingue personne. */
@@ -87,7 +94,10 @@ describe('awards de fin de partie', () => {
     // Une annonce exacte chacun : le visionnaire ne veut rien dire.
     expect(labels(awards).visionary).toBeUndefined();
     // Le zéro, lui, n'a été tenu que par un seul.
-    expect(labels(awards).zeroAdmiral).toEqual({ players: ['a'], detail: '1 mise 0 tenue' });
+    expect(labels(awards).zeroAdmiral).toEqual({
+      players: ['a'],
+      detail: 'award.zeroAdmiralDetail=1',
+    });
   });
 
   it('partage un titre entre deux ex æquo si un troisième est derrière', () => {
@@ -106,7 +116,7 @@ describe('awards de fin de partie', () => {
 
     expect(labels(awards).zeroAdmiral).toEqual({
       players: ['a', 'b'],
-      detail: '2 mises 0 tenues',
+      detail: 'award.zeroAdmiralDetail=2',
     });
   });
 

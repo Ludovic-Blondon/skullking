@@ -1,38 +1,46 @@
 /**
  * Traduction des codes d'anomalie du moteur en phrases lisibles (PLAN.md §7.2).
  *
- * Le moteur ne renvoie que des codes ; ces libellés partiront dans les fichiers
- * de traduction en P6.
+ * Le moteur ne renvoie que des codes ; ce module les mappe sur des clés du
+ * catalogue et fournit les paramètres à interpoler. Il ne connaît donc aucune
+ * langue — c'est l'écran qui traduit.
  */
 
 import type { Issue } from '@/core';
+import type { MessageKey, Params, PluralKey } from '@/i18n';
 
-export function issueMessage(issue: Issue): string {
+export function issueMessage(issue: Issue): { key: MessageKey | PluralKey; params?: Params } {
   switch (issue.code) {
     case 'trickCountMismatch':
-      return `Le compte n'y est pas : ${issue.value} pli${(issue.value ?? 0) > 1 ? 's' : ''} pour ${issue.expected} cartes`;
+      return {
+        key: 'issue.trickCountMismatch',
+        params: { count: issue.value ?? 0, value: issue.value ?? 0, expected: issue.expected ?? 0 },
+      };
     case 'bonusCountExceeded':
-      return `Ce bonus est saisi ${issue.value} fois pour un maximum de ${issue.max}`;
+      return {
+        key: 'issue.bonusCountExceeded',
+        params: { value: issue.value ?? 0, max: issue.max ?? 0 },
+      };
     case 'skullKingAlreadyCaptured':
-      return 'Le Skull King a été capturé par une sirène : il ne peut pas avoir capturé de pirate';
+      return { key: 'issue.skullKingAlreadyCaptured' };
     case 'bonusUnavailableInEdition':
-      return "Ce bonus n'existe pas dans l'édition choisie";
+      return { key: 'issue.bonusUnavailableInEdition' };
     case 'multipleHarry':
-      return 'Un seul joueur par manche peut modifier sa mise avec Harry le Géant';
+      return { key: 'issue.multipleHarry' };
     case 'multipleRascalBets':
-      return 'Un seul pari de Rascal par manche';
+      return { key: 'issue.multipleRascalBets' };
     case 'effectiveBidOutOfRange':
-      return 'La mise modifiée sort du nombre de cartes distribuées';
+      return { key: 'issue.effectiveBidOutOfRange' };
     case 'lootWithTwoPlayers':
-      return "Le Butin n'est pas utilisé à 2 joueurs";
+      return { key: 'issue.lootWithTwoPlayers' };
     case 'lootSelfAlliance':
-      return 'Une alliance de Butin se fait à deux joueurs différents';
+      return { key: 'issue.lootSelfAlliance' };
     case 'lootAlliancesExceeded':
-      return 'Deux alliances de Butin au maximum par manche';
+      return { key: 'issue.lootAlliancesExceeded' };
     case 'destroyedTricksWithoutAdvancedCards':
-      return 'Les cartes avancées ne sont pas en jeu dans cette partie';
+      return { key: 'issue.destroyedTricksWithoutAdvancedCards' };
     default:
-      return 'La saisie de cette manche est incohérente';
+      return { key: 'issue.unknown' };
   }
 }
 
