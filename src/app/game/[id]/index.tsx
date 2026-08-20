@@ -178,9 +178,10 @@ export default function GameScreen() {
           const entry = entryOf(player.id);
           const score = scoreOf(player.id);
           const total = state?.totals[String(player.id)] ?? 0;
-          // Bonus et ajustement manuel comptent ensemble : un ±10 posé à la main
-          // doit se voir depuis la manche, pas seulement depuis sa feuille.
-          const extra = score ? score.bonus + score.custom : 0;
+          // Tout ce qui s'ajoute au score de base se lit sur la pastille : bonus
+          // de capture, pari de Rascal — gagné ou débité — et ajustement manuel.
+          // Chacun de ces gains se règle dans la feuille qu'elle ouvre.
+          const extra = score ? score.bonus + score.rascalBet + score.custom : 0;
           const played = score?.played ?? false;
 
           // En annonces, aucune couleur : rien n'est encore joué. En résultats,
