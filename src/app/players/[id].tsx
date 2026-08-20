@@ -13,6 +13,7 @@ import {
   updatePlayer,
 } from '@/db/repositories/player-repo';
 import { gamePlayers, players, type Player } from '@/db/schema';
+import { AccuracyBars } from '@/features/stats/accuracy-bars';
 import { MIN_GAMES_FOR_RATES, type PlayerStats } from '@/features/stats/compute';
 import { useStats } from '@/features/stats/use-stats';
 import { Avatar } from '@/ui/avatar';
@@ -125,6 +126,8 @@ function PlayerStatsSection({ stats }: { stats: PlayerStats | undefined }) {
           chaque manche.
         </Text>
       )}
+
+      {stats && <AccuracyBars stats={stats} />}
 
       <View className="gap-2 rounded-field bg-surface-raised p-3">
         <Text className="font-body text-caption text-content-muted">
