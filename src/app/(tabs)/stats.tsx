@@ -7,7 +7,7 @@ import { db } from '@/db/client';
 import { players } from '@/db/schema';
 import { MIN_GAMES_FOR_RATES } from '@/features/stats/compute';
 import { useStats } from '@/features/stats/use-stats';
-import { useT } from '@/i18n';
+import { ordinalSuffix, useLanguage, useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 
@@ -17,6 +17,7 @@ import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
  */
 export default function StatsScreen() {
   const t = useT();
+  const language = useLanguage();
   const { data: roster } = useLiveQuery(db.select().from(players));
   const { global } = useStats();
 
@@ -79,7 +80,7 @@ export default function StatsScreen() {
               <Text className="font-body text-micro text-content-muted">
                 {t('stats.bestRound', {
                   round: global.bestRound.roundNumber,
-                  suffix: global.bestRound.roundNumber === 1 ? 'ʳᵉ' : 'ᵉ',
+                  suffix: ordinalSuffix(language, global.bestRound.roundNumber),
                 })}
               </Text>
             </View>

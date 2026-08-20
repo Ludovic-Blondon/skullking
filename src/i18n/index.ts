@@ -7,7 +7,14 @@ import type { Language } from './messages';
 
 export type { Language, MessageKey, PluralKey } from './messages';
 export type { Params, Translate } from './translate';
-export { deviceLanguage, translator } from './translate';
+export {
+  dateLocale,
+  deviceLanguage,
+  LANGUAGE_NAMES,
+  LANGUAGES,
+  ordinalSuffix,
+  translator,
+} from './translate';
 
 /** Langue effective : le réglage de l'app, ou celle de l'appareil. */
 export function useLanguage(): Language {

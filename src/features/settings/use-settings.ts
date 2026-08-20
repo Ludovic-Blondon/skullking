@@ -5,12 +5,15 @@ import { useMemo } from 'react';
 import { DEFAULT_RULESET, type Ruleset } from '@/core';
 import { db } from '@/db/client';
 import { settings } from '@/db/schema';
+// Le catalogue plutôt que `@/i18n` : l'index des traductions importe ce
+// module-ci, et une langue en trop n'a qu'un seul endroit où être ajoutée.
+import { catalogs, type Language } from '@/i18n/messages';
 
 import { parseStoredRuleset, serializeRuleset } from './last-ruleset';
 
 /** Préférences de l'app (PLAN.md §7.4). `system` suit le réglage de l'appareil. */
 export interface AppSettings {
-  language: 'system' | 'fr' | 'en';
+  language: 'system' | Language;
   theme: 'system' | 'light' | 'dark';
   /** Écran maintenu allumé pendant une partie : une manche dure plus que la veille. */
   keepAwake: boolean;
@@ -30,7 +33,11 @@ function parse(rows: { key: string; value: string }[]): AppSettings {
   const language = stored.get('language');
   const theme = stored.get('theme');
   return {
-    language: language === 'fr' || language === 'en' ? language : DEFAULT_SETTINGS.language,
+    // `hasOwn` et non `in` : `in` dirait oui à « toString ».
+    language:
+      language !== undefined && Object.hasOwn(catalogs, language)
+        ? (language as Language)
+        : DEFAULT_SETTINGS.language,
     theme: theme === 'light' || theme === 'dark' ? theme : DEFAULT_SETTINGS.theme,
     keepAwake: stored.get('keepAwake') !== 'false',
     lastRuleset: parseStoredRuleset(stored.get('ruleset')),
