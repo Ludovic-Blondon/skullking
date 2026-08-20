@@ -1,0 +1,2599 @@
+{
+  "app": "skull-scores",
+  "version": 1,
+  "exportedAt": 1756665500000,
+  "players": [
+    {
+      "id": 1,
+      "name": "Lou",
+      "emoji": "🦜",
+      "color": "#E8785A",
+      "createdAt": 1754000000000,
+      "archivedAt": null
+    },
+    {
+      "id": 2,
+      "name": "Marin",
+      "emoji": "⚓",
+      "color": "#4FA8A0",
+      "createdAt": 1754000000000,
+      "archivedAt": null
+    },
+    {
+      "id": 3,
+      "name": "Zoé",
+      "emoji": "🔱",
+      "color": "#D9A24E",
+      "createdAt": 1754000000000,
+      "archivedAt": null
+    },
+    {
+      "id": 4,
+      "name": "Ravi",
+      "emoji": "🏴",
+      "color": "#9083C7",
+      "createdAt": 1754000000000,
+      "archivedAt": null
+    }
+  ],
+  "games": [
+    {
+      "id": 1,
+      "createdAt": 1754244800000,
+      "finishedAt": 1754247620000,
+      "status": "finished",
+      "ruleset": {
+        "edition": "current",
+        "advancedCards": true,
+        "scoring": "classic",
+        "rascalCannonball": false,
+        "pirateAbilities": true,
+        "roundsPlan": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "currentRound": 10,
+      "currentPhase": "results",
+      "seats": [
+        {
+          "playerId": 1,
+          "seatIndex": 0
+        },
+        {
+          "playerId": 2,
+          "seatIndex": 1
+        },
+        {
+          "playerId": 3,
+          "seatIndex": 2
+        },
+        {
+          "playerId": 4,
+          "seatIndex": 3
+        }
+      ],
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "cardsDealt": 1,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 2,
+          "cardsDealt": 2,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 3,
+          "cardsDealt": 3,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 4,
+          "cardsDealt": 4,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 5,
+          "cardsDealt": 5,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "black14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 6,
+          "cardsDealt": 6,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 7,
+          "cardsDealt": 7,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "purple14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 3,
+              "type": "skullKingCapturesPirate",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 8,
+          "cardsDealt": 8,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 5,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 9,
+          "cardsDealt": 9,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "black14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 10,
+          "cardsDealt": 10,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 6,
+              "tricks": 6,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 2,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "createdAt": 1754849600000,
+      "finishedAt": 1754852420000,
+      "status": "finished",
+      "ruleset": {
+        "edition": "current",
+        "advancedCards": true,
+        "scoring": "classic",
+        "rascalCannonball": false,
+        "pirateAbilities": true,
+        "roundsPlan": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "currentRound": 10,
+      "currentPhase": "results",
+      "seats": [
+        {
+          "playerId": 1,
+          "seatIndex": 0
+        },
+        {
+          "playerId": 2,
+          "seatIndex": 1
+        },
+        {
+          "playerId": 3,
+          "seatIndex": 2
+        },
+        {
+          "playerId": 4,
+          "seatIndex": 3
+        }
+      ],
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "cardsDealt": 1,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 2,
+          "cardsDealt": 2,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 3,
+          "cardsDealt": 3,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 4,
+          "cardsDealt": 4,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 5,
+          "cardsDealt": 5,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 6,
+          "cardsDealt": 6,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 7,
+          "cardsDealt": 7,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "skullKingCapturesPirate",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 8,
+          "cardsDealt": 8,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "green14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 9,
+          "cardsDealt": 9,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 10,
+          "cardsDealt": 10,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 2,
+              "type": "green14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 1,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "createdAt": 1755454400000,
+      "finishedAt": 1755457220000,
+      "status": "finished",
+      "ruleset": {
+        "edition": "current",
+        "advancedCards": true,
+        "scoring": "classic",
+        "rascalCannonball": false,
+        "pirateAbilities": true,
+        "roundsPlan": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "currentRound": 10,
+      "currentPhase": "results",
+      "seats": [
+        {
+          "playerId": 1,
+          "seatIndex": 0
+        },
+        {
+          "playerId": 2,
+          "seatIndex": 1
+        },
+        {
+          "playerId": 3,
+          "seatIndex": 2
+        },
+        {
+          "playerId": 4,
+          "seatIndex": 3
+        }
+      ],
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "cardsDealt": 1,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 2,
+          "cardsDealt": 2,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 3,
+          "cardsDealt": 3,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 4,
+          "cardsDealt": 4,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 5,
+          "cardsDealt": 5,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "black14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 6,
+          "cardsDealt": 6,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 7,
+          "cardsDealt": 7,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 3,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 3,
+              "type": "purple14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 2,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 8,
+          "cardsDealt": 8,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 9,
+          "cardsDealt": 9,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "purple14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 1,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 10,
+          "cardsDealt": 10,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 5,
+              "tricks": 5,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 4,
+              "type": "skullKingCapturesPirate",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "createdAt": 1756059200000,
+      "finishedAt": 1756062020000,
+      "status": "finished",
+      "ruleset": {
+        "edition": "current",
+        "advancedCards": true,
+        "scoring": "classic",
+        "rascalCannonball": false,
+        "pirateAbilities": true,
+        "roundsPlan": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "currentRound": 10,
+      "currentPhase": "results",
+      "seats": [
+        {
+          "playerId": 1,
+          "seatIndex": 0
+        },
+        {
+          "playerId": 2,
+          "seatIndex": 1
+        },
+        {
+          "playerId": 3,
+          "seatIndex": 2
+        },
+        {
+          "playerId": 4,
+          "seatIndex": 3
+        }
+      ],
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "cardsDealt": 1,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 2,
+          "cardsDealt": 2,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 3,
+          "cardsDealt": 3,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 4,
+          "cardsDealt": 4,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "green14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 5,
+          "cardsDealt": 5,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 6,
+          "cardsDealt": 6,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 7,
+          "cardsDealt": 7,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 2,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 8,
+          "cardsDealt": 8,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 4,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 9,
+          "cardsDealt": 9,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 2,
+              "type": "skullKingCapturesPirate",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 10,
+          "cardsDealt": 10,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 5,
+              "tricks": 4,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 4,
+              "type": "purple14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 4,
+              "type": "mermaidCapturesSkullKing",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "createdAt": 1756665500000,
+      "finishedAt": null,
+      "status": "in_progress",
+      "ruleset": {
+        "edition": "current",
+        "advancedCards": true,
+        "scoring": "classic",
+        "rascalCannonball": false,
+        "pirateAbilities": true,
+        "roundsPlan": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ]
+      },
+      "currentRound": 7,
+      "currentPhase": "results",
+      "seats": [
+        {
+          "playerId": 1,
+          "seatIndex": 0
+        },
+        {
+          "playerId": 2,
+          "seatIndex": 1
+        },
+        {
+          "playerId": 3,
+          "seatIndex": 2
+        },
+        {
+          "playerId": 4,
+          "seatIndex": 3
+        }
+      ],
+      "rounds": [
+        {
+          "roundNumber": 1,
+          "cardsDealt": 1,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 2,
+          "cardsDealt": 2,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 3,
+          "cardsDealt": 3,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 4,
+          "cardsDealt": 4,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 2,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 5,
+          "cardsDealt": 5,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 2,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        },
+        {
+          "roundNumber": 6,
+          "cardsDealt": 6,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 1,
+              "tricks": 1,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": []
+        },
+        {
+          "roundNumber": 7,
+          "cardsDealt": 7,
+          "destroyedTricks": 0,
+          "forced": false,
+          "entries": [
+            {
+              "playerId": 1,
+              "bid": 3,
+              "tricks": 3,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 2,
+              "bid": 2,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 3,
+              "bid": 1,
+              "tricks": 2,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            },
+            {
+              "playerId": 4,
+              "bid": 0,
+              "tricks": 0,
+              "bidModifier": 0,
+              "rascalBet": 0,
+              "cannonball": false,
+              "customBonus": 0
+            }
+          ],
+          "bonusEvents": [
+            {
+              "playerId": 1,
+              "type": "skullKingCapturesPirate",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 1,
+              "type": "yellow14",
+              "count": 1,
+              "allyPlayerId": null
+            },
+            {
+              "playerId": 2,
+              "type": "green14",
+              "count": 1,
+              "allyPlayerId": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
