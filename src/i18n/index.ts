@@ -5,7 +5,7 @@ import { useSettings } from '@/features/settings/use-settings';
 import { deviceLanguage, translator, type Translate } from './translate';
 import type { Language } from './messages';
 
-export type { Language, MessageKey } from './messages';
+export type { Language, MessageKey, PluralKey } from './messages';
 export type { Params, Translate } from './translate';
 export { deviceLanguage, translator } from './translate';
 

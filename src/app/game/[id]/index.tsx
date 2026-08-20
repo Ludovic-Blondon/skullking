@@ -15,6 +15,7 @@ import { firstBlockingIssue, issueMessage } from '@/features/game/issue-messages
 import { PlayerRow, type PlayerRowTone } from '@/features/game/player-row';
 import { useGame } from '@/features/game/use-game';
 import { useKeepScreenAwake } from '@/features/settings/use-keep-awake';
+import { useT } from '@/i18n';
 import { ValidationBar } from '@/features/game/validation-bar';
 import { Avatar } from '@/ui/avatar';
 import { Watermark } from '@/ui/screen';
@@ -52,6 +53,7 @@ export default function GameScreen() {
   const gameId = Number(id);
   const view = useGame(gameId);
   const insets = useSafeAreaInsets();
+  const t = useT();
   useKeepScreenAwake();
 
   if (!view.ready || !view.game || !view.current) {
@@ -120,26 +122,26 @@ export default function GameScreen() {
       <View style={{ paddingTop: insets.top + 6 }} className="gap-2 px-5 pb-3">
         <View className="flex-row items-start justify-between gap-3">
           <Text className="flex-1 font-title text-h1 text-content">
-            Manche {round.roundNumber}/{totalRounds} ·{' '}
-            {bidding ? `${cardsDealt} carte${cardsDealt > 1 ? 's' : ''}` : 'Résultats'}
+            {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
+            {bidding ? t('game.cards', { count: cardsDealt }) : t('game.results')}
           </Text>
           <View className="flex-row gap-2">
             {!bidding && (
               <TopAction
                 icon="arrow-undo-outline"
-                label="Revenir aux annonces"
+                label={t('game.backToBids')}
                 testID="back-to-bids"
                 onPress={() => void backToBids()}
               />
             )}
             <TopAction
               icon="home-outline"
-              label="Retour à l’accueil"
+              label={t('common.back')}
               onPress={() => router.replace('/')}
             />
             <TopAction
               icon="list-outline"
-              label="Feuille de score"
+              label={t('game.scoresheet')}
               onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
             />
           </View>
@@ -150,7 +152,7 @@ export default function GameScreen() {
             <>
               <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />
               <Text className="font-body text-caption text-content-muted">
-                {view.dealer.name} distribue
+                {t('game.dealer', { name: view.dealer.name })}
               </Text>
             </>
           )}
@@ -158,10 +160,10 @@ export default function GameScreen() {
             // Le potentiel de la manche est ce que Rascal met sur la table :
             // l'afficher évite d'avoir à le recalculer de tête à chaque manche.
             <Text className="font-body text-caption text-content-muted">
-              · potentiel {RASCAL_POINTS.potentialPerCard * cardsDealt}
-              {game.ruleset.rascalCannonball
-                ? ` ou ${RASCAL_POINTS.cannonballPerCard * cardsDealt} au boulet`
-                : ''}
+              {t(game.ruleset.rascalCannonball ? 'game.potentialCannonball' : 'game.potential', {
+                value: RASCAL_POINTS.potentialPerCard * cardsDealt,
+                cannonball: RASCAL_POINTS.cannonballPerCard * cardsDealt,
+              })}
             </Text>
           )}
         </View>
@@ -194,11 +196,13 @@ export default function GameScreen() {
               value={entry?.bid ?? 0}
               onChange={(bid) => void updateEntry(round.id, player.id, { bid })}
               max={cardsDealt}
-              label="Annonce"
+              label={t('game.bidLabel')}
               tone={tone}
               testID={`bid-${player.id}`}
               subtitle={
-                <Text className="font-body text-micro text-content-muted">{total} pts</Text>
+                <Text className="font-body text-micro text-content-muted">
+                  {t('game.points', { points: total })}
+                </Text>
               }
             />
           ) : (
@@ -208,13 +212,17 @@ export default function GameScreen() {
               value={entry?.tricks ?? 0}
               onChange={(tricks) => void updateEntry(round.id, player.id, { tricks })}
               max={cardsDealt}
-              label="Plis"
+              label={t('game.tricksLabel')}
               tone={tone}
               testID={`tricks-${player.id}`}
               subtitle={
                 <Text className="font-body text-micro text-content-muted">
-                  annoncé {entry?.bid ?? 0}
-                  {played && score ? ` · ${score.total > 0 ? '+' : ''}${score.total} ce tour` : ''}
+                  {t('game.announced', { bid: entry?.bid ?? 0 })}
+                  {played && score
+                    ? ` · ${t('game.thisRound', {
+                        delta: `${score.total > 0 ? '+' : ''}${score.total}`,
+                      })}`
+                    : ''}
                 </Text>
               }
               trailing={
@@ -226,7 +234,7 @@ export default function GameScreen() {
                   asChild>
                   <Pressable
                     hitSlop={8}
-                    accessibilityLabel={`Bonus de ${player.name}`}
+                    accessibilityLabel={t('game.bonusOf', { name: player.name })}
                     className="min-w-9 items-end active:opacity-70">
                     <Text
                       className={`font-title text-caption ${
@@ -249,14 +257,14 @@ export default function GameScreen() {
         {!bidding && game.ruleset.advancedCards && (
           <View className="flex-row items-center justify-between gap-3 px-1 pt-1">
             <Text className="flex-1 font-body text-caption text-content-muted">
-              ☠️🐋 Plis détruits (Kraken / Baleine)
+              {t('game.destroyed')}
             </Text>
             <Stepper
               value={round.destroyedTricks}
               onChange={(count) => void setDestroyedTricks(round.id, count)}
               max={2}
               size="sm"
-              label="Plis détruits"
+              label={t('game.destroyedLabel')}
             />
           </View>
         )}
@@ -267,10 +275,8 @@ export default function GameScreen() {
               <Text className="text-base">👻</Text>
             </View>
             <View className="flex-1">
-              <Text className="font-semi text-body text-content-muted">Barbe Grise</Text>
-              <Text className="font-body text-micro text-content-muted">
-                Ne mise pas, ne marque pas
-              </Text>
+              <Text className="font-semi text-body text-content-muted">{t('game.ghost')}</Text>
+              <Text className="font-body text-micro text-content-muted">{t('game.ghostHint')}</Text>
             </View>
             <Text className="font-display text-h2 tabular-nums text-content-muted">
               {ghostTricks}
@@ -281,27 +287,35 @@ export default function GameScreen() {
 
       {bidding ? (
         <ValidationBar
-          summary={`Σ annonces ${bidsTotal} / ${cardsDealt} pli${cardsDealt > 1 ? 's' : ''}${
-            bidsTotal > cardsDealt
-              ? ' — table sur-annoncée'
+          summary={
+            t('game.bidsSum', { bids: bidsTotal, cards: cardsDealt }) +
+            (bidsTotal > cardsDealt
+              ? t('game.overbid')
               : bidsTotal < cardsDealt
-                ? ' — table sous-annoncée'
-                : ''
-          }`}
+                ? t('game.underbid')
+                : '')
+          }
           tone={bidsTotal === cardsDealt ? 'ok' : 'warn'}
           ok
-          actionLabel="Lancer la manche"
+          actionLabel={t('game.launch')}
           onAction={() => void launchRound()}
         />
       ) : (
         <ValidationBar
           summary={
             round.destroyedTricks > 0
-              ? `Σ plis ${tricksTotal} + ${round.destroyedTricks} détruit = ${accounted} / ${cardsDealt}`
-              : `Σ plis ${tricksTotal} / ${cardsDealt}`
+              ? t('game.tricksSumDestroyed', {
+                  tricks: tricksTotal,
+                  destroyed: round.destroyedTricks,
+                  accounted,
+                  cards: cardsDealt,
+                })
+              : t('game.tricksSum', { tricks: tricksTotal, cards: cardsDealt })
           }
           ok={roundOk}
-          problem={blocking ? issueMessage(blocking) : undefined}
+          problem={
+            blocking ? (({ key, params }) => t(key, params))(issueMessage(blocking)) : undefined
+          }
           actionLabel={
             round.roundNumber >= totalRounds ? 'Terminer la partie' : 'Valider la manche'
           }

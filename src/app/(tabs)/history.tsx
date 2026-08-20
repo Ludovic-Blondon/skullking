@@ -3,23 +3,24 @@ import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { gamesQuery, gameTotalsQuery } from '@/db/repositories/game-repo';
+import { useLanguage, useT } from '@/i18n';
 import { EmptyState, Screen } from '@/ui/screen';
 
 /** « 12 août », « 12 août 2025 » si la partie date d'une autre année. */
-function formatDate(timestamp: number): string {
+export function formatDate(timestamp: number, language: string): string {
   const date = new Date(timestamp);
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString('fr-FR', {
+  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', {
     day: 'numeric',
     month: 'long',
     ...(sameYear ? {} : { year: 'numeric' }),
   });
 }
 
-const STATUS_LABELS = {
-  in_progress: 'en cours',
-  abandoned: 'abandonnée',
-  finished: '',
+const STATUS_KEYS = {
+  in_progress: 'history.inProgress',
+  abandoned: 'history.abandoned',
+  finished: null,
 } as const;
 
 /**
@@ -27,14 +28,16 @@ const STATUS_LABELS = {
  * nombre de joueurs, vainqueur, score. Toucher une ligne ouvre le détail.
  */
 export default function HistoryScreen() {
+  const t = useT();
+  const language = useLanguage();
   const { data: games } = useLiveQuery(gamesQuery());
   const { data: totals } = useLiveQuery(gameTotalsQuery());
 
   if (games.length === 0) {
     return (
       <Screen>
-        <EmptyState emoji="🗺️" title="Aucune partie">
-          Les parties terminées s’empilent ici, avec leur feuille de score complète.
+        <EmptyState emoji="🗺️" title={t('history.empty')}>
+          {t('history.emptyHint')}
         </EmptyState>
       </Screen>
     );
@@ -48,7 +51,7 @@ export default function HistoryScreen() {
             .filter((row) => row.gameId === game.id)
             .sort((a, b) => b.total - a.total);
           const winner = standings[0];
-          const status = STATUS_LABELS[game.status];
+          const statusKey = STATUS_KEYS[game.status];
 
           return (
             <Link
@@ -57,20 +60,24 @@ export default function HistoryScreen() {
               asChild>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Partie du ${formatDate(game.createdAt)}`}
+                accessibilityLabel={t('history.gameOf', {
+                  date: formatDate(game.createdAt, language),
+                })}
                 testID={`history-${game.id}`}
                 className="min-h-touch flex-row items-center gap-3 rounded-card bg-surface-raised p-3 active:opacity-70">
                 <View className="flex-1 gap-0.5">
                   <View className="flex-row items-center gap-2">
                     <Text className="font-semi text-body text-content">
-                      {formatDate(game.createdAt)}
+                      {formatDate(game.createdAt, language)}
                     </Text>
-                    {status !== '' && (
-                      <Text className="font-body text-micro text-content-muted">· {status}</Text>
+                    {statusKey && (
+                      <Text className="font-body text-micro text-content-muted">
+                        · {t(statusKey)}
+                      </Text>
                     )}
                   </View>
                   <Text className="font-body text-caption text-content-muted" numberOfLines={1}>
-                    {standings.length} joueur{standings.length > 1 ? 's' : ''}
+                    {t('history.players', { count: standings.length })}
                     {winner ? ` · ${winner.emoji ?? ''} ${winner.name}` : ''}
                   </Text>
                 </View>

@@ -1,18 +1,20 @@
 import { Link, Stack } from 'expo-router';
 import { Text } from 'react-native';
 
+import { useT } from '@/i18n';
 import { Body, Card, Screen, Title } from '@/ui/screen';
 
 export default function NotFoundScreen() {
+  const t = useT();
   return (
     <>
-      <Stack.Screen options={{ title: 'Introuvable' }} />
+      <Stack.Screen options={{ title: t('notFound.title') }} />
       <Screen edgeToEdgeBottom>
         <Card>
-          <Title>Cette page n'existe pas</Title>
-          <Body>Le lien suivi ne correspond à aucun écran de l'application.</Body>
+          <Title>{t('notFound.heading')}</Title>
+          <Body>{t('notFound.body')}</Body>
           <Link href="/">
-            <Text className="text-base font-semibold text-primary">Retour à l'accueil</Text>
+            <Text className="font-semi text-body text-primary">{t('common.back')}</Text>
           </Link>
         </Card>
       </Screen>

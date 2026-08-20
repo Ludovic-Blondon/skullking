@@ -1,6 +1,8 @@
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useT } from '@/i18n';
+
 /** Couleur du bandeau : ce que la table doit comprendre en un coup d'œil. */
 export type BarTone = 'ok' | 'warn' | 'error';
 
@@ -42,6 +44,7 @@ export function ValidationBar({
   onForce,
 }: ValidationBarProps) {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const { strip, text, icon } = TONES[problem ? 'error' : tone];
 
   return (
@@ -51,7 +54,9 @@ export function ValidationBar({
         <Text className={`flex-1 font-semi text-caption ${text}`}>{problem ?? summary}</Text>
         {!ok && onForce && (
           <Pressable onPress={onForce} hitSlop={10} accessibilityRole="button">
-            <Text className="font-semi text-micro text-content-muted underline">forcer</Text>
+            <Text className="font-semi text-micro text-content-muted underline">
+              {t('game.force')}
+            </Text>
           </Pressable>
         )}
       </View>
