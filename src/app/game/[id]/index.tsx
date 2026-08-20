@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hasBlockingIssues, RASCAL_POINTS, scoreRound } from '@/core';
@@ -150,24 +151,21 @@ export default function GameScreen() {
         </View>
 
         <View className="flex-row items-center gap-2">
-          {view.dealer && (
-            <>
-              <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />
-              <Text className="font-body text-caption text-content-muted">
-                {t('game.dealer', { name: view.dealer.name })}
-              </Text>
-            </>
-          )}
-          {game.ruleset.scoring === 'rascal' && (
-            // Le potentiel de la manche est ce que Rascal met sur la table :
-            // l'afficher évite d'avoir à le recalculer de tête à chaque manche.
-            <Text className="font-body text-caption text-content-muted">
-              {t(game.ruleset.rascalCannonball ? 'game.potentialCannonball' : 'game.potential', {
-                value: RASCAL_POINTS.potentialPerCard * cardsDealt,
-                cannonball: RASCAL_POINTS.cannonballPerCard * cardsDealt,
-              })}
-            </Text>
-          )}
+          {view.dealer && <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />}
+          {/* Une seule ligne de texte, qui se replie : à grande taille de
+              police, deux textes côte à côte débordaient sans se couper. */}
+          <Text className="flex-1 font-body text-caption text-content-muted">
+            {view.dealer ? t('game.dealer', { name: view.dealer.name }) : ''}
+            {game.ruleset.scoring === 'rascal'
+              ? ` ${t(
+                  game.ruleset.rascalCannonball ? 'game.potentialCannonball' : 'game.potential',
+                  {
+                    value: RASCAL_POINTS.potentialPerCard * cardsDealt,
+                    cannonball: RASCAL_POINTS.cannonballPerCard * cardsDealt,
+                  },
+                )}`
+              : ''}
+          </Text>
         </View>
       </View>
 

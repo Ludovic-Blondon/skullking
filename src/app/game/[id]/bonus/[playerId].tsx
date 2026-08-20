@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { BONUS_POINTS, RASCAL_POINTS, ROUND_BONUS_LIMITS, type BonusType } from '@/core';
 import {
@@ -85,8 +86,9 @@ export default function BonusScreen() {
   return (
     <View className="flex-1 bg-surface">
       {/* Pas d'en-tête natif sur cette feuille : la marge haute dégage la poignée. */}
-      <ScrollView contentContainerClassName="mx-auto w-full gap-2.5 px-4 pb-8 pt-7"
-      contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
+      <ScrollView
+        contentContainerClassName="mx-auto w-full gap-2.5 px-4 pb-8 pt-7"
+        contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
         <View className="flex-row items-center gap-2.5">
           <Avatar emoji={player.emoji} color={player.color} size="sm" />
           <Text className="font-title text-h2 text-content">
@@ -188,6 +190,9 @@ export default function BonusScreen() {
                     <Pressable
                       key={ally.id}
                       disabled={full}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: allied, disabled: full }}
+                      accessibilityLabel={`${t('bonus.loot')} — ${ally.name}`}
                       onPress={() =>
                         void (allied
                           ? removeLootAlliance(round.id, numericPlayerId, ally.id)
@@ -257,6 +262,11 @@ export default function BonusScreen() {
                 {([-1, 0, 1] as const).map((modifier) => (
                   <Pressable
                     key={modifier}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: entry.bidModifier === modifier }}
+                    accessibilityLabel={`${t('bonus.harry')} : ${
+                      modifier === 0 ? '=' : modifier > 0 ? '+1' : '−1'
+                    }`}
                     onPress={() =>
                       void updateEntry(round.id, numericPlayerId, { bidModifier: modifier })
                     }
@@ -285,6 +295,11 @@ export default function BonusScreen() {
                 {([0, 10, 20] as const).map((bet) => (
                   <Pressable
                     key={bet}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: entry.rascalBet === bet }}
+                    accessibilityLabel={`${t('bonus.rascal')} : ${
+                      bet === 0 ? t('bonus.rascalNone') : bet
+                    }`}
                     onPress={() => void updateEntry(round.id, numericPlayerId, { rascalBet: bet })}
                     className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
                       entry.rascalBet === bet ? 'bg-primary' : 'bg-surface-sunken'

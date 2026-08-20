@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { deleteGame, reopenRound } from '@/db/repositories/game-repo';
 import { bonusLabel } from '@/features/game/bonus-labels';

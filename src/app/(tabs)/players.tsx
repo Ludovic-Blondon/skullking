@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import {
   archivedPlayersQuery,
@@ -45,6 +46,7 @@ export default function PlayersScreen() {
           onSubmitEditing={addPlayer}
           placeholder={t('new.addPlayer')}
           placeholderTextColor={tokens.contentMuted}
+          maxFontSizeMultiplier={1.5}
           returnKeyType="done"
           autoCapitalize="words"
           testID="new-player-name"

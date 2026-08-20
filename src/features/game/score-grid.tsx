@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
+import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 import type { GameState } from '@/core';
 import type { StoredRound } from '@/db/mappers';
@@ -71,6 +72,7 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
                     <View key={seat.id} style={{ width: SCORE_COLUMN }} className="px-0.5">
                       <View className="items-center rounded-tile bg-surface-raised py-1.5">
                         <Text
+                          maxFontSizeMultiplier={DENSE_MAX_SCALE}
                           className={`font-semi text-caption tabular-nums ${
                             !played || !score
                               ? 'text-content-muted'
@@ -97,7 +99,9 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
             const standing = state.standings.find((s) => s.playerId === String(seat.id));
             return (
               <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">
-                <Text className="font-display text-h2 tabular-nums text-content">
+                <Text
+                  maxFontSizeMultiplier={DENSE_MAX_SCALE}
+                  className="font-display text-h2 tabular-nums text-content">
                   {standing?.total ?? 0}
                 </Text>
                 <Text className="font-body text-micro text-content-muted">{standing?.rank}ᵉ</Text>

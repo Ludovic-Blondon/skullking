@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS, type Ruleset } from '@/core';
 import { createGame } from '@/db/repositories/game-repo';
@@ -116,6 +117,7 @@ export default function NewGameScreen() {
           onSubmitEditing={addPlayer}
           placeholder={t('new.addPlayer')}
           placeholderTextColor={tokens.contentMuted}
+          maxFontSizeMultiplier={1.5}
           returnKeyType="done"
           autoCapitalize="words"
           testID="new-player-name"
