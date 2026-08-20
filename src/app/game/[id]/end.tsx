@@ -3,14 +3,21 @@ import { Pressable, Text, View } from 'react-native';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
 import { useGame } from '@/features/game/use-game';
+import { computeAwards } from '@/features/stats/awards';
 import { Avatar } from '@/ui/avatar';
 import { Screen, SectionLabel, Watermark } from '@/ui/screen';
 
-/** Hauteur des marches, dans l'ordre d'affichage 2ᵉ · 1ᵉʳ · 3ᵉ. */
+/**
+ * Marches du podium, dans l'ordre d'affichage : deuxième, premier, troisième.
+ *
+ * On prend les joueurs par **position au classement**, pas par rang : deux ex
+ * æquo partagent le rang 2, et chercher un rang 3 ferait disparaître l'un
+ * d'eux du podium.
+ */
 const STEPS = [
-  { rank: 2, height: 44 },
-  { rank: 1, height: 72 },
-  { rank: 3, height: 30 },
+  { index: 1, height: 44 },
+  { index: 0, height: 72 },
+  { index: 2, height: 30 },
 ];
 
 export default function GameEndScreen() {
@@ -23,6 +30,7 @@ export default function GameEndScreen() {
   const { state, seats, game } = view;
   const seatOf = (playerId: string) => seats.find((seat) => String(seat.id) === playerId);
   const nameOf = (playerId: string) => seatOf(playerId)?.name ?? playerId;
+  const awards = computeAwards(state.rounds, view.inputs);
 
   async function rematch() {
     const newGameId = await createGame(
@@ -60,13 +68,13 @@ export default function GameEndScreen() {
           <View className="gap-4 rounded-card bg-surface-raised p-4">
             <Text className="text-center font-title text-h1 text-content">Partie terminée</Text>
             <View className="flex-row items-end justify-center gap-3">
-              {STEPS.map(({ rank, height }) => {
-                const standing = state.standings.find((s) => s.rank === rank);
+              {STEPS.map(({ index, height }) => {
+                const standing = state.standings[index];
                 if (!standing) return null;
                 const seat = seatOf(standing.playerId);
-                const first = rank === 1;
+                const first = index === 0;
                 return (
-                  <View key={rank} className="items-center gap-1.5">
+                  <View key={standing.playerId} className="items-center gap-1.5">
                     <Avatar emoji={seat?.emoji} color={seat?.color} size={first ? 'md' : 'sm'} />
                     <Text
                       className={`font-display tabular-nums ${
@@ -90,6 +98,32 @@ export default function GameEndScreen() {
               })}
             </View>
           </View>
+        )}
+
+        {awards.length > 0 && (
+          <>
+            <SectionLabel>Palmarès</SectionLabel>
+            <View className="flex-row flex-wrap gap-2">
+              {awards.map((award) => (
+                <View
+                  key={award.id}
+                  className="flex-1 basis-[45%] items-center gap-0.5 rounded-field bg-surface-raised p-3">
+                  <Text className="text-xl">{award.emoji}</Text>
+                  <Text className="text-center font-semi text-caption text-content">
+                    {award.label}
+                  </Text>
+                  <Text
+                    className="text-center font-body text-micro text-content-muted"
+                    numberOfLines={1}>
+                    {award.playerIds.map(nameOf).join(' & ')}
+                  </Text>
+                  <Text className="text-center font-body text-micro text-content-muted">
+                    {award.detail}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
         )}
 
         <SectionLabel>Classement</SectionLabel>
