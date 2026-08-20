@@ -2,12 +2,16 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { db } from '@/db/client';
 import { describeBackup, parseBackup, serializeBackup } from '@/db/backup-format';
 import { eraseEverything, exportBackup, importBackup } from '@/db/repositories/backup-repo';
 import { games, players } from '@/db/schema';
+import { PreferenceRow } from '@/features/settings/preference-row';
+import { setSetting, useSettings } from '@/features/settings/use-settings';
+import { useT } from '@/i18n';
 import { Screen, SectionLabel } from '@/ui/screen';
 
 /** `skull-scores-2026-08-19.json` : un nom de fichier qui se relit dans un an. */
@@ -52,6 +56,8 @@ function Action({ emoji, title, description, onPress, busy, destructive, testID 
  * l'à-propos ; langue, thème et keep-awake le rejoindront en P6.
  */
 export default function SettingsScreen() {
+  const t = useT();
+  const preferences = useSettings();
   const { data: allPlayers } = useLiveQuery(db.select({ id: players.id }).from(players));
   const { data: allGames } = useLiveQuery(db.select({ id: games.id }).from(games));
   const [busy, setBusy] = useState(false);
@@ -70,14 +76,17 @@ export default function SettingsScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
-          dialogTitle: 'Sauvegarde Skull Scores',
+          dialogTitle: t('settings.shareTitle'),
           UTI: 'public.json',
         });
       } else {
-        Alert.alert('Sauvegarde enregistrée', `Fichier : ${file.uri}`);
+        Alert.alert(t('settings.saved'), t('settings.savedAt', { uri: file.uri }));
       }
     } catch (error) {
-      Alert.alert('Export impossible', error instanceof Error ? error.message : String(error));
+      Alert.alert(
+        t('settings.exportFailed'),
+        error instanceof Error ? error.message : String(error),
+      );
     } finally {
       setBusy(false);
     }
@@ -94,27 +103,30 @@ export default function SettingsScreen() {
 
       const result = parseBackup(await picked.result.text());
       if (!result.ok) {
-        Alert.alert('Sauvegarde illisible', result.reason);
+        Alert.alert(t('settings.importUnreadable'), result.reason);
         return;
       }
 
       const { document } = result;
       Alert.alert(
-        'Remplacer toutes les données ?',
-        `Cette sauvegarde contient ${describeBackup(document)}. Les parties et les joueurs actuellement dans l’app seront remplacés.`,
+        t('settings.importTitle'),
+        t('settings.importBody', { summary: describeBackup(document) }),
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Remplacer',
+            text: t('settings.replace'),
             style: 'destructive',
             onPress: () => {
               void importBackup(document)
                 .then(() =>
-                  Alert.alert('Sauvegarde restaurée', `${describeBackup(document)} rechargés.`),
+                  Alert.alert(
+                    t('settings.importDone'),
+                    t('settings.importDoneBody', { summary: describeBackup(document) }),
+                  ),
                 )
                 .catch((error: unknown) =>
                   Alert.alert(
-                    'Import impossible',
+                    t('settings.importFailed'),
                     error instanceof Error ? error.message : String(error),
                   ),
                 );
@@ -123,74 +135,100 @@ export default function SettingsScreen() {
         ],
       );
     } catch (error) {
-      Alert.alert('Import impossible', error instanceof Error ? error.message : String(error));
+      Alert.alert(
+        t('settings.importFailed'),
+        error instanceof Error ? error.message : String(error),
+      );
     } finally {
       setBusy(false);
     }
   }
 
   function askErase() {
-    Alert.alert(
-      'Tout effacer ?',
-      'Toutes les parties et tous les joueurs disparaissent définitivement. Exportez d’abord si vous tenez à cet historique.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Tout effacer', style: 'destructive', onPress: () => void eraseEverything() },
-      ],
-    );
+    Alert.alert(t('settings.eraseTitle'), t('settings.eraseBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('settings.erase'), style: 'destructive', onPress: () => void eraseEverything() },
+    ]);
   }
 
   return (
     <Screen edgeToEdgeBottom>
-      <SectionLabel>Données</SectionLabel>
+      <SectionLabel>{t('settings.data')}</SectionLabel>
       <Text className="font-body text-caption text-content-muted">
-        {allPlayers.length} joueur{allPlayers.length > 1 ? 's' : ''} · {allGames.length} partie
-        {allGames.length > 1 ? 's' : ''} en mémoire. Tout est stocké sur cet appareil, sans compte
-        ni serveur.
+        {t('settings.inventory', {
+          count: allPlayers.length,
+          players: allPlayers.length,
+          games: allGames.length,
+        })}{' '}
+        {t('settings.storage')}
       </Text>
 
       <View className="gap-2">
         <Action
           emoji="📤"
-          title="Exporter"
-          description="Un fichier JSON à envoyer où vous voulez"
+          title={t('settings.export')}
+          description={t('settings.exportHint')}
           onPress={() => void runExport()}
           busy={busy}
           testID="export-backup"
         />
         <Action
           emoji="📥"
-          title="Importer"
-          description="Remplace les données par celles d’une sauvegarde"
+          title={t('settings.import')}
+          description={t('settings.importHint')}
           onPress={() => void runImport()}
           busy={busy}
           testID="import-backup"
         />
         <Action
           emoji="🗑️"
-          title="Tout effacer"
-          description="Repartir d’une app vide"
+          title={t('settings.erase')}
+          description={t('settings.eraseHint')}
           onPress={askErase}
           destructive
           testID="erase-all"
         />
       </View>
 
-      <SectionLabel>À propos</SectionLabel>
-      <View className="gap-2 rounded-field bg-surface-raised p-3">
-        <Text className="font-body text-caption text-content-muted">
-          Skull Scores compte les points de vos parties de Skull King : hors ligne, sans publicité,
-          sans compte et sans traceur.
-        </Text>
-        <Text className="font-body text-micro text-content-muted">
-          Application non affiliée à Grandpa Beck&apos;s Games. « Skull King » est une marque de son
-          éditeur ; l&apos;iconographie de cette app est originale.
-        </Text>
-      </View>
+      <SectionLabel>{t('settings.preferences')}</SectionLabel>
+      <PreferenceRow
+        label={t('settings.language')}
+        hint={t('settings.languageHint')}
+        value={preferences.language}
+        options={[
+          { value: 'system' as const, label: t('settings.system') },
+          { value: 'fr' as const, label: 'Français' },
+          { value: 'en' as const, label: 'English' },
+        ]}
+        onChange={(language) => void setSetting('language', language)}
+      />
+      <PreferenceRow
+        label={t('settings.theme')}
+        hint={t('settings.themeHint')}
+        value={preferences.theme}
+        options={[
+          { value: 'system' as const, label: t('settings.system') },
+          { value: 'light' as const, label: t('settings.light') },
+          { value: 'dark' as const, label: t('settings.dark') },
+        ]}
+        onChange={(theme) => void setSetting('theme', theme)}
+      />
+      <PreferenceRow
+        label={t('settings.keepAwake')}
+        hint={t('settings.keepAwakeHint')}
+        value={preferences.keepAwake}
+        options={[
+          { value: true, label: t('settings.on') },
+          { value: false, label: t('settings.off') },
+        ]}
+        onChange={(keepAwake) => void setSetting('keepAwake', keepAwake)}
+      />
 
-      <Text className="px-1 font-body text-micro text-content-muted">
-        Langue, thème et écran maintenu allumé arriveront avec la phase P6.
-      </Text>
+      <SectionLabel>{t('settings.about')}</SectionLabel>
+      <View className="gap-2 rounded-field bg-surface-raised p-3">
+        <Text className="font-body text-caption text-content-muted">{t('settings.aboutBody')}</Text>
+        <Text className="font-body text-micro text-content-muted">{t('settings.disclaimer')}</Text>
+      </View>
     </Screen>
   );
 }

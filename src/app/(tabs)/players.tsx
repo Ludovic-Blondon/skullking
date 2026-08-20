@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, TextInput, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import {
   archivedPlayersQuery,
@@ -9,6 +10,7 @@ import {
   restorePlayer,
   rosterQuery,
 } from '@/db/repositories/player-repo';
+import { useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 import { useTokens } from '@/ui/use-tokens';
@@ -18,7 +20,8 @@ import { useTokens } from '@/ui/use-tokens';
  * archivage réversible. Toucher un joueur ouvre sa fiche.
  */
 export default function PlayersScreen() {
-  const t = useTokens();
+  const tokens = useTokens();
+  const t = useT();
   const { data: roster } = useLiveQuery(rosterQuery());
   const { data: archived } = useLiveQuery(archivedPlayersQuery());
   const [name, setName] = useState('');
@@ -30,10 +33,7 @@ export default function PlayersScreen() {
       await createPlayer(trimmed);
       setName('');
     } catch (error) {
-      Alert.alert(
-        'Impossible d’ajouter ce joueur',
-        error instanceof Error ? error.message : String(error),
-      );
+      Alert.alert(t('new.addFailed'), error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -44,8 +44,9 @@ export default function PlayersScreen() {
           value={name}
           onChangeText={setName}
           onSubmitEditing={addPlayer}
-          placeholder="Ajouter un joueur"
-          placeholderTextColor={t.contentMuted}
+          placeholder={t('new.addPlayer')}
+          placeholderTextColor={tokens.contentMuted}
+          maxFontSizeMultiplier={1.5}
           returnKeyType="done"
           autoCapitalize="words"
           testID="new-player-name"
@@ -55,7 +56,7 @@ export default function PlayersScreen() {
           onPress={() => void addPlayer()}
           disabled={!name.trim()}
           accessibilityRole="button"
-          accessibilityLabel="Ajouter ce joueur"
+          accessibilityLabel={t('new.addThisPlayer')}
           testID="new-player-add"
           className={`size-touch items-center justify-center rounded-full active:opacity-80 ${
             name.trim() ? 'bg-primary' : 'bg-border'
@@ -70,8 +71,8 @@ export default function PlayersScreen() {
       </View>
 
       {roster.length === 0 ? (
-        <EmptyState emoji="🗺️" title="Aucun joueur">
-          Ajoutez les prénoms de la table : ils seront réutilisables d’une partie à l’autre.
+        <EmptyState emoji="🗺️" title={t('players.empty')}>
+          {t('players.emptyHint')}
         </EmptyState>
       ) : (
         <View className="gap-2">
@@ -82,13 +83,13 @@ export default function PlayersScreen() {
               asChild>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Fiche de ${player.name}`}
+                accessibilityLabel={t('players.sheetOf', { name: player.name })}
                 testID={`roster-${player.id}`}
                 className="min-h-touch flex-row items-center gap-3 rounded-card bg-surface-raised p-3 active:opacity-70">
                 <Avatar emoji={player.emoji} color={player.color} />
                 <Text className="flex-1 font-semi text-body text-content">{player.name}</Text>
                 <Text className="font-body text-caption text-content-muted">
-                  {player.games} partie{player.games > 1 ? 's' : ''}
+                  {t('players.games', { count: player.games })}
                 </Text>
               </Pressable>
             </Link>
@@ -98,7 +99,7 @@ export default function PlayersScreen() {
 
       {archived.length > 0 && (
         <>
-          <SectionLabel>Archivés</SectionLabel>
+          <SectionLabel>{t('players.archived')}</SectionLabel>
           <View className="gap-2">
             {archived.map((player) => (
               <View
@@ -110,9 +111,11 @@ export default function PlayersScreen() {
                   onPress={() => void restorePlayer(player.id)}
                   hitSlop={10}
                   accessibilityRole="button"
-                  accessibilityLabel={`Réactiver ${player.name}`}
+                  accessibilityLabel={t('players.restoreOf', { name: player.name })}
                   className="active:opacity-70">
-                  <Text className="font-semi text-caption text-primary">Réactiver</Text>
+                  <Text className="font-semi text-caption text-primary">
+                    {t('players.restore')}
+                  </Text>
                 </Pressable>
               </View>
             ))}
@@ -123,11 +126,9 @@ export default function PlayersScreen() {
       <Pressable
         onPress={() => router.push('/game/new')}
         accessibilityRole="button"
-        accessibilityLabel="Nouvelle partie"
+        accessibilityLabel={t('route.newGame')}
         className="min-h-touch items-center justify-center active:opacity-70">
-        <Text className="font-body text-caption text-content-muted">
-          Ces joueurs se retrouvent dans la configuration de partie
-        </Text>
+        <Text className="font-body text-caption text-content-muted">{t('players.footer')}</Text>
       </Pressable>
     </Screen>
   );

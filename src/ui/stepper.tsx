@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 type StepperProps = {
   value: number;
@@ -66,6 +67,7 @@ export function Stepper({
 
       <Text
         testID={testID}
+        maxFontSizeMultiplier={DENSE_MAX_SCALE}
         className={`min-w-6 text-center font-display tabular-nums text-content ${valueText}`}>
         {value}
       </Text>

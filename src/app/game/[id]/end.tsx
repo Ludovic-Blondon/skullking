@@ -1,9 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
 import { useGame } from '@/features/game/use-game';
 import { computeAwards } from '@/features/stats/awards';
+import { useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { Screen, SectionLabel, Watermark } from '@/ui/screen';
 
@@ -24,6 +26,7 @@ export default function GameEndScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Number(id);
   const view = useGame(gameId);
+  const t = useT();
 
   if (!view.ready || !view.state || !view.game) return <View className="flex-1 bg-surface" />;
 
@@ -52,21 +55,22 @@ export default function GameEndScreen() {
         {state.tie ? (
           <View className="gap-3 rounded-card border-[1.5px] border-accent bg-accent/10 p-4">
             <Text className="font-title text-h1 text-content">
-              Égalité à {state.standings[0]?.total ?? 0} points
+              {t('end.tie', { score: state.standings[0]?.total ?? 0 })}
             </Text>
             <Text className="font-body text-body text-content-muted">
-              {state.leaders.map(nameOf).join(' et ')} terminent au coude à coude. Le livret prévoit
-              une manche supplémentaire pour les départager.
+              {t('end.tieBody', { names: state.leaders.map(nameOf).join(' · ') })}
             </Text>
             <Pressable
               onPress={() => void tiebreak()}
+              accessibilityRole="button"
+              accessibilityLabel={t('end.tiebreak')}
               className="min-h-touch items-center justify-center rounded-card bg-accent p-3 active:opacity-80">
-              <Text className="font-title text-h2 text-accent-fg">Jouer la manche décisive</Text>
+              <Text className="font-title text-h2 text-accent-fg">{t('end.tiebreak')}</Text>
             </Pressable>
           </View>
         ) : (
           <View className="gap-4 rounded-card bg-surface-raised p-4">
-            <Text className="text-center font-title text-h1 text-content">Partie terminée</Text>
+            <Text className="text-center font-title text-h1 text-content">{t('end.over')}</Text>
             <View className="flex-row items-end justify-center gap-3">
               {STEPS.map(({ index, height }) => {
                 const standing = state.standings[index];
@@ -102,7 +106,7 @@ export default function GameEndScreen() {
 
         {awards.length > 0 && (
           <>
-            <SectionLabel>Palmarès</SectionLabel>
+            <SectionLabel>{t('end.awards')}</SectionLabel>
             <View className="flex-row flex-wrap gap-2">
               {awards.map((award) => (
                 <View
@@ -110,7 +114,7 @@ export default function GameEndScreen() {
                   className="flex-1 basis-[45%] items-center gap-0.5 rounded-field bg-surface-raised p-3">
                   <Text className="text-xl">{award.emoji}</Text>
                   <Text className="text-center font-semi text-caption text-content">
-                    {award.label}
+                    {t(award.labelKey)}
                   </Text>
                   <Text
                     className="text-center font-body text-micro text-content-muted"
@@ -118,7 +122,7 @@ export default function GameEndScreen() {
                     {award.playerIds.map(nameOf).join(' & ')}
                   </Text>
                   <Text className="text-center font-body text-micro text-content-muted">
-                    {award.detail}
+                    {t(award.detailKey, { count: award.value })}
                   </Text>
                 </View>
               ))}
@@ -126,7 +130,7 @@ export default function GameEndScreen() {
           </>
         )}
 
-        <SectionLabel>Classement</SectionLabel>
+        <SectionLabel>{t('end.ranking')}</SectionLabel>
         <View className="gap-2">
           {state.standings.map((standing) => {
             const seat = seatOf(standing.playerId);
@@ -153,24 +157,26 @@ export default function GameEndScreen() {
           <Pressable
             onPress={() => void rematch()}
             accessibilityRole="button"
-            accessibilityLabel="Revanche"
+            accessibilityLabel={t('end.rematch')}
             testID="rematch"
             className="min-h-touch flex-1 items-center justify-center rounded-card bg-primary p-3.5 active:opacity-80">
-            <Text className="font-title text-h2 text-primary-fg">Revanche</Text>
+            <Text className="font-title text-h2 text-primary-fg">{t('end.rematch')}</Text>
           </Pressable>
           <Pressable
             onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
             accessibilityRole="button"
-            accessibilityLabel="Voir la feuille de score"
+            accessibilityLabel={t('end.seeSheet')}
             className="min-h-touch flex-1 items-center justify-center rounded-card bg-surface-raised p-3.5 active:opacity-70">
-            <Text className="font-title text-h2 text-content">Détail</Text>
+            <Text className="font-title text-h2 text-content">{t('end.detail')}</Text>
           </Pressable>
         </View>
 
         <Pressable
           onPress={() => router.replace('/')}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
           className="min-h-touch items-center justify-center active:opacity-70">
-          <Text className="font-body text-caption text-content-muted">Retour à l&apos;accueil</Text>
+          <Text className="font-body text-caption text-content-muted">{t('common.back')}</Text>
         </Pressable>
       </Screen>
     </View>
