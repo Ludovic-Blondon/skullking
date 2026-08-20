@@ -6,7 +6,7 @@ import { deleteGame, reopenRound } from '@/db/repositories/game-repo';
 import { bonusLabel } from '@/features/game/bonus-labels';
 import { ScoreGrid } from '@/features/game/score-grid';
 import { useGame } from '@/features/game/use-game';
-import { useLanguage, useT } from '@/i18n';
+import { dateLocale, useLanguage, useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { SectionLabel, CONTENT_MAX_WIDTH } from '@/ui/screen';
 
@@ -33,7 +33,7 @@ export default function GameHistoryDetailScreen() {
   }
 
   const winner = state.standings[0];
-  const date = new Date(game.createdAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', {
+  const date = new Date(game.createdAt).toLocaleDateString(dateLocale(language), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

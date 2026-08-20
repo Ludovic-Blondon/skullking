@@ -15,6 +15,8 @@
  *    photo complète : la relire remplace tout, elle ne fusionne pas.
  */
 
+import type { Translate } from '@/i18n';
+
 export const BACKUP_APP = 'skull-scores';
 export const BACKUP_VERSION = 1;
 
@@ -245,9 +247,14 @@ export function parseBackup(text: string): ParseResult {
   };
 }
 
-/** Résumé lisible d'une sauvegarde, pour la demander de confirmation. */
-export function describeBackup(document: BackupDocument): string {
-  const games = document.games.length;
-  const players = document.players.length;
-  return `${players} joueur${players > 1 ? 's' : ''} et ${games} partie${games > 1 ? 's' : ''}`;
+/**
+ * Résumé lisible d'une sauvegarde, pour la demande de confirmation. La
+ * traduction est passée en argument : joueurs et parties s'accordent chacun de
+ * leur côté, ce qu'une seule chaîne à deux nombres ne sait pas faire.
+ */
+export function describeBackup(document: BackupDocument, t: Translate): string {
+  return t('summary.playersAndGames', {
+    players: t('summary.players', { count: document.players.length }),
+    games: t('summary.games', { count: document.games.length }),
+  });
 }

@@ -12,10 +12,7 @@
       "bundleIdentifier": "com.lblondon.skullscores",
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": [
-          "en",
-          "fr"
-        ]
+        "CFBundleLocalizations": ["en", "fr", "es", "de"]
       }
     },
     "android": {

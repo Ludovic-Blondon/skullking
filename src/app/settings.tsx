@@ -11,7 +11,7 @@ import { eraseEverything, exportBackup, importBackup } from '@/db/repositories/b
 import { games, players } from '@/db/schema';
 import { PreferenceRow } from '@/features/settings/preference-row';
 import { setSetting, useSettings } from '@/features/settings/use-settings';
-import { useT } from '@/i18n';
+import { LANGUAGE_NAMES, LANGUAGES, useT } from '@/i18n';
 import { Screen, SectionLabel } from '@/ui/screen';
 
 /** `skull-scores-2026-08-19.json` : un nom de fichier qui se relit dans un an. */
@@ -110,7 +110,7 @@ export default function SettingsScreen() {
       const { document } = result;
       Alert.alert(
         t('settings.importTitle'),
-        t('settings.importBody', { summary: describeBackup(document) }),
+        t('settings.importBody', { summary: describeBackup(document, t) }),
         [
           { text: t('common.cancel'), style: 'cancel' },
           {
@@ -121,7 +121,7 @@ export default function SettingsScreen() {
                 .then(() =>
                   Alert.alert(
                     t('settings.importDone'),
-                    t('settings.importDoneBody', { summary: describeBackup(document) }),
+                    t('settings.importDoneBody', { summary: describeBackup(document, t) }),
                   ),
                 )
                 .catch((error: unknown) =>
@@ -156,9 +156,8 @@ export default function SettingsScreen() {
       <SectionLabel>{t('settings.data')}</SectionLabel>
       <Text className="font-body text-caption text-content-muted">
         {t('settings.inventory', {
-          count: allPlayers.length,
-          players: allPlayers.length,
-          games: allGames.length,
+          players: t('summary.players', { count: allPlayers.length }),
+          games: t('summary.games', { count: allGames.length }),
         })}{' '}
         {t('settings.storage')}
       </Text>
@@ -197,8 +196,7 @@ export default function SettingsScreen() {
         value={preferences.language}
         options={[
           { value: 'system' as const, label: t('settings.system') },
-          { value: 'fr' as const, label: 'Français' },
-          { value: 'en' as const, label: 'English' },
+          ...LANGUAGES.map((language) => ({ value: language, label: LANGUAGE_NAMES[language] })),
         ]}
         onChange={(language) => void setSetting('language', language)}
       />

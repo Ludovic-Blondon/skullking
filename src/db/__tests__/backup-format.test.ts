@@ -6,6 +6,7 @@ import {
   serializeBackup,
   type BackupDocument,
 } from '../backup-format';
+import { translator } from '@/i18n/translate';
 
 function document(overrides: Partial<BackupDocument> = {}): BackupDocument {
   return {
@@ -226,13 +227,24 @@ describe('tolérance', () => {
 });
 
 describe('describeBackup', () => {
+  const fr = translator('fr');
+
   it('résume ce que le fichier contient', () => {
-    expect(describeBackup(document())).toBe('2 joueurs et 1 partie');
+    expect(describeBackup(document(), fr)).toBe('2 joueurs et 1 partie');
   });
 
   it('accorde au singulier', () => {
-    expect(describeBackup(document({ players: [document().players[0]], games: [] }))).toBe(
+    expect(describeBackup(document({ players: [document().players[0]], games: [] }), fr)).toBe(
       '1 joueur et 0 partie',
     );
+  });
+
+  /** Chaque nom s'accorde sur son propre compte, pas sur celui de l'autre. */
+  it('accorde les joueurs et les parties séparément', () => {
+    const solo = document({ games: [] });
+    expect(describeBackup(solo, fr)).toBe('2 joueurs et 0 partie');
+    expect(describeBackup(solo, translator('en'))).toBe('2 players and 0 games');
+    expect(describeBackup(solo, translator('es'))).toBe('2 jugadores y 0 partidas');
+    expect(describeBackup(solo, translator('de'))).toBe('2 Spieler und 0 Partien');
   });
 });

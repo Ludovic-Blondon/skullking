@@ -4,14 +4,14 @@ import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/text';
 
 import { gamesQuery, gameTotalsQuery } from '@/db/repositories/game-repo';
-import { useLanguage, useT } from '@/i18n';
+import { dateLocale, useLanguage, useT, type Language } from '@/i18n';
 import { EmptyState, Screen } from '@/ui/screen';
 
 /** « 12 août », « 12 août 2025 » si la partie date d'une autre année. */
-export function formatDate(timestamp: number, language: string): string {
+export function formatDate(timestamp: number, language: Language): string {
   const date = new Date(timestamp);
   const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', {
+  return date.toLocaleDateString(dateLocale(language), {
     day: 'numeric',
     month: 'long',
     ...(sameYear ? {} : { year: 'numeric' }),
