@@ -1,5 +1,5 @@
+import { Text } from '@/ui/text';
 import { Link, Stack } from 'expo-router';
-import { Text } from 'react-native';
 
 import { useT } from '@/i18n';
 import { Body, Card, Screen, Title } from '@/ui/screen';

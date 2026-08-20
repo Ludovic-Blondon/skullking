@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { DEFAULT_ROUNDS_PLAN, type Ruleset } from '@/core';
 import { useT } from '@/i18n';

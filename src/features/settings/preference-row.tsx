@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 /**
  * Une préférence : ce qu'elle règle, et deux ou trois valeurs au choix.

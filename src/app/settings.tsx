@@ -2,7 +2,8 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { db } from '@/db/client';
 import { describeBackup, parseBackup, serializeBackup } from '@/db/backup-format';

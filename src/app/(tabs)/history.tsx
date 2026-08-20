@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { Link } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { gamesQuery, gameTotalsQuery } from '@/db/repositories/game-repo';
 import { useLanguage, useT } from '@/i18n';

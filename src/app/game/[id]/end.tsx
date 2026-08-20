@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
 import { useGame } from '@/features/game/use-game';
@@ -61,6 +62,8 @@ export default function GameEndScreen() {
             </Text>
             <Pressable
               onPress={() => void tiebreak()}
+              accessibilityRole="button"
+              accessibilityLabel={t('end.tiebreak')}
               className="min-h-touch items-center justify-center rounded-card bg-accent p-3 active:opacity-80">
               <Text className="font-title text-h2 text-accent-fg">{t('end.tiebreak')}</Text>
             </Pressable>
@@ -170,6 +173,8 @@ export default function GameEndScreen() {
 
         <Pressable
           onPress={() => router.replace('/')}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.back')}
           className="min-h-touch items-center justify-center active:opacity-70">
           <Text className="font-body text-caption text-content-muted">{t('common.back')}</Text>
         </Pressable>

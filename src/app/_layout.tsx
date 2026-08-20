@@ -12,7 +12,8 @@ import { Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { useEffect } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
+import { Text } from '@/ui/text';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import migrations from '../../drizzle/migrations';

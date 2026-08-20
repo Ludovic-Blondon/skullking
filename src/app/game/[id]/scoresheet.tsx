@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { reopenRound } from '@/db/repositories/game-repo';
 import { ScoreGrid } from '@/features/game/score-grid';

@@ -770,7 +770,8 @@ export const en: Record<MessageKey, string> = {
   'cheat.whale': 'White Whale',
   'cheat.whaleValue': 'trick discarded',
   'cheat.advancedHint': 'The tricks then add up to less than the cards dealt',
-  'cheat.editionNote': 'Scoring for the {edition} edition. Switch editions to see the other column.',
+  'cheat.editionNote':
+    'Scoring for the {edition} edition. Switch editions to see the other column.',
 };
 
 export const catalogs = { fr, en } as const;

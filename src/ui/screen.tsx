@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { Text } from '@/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ScreenProps = {

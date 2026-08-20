@@ -2,7 +2,8 @@ import { eq } from 'drizzle-orm';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Text } from '@/ui/text';
 
 import { db } from '@/db/client';
 import {
@@ -176,7 +177,9 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
   }
 
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="mx-auto w-full gap-3 px-4 pb-8 pt-7"
+    <ScrollView
+      className="flex-1 bg-surface"
+      contentContainerClassName="mx-auto w-full gap-3 px-4 pb-8 pt-7"
       contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
       <View className="flex-row items-center gap-3">
         <Avatar emoji={player.emoji} color={player.color} size="lg" />
@@ -188,6 +191,7 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
             onSubmitEditing={saveName}
             placeholder={t('players.firstName')}
             placeholderTextColor={tokens.contentMuted}
+            maxFontSizeMultiplier={1.5}
             returnKeyType="done"
             autoCapitalize="words"
             testID="player-name"
