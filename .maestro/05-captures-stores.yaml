@@ -1,0 +1,77 @@
+# Captures des fiches stores (PLAN.md §10) : six écrans, dans la langue passée
+# en paramètre, sur un iPhone 17 Pro Max — 1320 × 2868, le format 6,9" exigé
+# par l'App Store, et bien au-delà du minimum de Play.
+#
+# À jouer sur une base peuplée par `docs/store/demo-data.py`, importée depuis
+# l'écran Réglages : les six écrans supposent une partie en cours arrêtée en
+# manche 7 (id 5) et quatre parties terminées (la 4 sert au podium).
+#
+#   maestro test -e LANGUE=Español captures.yaml
+#
+# Les captures sortent sous des noms fixes (1-accueil…6-stats) dans le dossier
+# du run ; c'est l'appelant qui les range par langue.
+#
+# La navigation passe par des liens profonds partout où c'est possible : ils ne
+# dépendent pas des libellés, donc le flux ne change pas d'une langue à l'autre.
+appId: com.lblondon.skullscores
+---
+- openLink: "skullking://settings"
+- tapOn:
+    text: "Ouvrir"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- tapOn: ".*${LANGUE}"
+- waitForAnimationToEnd:
+    timeout: 4000
+# Retour à l'accueil par le lien racine plutôt que par le bouton retour : ce
+# dernier revient à l'écran précédent, qui n'est pas toujours l'accueil.
+- openLink: "skullking:///"
+- tapOn:
+    text: "Ouvrir"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "1-accueil"
+
+- tapOn:
+    id: "resume-game"
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "2-resultats"
+
+- tapOn:
+    id: "back-to-bids"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: "3-annonces"
+# La manche est relancée pour rendre la partie à la phase Résultats : la langue
+# suivante retrouve exactement le même état.
+- tapOn:
+    id: "round-action"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- openLink: "skullking://game/5/scoresheet"
+- tapOn:
+    text: "Ouvrir"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "4-feuille"
+
+- openLink: "skullking://game/4/end"
+- tapOn:
+    text: "Ouvrir"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "5-podium"
+
+- openLink: "skullking://stats"
+- tapOn:
+    text: "Ouvrir"
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "6-stats"
