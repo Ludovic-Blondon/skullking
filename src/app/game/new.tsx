@@ -3,18 +3,36 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 
-import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS } from '@/core';
+import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS, type Ruleset } from '@/core';
 import { createGame } from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
+import { RulesetOptions } from '@/features/game/ruleset-options';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
 import { useTokens } from '@/ui/use-tokens';
+
+/** Résumé d'une ligne des règles choisies, pour le repli des options. */
+function summarizeRuleset(ruleset: Ruleset): string {
+  const parts = [ruleset.scoring === 'rascal' ? 'Rascal' : 'classique'];
+  if (ruleset.rascalCannonball) parts.push('boulet de canon');
+  if (ruleset.pirateAbilities) parts.push('pouvoirs');
+  if (!ruleset.advancedCards) parts.push('sans cartes avancées');
+  if (ruleset.edition === 'legacy') parts.push('ancienne édition');
+  if (ruleset.roundsPlan.length !== DEFAULT_RULESET.roundsPlan.length) {
+    parts.push(`${ruleset.roundsPlan.length} manches`);
+  }
+  return parts.join(', ');
+}
 
 export default function NewGameScreen() {
   const t = useTokens();
   const { data: players } = useLiveQuery(activePlayersQuery());
   const [selected, setSelected] = useState<number[]>([]);
   const [name, setName] = useState('');
+  const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  // Repliées par défaut (§7.1) : celui qui découvre l'app ne voit que les
+  // joueurs et « C'est parti ».
+  const [showOptions, setShowOptions] = useState(false);
 
   const enough = selected.length >= MIN_PLAYERS;
   const seated = selected
@@ -51,7 +69,7 @@ export default function NewGameScreen() {
   }
 
   async function start() {
-    const gameId = await createGame(selected, DEFAULT_RULESET);
+    const gameId = await createGame(selected, ruleset);
     router.replace({ pathname: '/game/[id]', params: { id: String(gameId) } });
   }
 
@@ -145,6 +163,23 @@ export default function NewGameScreen() {
           </View>
         </>
       )}
+
+      <Pressable
+        onPress={() => setShowOptions((open) => !open)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showOptions }}
+        accessibilityLabel="Options de règles"
+        testID="toggle-options"
+        className="min-h-touch flex-row items-center justify-between gap-2 px-1 active:opacity-70">
+        <Text className="font-semi text-caption text-content-muted">
+          Options de règles{showOptions ? '' : ` — ${summarizeRuleset(ruleset)}`}
+        </Text>
+        <Text className="font-title text-caption text-content-muted">
+          {showOptions ? '▴' : '▾'}
+        </Text>
+      </Pressable>
+
+      {showOptions && <RulesetOptions ruleset={ruleset} onChange={setRuleset} />}
 
       <Pressable
         onPress={() => {

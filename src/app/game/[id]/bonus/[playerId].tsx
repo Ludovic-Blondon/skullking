@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { BONUS_POINTS, ROUND_BONUS_LIMITS, type BonusType } from '@/core';
+import { BONUS_POINTS, RASCAL_POINTS, ROUND_BONUS_LIMITS, type BonusType } from '@/core';
 import {
   addLootAlliance,
   removeLootAlliance,
@@ -195,6 +195,38 @@ export default function BonusScreen() {
                 })}
             </View>
           </View>
+        )}
+
+        {game.ruleset.scoring === 'rascal' && game.ruleset.rascalCannonball && (
+          <Row>
+            <View className="flex-1">
+              <Text className="font-semi text-caption text-content">💣 Boulet de canon</Text>
+              <Text className="font-body text-micro text-content-muted">
+                Tout ou rien : {RASCAL_POINTS.cannonballPerCard} par carte si la mise est exacte,
+                rien sinon
+              </Text>
+            </View>
+            <View className="flex-row gap-1.5">
+              {([false, true] as const).map((armed) => (
+                <Pressable
+                  key={String(armed)}
+                  onPress={() => void updateEntry(round.id, numericPlayerId, { cannonball: armed })}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: entry.cannonball === armed }}
+                  accessibilityLabel={`Boulet de canon : ${armed ? 'armé' : 'non'}`}
+                  className={`min-h-9 justify-center rounded-full px-3 active:opacity-70 ${
+                    entry.cannonball === armed ? 'bg-primary' : 'bg-surface-sunken'
+                  }`}>
+                  <Text
+                    className={`font-semi text-caption ${
+                      entry.cannonball === armed ? 'text-primary-fg' : 'text-content-muted'
+                    }`}>
+                    {armed ? 'Armé' : 'Non'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Row>
         )}
 
         {game.ruleset.pirateAbilities && (
