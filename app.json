@@ -10,7 +10,13 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.lblondon.skullscores",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "CFBundleLocalizations": [
+          "en",
+          "fr"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {
