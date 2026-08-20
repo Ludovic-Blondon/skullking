@@ -1,0 +1,98 @@
+# Parcours ② du plan (§9) : l'app tuée en pleine manche reprend exactement où
+# elle en était.
+#
+# Rien n'est mis en cache côté app : l'état de la partie vit en base, manche
+# par manche (§5). Le scénario le vérifie là où ça compte — au milieu d'une
+# manche entamée, annonces saisies mais résultats pas encore validés.
+#
+#   maestro test .maestro/02-reprise-apres-kill.yaml
+appId: com.lblondon.skullscores
+---
+- launchApp:
+    clearState: true
+# `clearState` efface aussi l'URL mémorisée par le client de développement :
+# on la lui redonne pour qu'il se rebranche sur Metro.
+- openLink: "com.lblondon.skullscores://expo-development-client/?url=http://localhost:8081"
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 30000
+
+# — Deux joueurs à table ————————————————————————————————————————————————
+- tapOn:
+    id: "new-game"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Alice"
+- tapOn:
+    id: "new-player-add"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Bob"
+- tapOn:
+    id: "new-player-add"
+- hideKeyboard
+- tapOn:
+    id: "start-game"
+
+# — Manche 1 jouée jusqu'au bout : Alice 20, Bob 10 ————————————————————
+- extendedWaitUntil:
+    visible: "Manche 1/10.*"
+    timeout: 20000
+- tapOn:
+    id: "bid-1-plus"
+- tapOn:
+    id: "round-action"
+- tapOn:
+    id: "tricks-1-plus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 2 : annonces saisies, résultats en cours de saisie —————————
+- assertVisible: "Manche 2/10.*"
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: "bid-2-plus"
+- tapOn:
+    id: "round-action"
+- assertVisible: "Manche 2/10 · Résultats"
+
+# — Kill —————————————————————————————————————————————————————————————————
+- stopApp
+- launchApp
+# L'accueil sait où la partie s'est arrêtée : la manche **et** sa phase. La
+# carte est un seul élément d'accessibilité — c'est son libellé que Maestro
+# lit, pas les trois lignes affichées.
+- extendedWaitUntil:
+    visible: "Reprendre — manche 2 · Résultats"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# — La reprise rouvre la manche 2 à l'identique ————————————————————————
+- tapOn:
+    id: "resume-game"
+- extendedWaitUntil:
+    visible: "Manche 2/10 · Résultats"
+    timeout: 20000
+# Les annonces de la manche interrompue sont intactes — et avec elles le
+# nombre de cartes distribuées : la mise 0 d'Alice vaut +20 sur deux cartes.
+- assertVisible: ".*annoncé 0 · \\+20 ce tour.*"
+- assertVisible: ".*annoncé 2 · -20 ce tour.*"
+
+# La manche 2 se termine sans rien retoucher : personne ne prend de pli.
+# Alice 20 + 20 = 40, Bob 10 − 20 = −10. Ces deux nombres ne tombent juste que
+# si la manche 1 a survécu au kill avec ses 20 et ses 10.
+- tapOn:
+    id: "round-action"
+- extendedWaitUntil:
+    visible: "Manche 3/10.*"
+    timeout: 20000
+- assertVisible: "40 pts"
+- assertVisible: "-10 pts"

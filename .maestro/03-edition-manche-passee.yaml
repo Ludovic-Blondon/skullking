@@ -1,0 +1,96 @@
+# Parcours ③ du plan (§9) : corriger une manche passée recalcule tout ce qui
+# suit.
+#
+# C'est l'invariant du §5 vu de l'écran : une correction ne rattrape jamais un
+# total par un delta, elle repasse la partie entière dans `computeGame`. Le
+# scénario déplace un pli d'Alice vers Bob en manche 1, et vérifie que les deux
+# cumuls de fin de manche 2 ont changé.
+#
+#   maestro test .maestro/03-edition-manche-passee.yaml
+appId: com.lblondon.skullscores
+---
+- launchApp:
+    clearState: true
+- openLink: "com.lblondon.skullscores://expo-development-client/?url=http://localhost:8081"
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 30000
+
+# — Deux joueurs à table ————————————————————————————————————————————————
+- tapOn:
+    id: "new-game"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Alice"
+- tapOn:
+    id: "new-player-add"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Bob"
+- tapOn:
+    id: "new-player-add"
+- hideKeyboard
+- tapOn:
+    id: "start-game"
+
+# — Manche 1 : Alice annonce 1 et le prend — 20 pour elle, 10 pour Bob ——
+- extendedWaitUntil:
+    visible: "Manche 1/10.*"
+    timeout: 20000
+- tapOn:
+    id: "bid-1-plus"
+- tapOn:
+    id: "round-action"
+- tapOn:
+    id: "tricks-1-plus"
+- tapOn:
+    id: "round-action"
+
+# — Manche 2 : Alice annonce 2 et les prend — 60 et 30 ————————————————
+- assertVisible: "Manche 2/10.*"
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: "bid-1-plus"
+- tapOn:
+    id: "round-action"
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: "tricks-1-plus"
+- tapOn:
+    id: "round-action"
+- assertVisible: "Manche 3/10.*"
+- assertVisible: "60 pts"
+- assertVisible: "30 pts"
+
+# — Correction de la manche 1 : le pli passe d'Alice à Bob ——————————————
+- tapOn: "Feuille de score"
+- tapOn: "Corriger la manche 1"
+# Le titre de l'alerte est « Corriger la manche 1 ? » : la comparaison portant
+# sur le texte entier, « Corriger » ne désigne que le bouton.
+- tapOn: "Corriger"
+- extendedWaitUntil:
+    visible: "Manche 1/10 · Résultats"
+    timeout: 20000
+- tapOn:
+    id: "tricks-1-minus"
+- tapOn:
+    id: "tricks-2-plus"
+- tapOn:
+    id: "round-action"
+
+# — La cascade : Alice rate son annonce (−10), Bob rate sa mise 0 (−10) —
+# Alice : −10 + 40 = 30. Bob : −10 + 20 = 10.
+- extendedWaitUntil:
+    visible: "30 pts"
+    timeout: 20000
+- assertVisible: "10 pts"
+- assertNotVisible: "60 pts"
