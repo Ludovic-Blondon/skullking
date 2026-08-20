@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/text';
@@ -14,6 +15,7 @@ import { useGame, type SeatedPlayer } from '@/features/game/use-game';
 import { useT } from '@/i18n';
 import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 import { Avatar } from '@/ui/avatar';
+import { AnimatedNumber } from '@/ui/animated-number';
 import { Stepper } from '@/ui/stepper';
 
 const TOGGLES: BonusType[] = [
@@ -114,7 +116,10 @@ export default function BonusScreen() {
             return (
               <Pressable
                 key={type}
-                onPress={() => void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1)}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  void setCaptureBonus(round.id, numericPlayerId, type, mine ? 0 : 1);
+                }}
                 disabled={locked}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: mine, disabled: locked }}
@@ -193,11 +198,12 @@ export default function BonusScreen() {
                       accessibilityRole="checkbox"
                       accessibilityState={{ checked: allied, disabled: full }}
                       accessibilityLabel={`${t('bonus.loot')} — ${ally.name}`}
-                      onPress={() =>
+                      onPress={() => {
+                        void Haptics.selectionAsync();
                         void (allied
                           ? removeLootAlliance(round.id, numericPlayerId, ally.id)
-                          : addLootAlliance(round.id, numericPlayerId, ally.id))
-                      }
+                          : addLootAlliance(round.id, numericPlayerId, ally.id));
+                      }}
                       className={`min-h-touch justify-center rounded-full px-3.5 active:opacity-70 ${
                         allied ? 'bg-accent' : 'bg-surface-sunken'
                       } ${full ? 'opacity-40' : ''}`}>
@@ -358,20 +364,20 @@ export default function BonusScreen() {
         </Row>
 
         <View className="flex-row items-center justify-between px-1 pt-2">
-          <Text className="font-title text-h2 text-content">
-            {t('bonus.total')}{' '}
-            <Text
-              className={
+          <View className="flex-row items-baseline gap-1.5">
+            <Text className="font-title text-h2 text-content">{t('bonus.total')}</Text>
+            <AnimatedNumber
+              value={sheetTotal}
+              format={(points) => `${points > 0 ? '+' : ''}${points}`}
+              className={`font-title text-h2 ${
                 sheetTotal > 0
                   ? 'text-positive'
                   : sheetTotal < 0
                     ? 'text-negative'
                     : 'text-content-muted'
-              }>
-              {sheetTotal > 0 ? '+' : ''}
-              {sheetTotal}
-            </Text>
-          </Text>
+              }`}
+            />
+          </View>
           {!exact && captured > 0 && (
             <Text className="font-body text-micro text-content-muted">
               {t('bonus.lostToMiss', { points: captured })}

@@ -76,7 +76,7 @@ export default function SettingsScreen() {
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
-          dialogTitle: 'Sauvegarde Skull Scores',
+          dialogTitle: t('settings.shareTitle'),
           UTI: 'public.json',
         });
       } else {

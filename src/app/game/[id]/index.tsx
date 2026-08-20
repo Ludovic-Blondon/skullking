@@ -19,6 +19,8 @@ import { useKeepScreenAwake } from '@/features/settings/use-keep-awake';
 import { useT } from '@/i18n';
 import { ValidationBar } from '@/features/game/validation-bar';
 import { Avatar } from '@/ui/avatar';
+import { AnimatedNumber } from '@/ui/animated-number';
+import { Pulse } from '@/ui/pulse';
 import { CONTENT_MAX_WIDTH, Watermark } from '@/ui/screen';
 import { Stepper } from '@/ui/stepper';
 import { useTokens } from '@/ui/use-tokens';
@@ -202,57 +204,60 @@ export default function GameScreen() {
               tone={tone}
               testID={`bid-${player.id}`}
               subtitle={
-                <Text className="font-body text-micro text-content-muted">
-                  {t('game.points', { points: total })}
-                </Text>
+                <AnimatedNumber
+                  value={total}
+                  className="font-body text-micro text-content-muted"
+                  format={(points) => t('game.points', { points })}
+                />
               }
             />
           ) : (
-            <PlayerRow
-              key={player.id}
-              player={player}
-              value={entry?.tricks ?? 0}
-              onChange={(tricks) => void updateEntry(round.id, player.id, { tricks })}
-              max={cardsDealt}
-              label={t('game.tricksLabel')}
-              tone={tone}
-              testID={`tricks-${player.id}`}
-              subtitle={
-                <Text className="font-body text-micro text-content-muted">
-                  {t('game.announced', { bid: entry?.bid ?? 0 })}
-                  {played && score
-                    ? ` · ${t('game.thisRound', {
-                        delta: `${score.total > 0 ? '+' : ''}${score.total}`,
-                      })}`
-                    : ''}
-                </Text>
-              }
-              trailing={
-                <Link
-                  href={{
-                    pathname: '/game/[id]/bonus/[playerId]',
-                    params: { id, playerId: String(player.id) },
-                  }}
-                  asChild>
-                  <Pressable
-                    hitSlop={8}
-                    accessibilityLabel={t('game.bonusOf', { name: player.name })}
-                    className="min-w-9 items-end active:opacity-70">
-                    <Text
-                      className={`font-title text-caption ${
-                        extra > 0
-                          ? 'text-positive'
-                          : extra < 0
-                            ? 'text-negative'
-                            : 'text-content-muted'
-                      }`}>
-                      {extra >= 0 ? '+' : ''}
-                      {extra}
-                    </Text>
-                  </Pressable>
-                </Link>
-              }
-            />
+            <Pulse key={player.id} trigger={score?.total ?? 0}>
+              <PlayerRow
+                player={player}
+                value={entry?.tricks ?? 0}
+                onChange={(tricks) => void updateEntry(round.id, player.id, { tricks })}
+                max={cardsDealt}
+                label={t('game.tricksLabel')}
+                tone={tone}
+                testID={`tricks-${player.id}`}
+                subtitle={
+                  <Text className="font-body text-micro text-content-muted">
+                    {t('game.announced', { bid: entry?.bid ?? 0 })}
+                    {played && score
+                      ? ` · ${t('game.thisRound', {
+                          delta: `${score.total > 0 ? '+' : ''}${score.total}`,
+                        })}`
+                      : ''}
+                  </Text>
+                }
+                trailing={
+                  <Link
+                    href={{
+                      pathname: '/game/[id]/bonus/[playerId]',
+                      params: { id, playerId: String(player.id) },
+                    }}
+                    asChild>
+                    <Pressable
+                      hitSlop={8}
+                      accessibilityLabel={t('game.bonusOf', { name: player.name })}
+                      className="min-w-9 items-end active:opacity-70">
+                      <Text
+                        className={`font-title text-caption ${
+                          extra > 0
+                            ? 'text-positive'
+                            : extra < 0
+                              ? 'text-negative'
+                              : 'text-content-muted'
+                        }`}>
+                        {extra >= 0 ? '+' : ''}
+                        {extra}
+                      </Text>
+                    </Pressable>
+                  </Link>
+                }
+              />
+            </Pulse>
           );
         })}
 
@@ -318,9 +323,7 @@ export default function GameScreen() {
           problem={
             blocking ? (({ key, params }) => t(key, params))(issueMessage(blocking)) : undefined
           }
-          actionLabel={
-            round.roundNumber >= totalRounds ? 'Terminer la partie' : 'Valider la manche'
-          }
+          actionLabel={t(round.roundNumber >= totalRounds ? 'game.finish' : 'game.validate')}
           onAction={() => void confirmRound()}
           onForce={() => void confirmRound(true)}
         />
