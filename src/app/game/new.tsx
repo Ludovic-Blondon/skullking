@@ -8,6 +8,7 @@ import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS, type Ruleset } from '@/core'
 import { createGame } from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
 import { RulesetOptions } from '@/features/game/ruleset-options';
+import { setSetting, useSettings } from '@/features/settings/use-settings';
 import { useT, type Translate } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
 import { EmptyState, Screen, SectionLabel } from '@/ui/screen';
@@ -17,7 +18,7 @@ import { useTokens } from '@/ui/use-tokens';
 function summarizeRuleset(ruleset: Ruleset, t: Translate): string {
   const parts = [t(ruleset.scoring === 'rascal' ? 'rules.rascal' : 'rules.classic')];
   if (ruleset.rascalCannonball) parts.push(t('rules.summaryCannonball'));
-  if (ruleset.pirateAbilities) parts.push(t('rules.summaryPowers'));
+  if (!ruleset.pirateAbilities) parts.push(t('rules.summaryNoPowers'));
   if (!ruleset.advancedCards) parts.push(t('rules.summaryNoAdvanced'));
   if (ruleset.edition === 'legacy') parts.push(t('rules.summaryLegacy'));
   if (ruleset.roundsPlan.length !== DEFAULT_RULESET.roundsPlan.length) {
@@ -32,11 +33,18 @@ export default function NewGameScreen() {
   const { data: players } = useLiveQuery(activePlayersQuery());
   const [selected, setSelected] = useState<number[]>([]);
   const [name, setName] = useState('');
-  const [ruleset, setRuleset] = useState<Ruleset>(DEFAULT_RULESET);
+  // Les règles partent de la dernière partie (§7.4) : une table rejoue presque
+  // toujours pareil. Les préférences arrivent de la base, donc après le premier
+  // rendu — d'où la superposition plutôt qu'un état initial, qui figerait les
+  // règles par défaut avant l'arrivée des vraies.
+  const { lastRuleset } = useSettings();
+  const [chosen, setChosen] = useState<Ruleset | null>(null);
+  const ruleset = chosen ?? lastRuleset;
   // Repliées par défaut (§7.1) : celui qui découvre l'app ne voit que les
   // joueurs et « C'est parti ».
   const [showOptions, setShowOptions] = useState(false);
 
+  const summary = summarizeRuleset(ruleset, t);
   const enough = selected.length >= MIN_PLAYERS;
   const seated = selected
     .map((id) => players.find((player) => player.id === id))
@@ -69,6 +77,7 @@ export default function NewGameScreen() {
   }
 
   async function start() {
+    await setSetting('lastRuleset', ruleset);
     const gameId = await createGame(selected, ruleset);
     router.replace({ pathname: '/game/[id]', params: { id: String(gameId) } });
   }
@@ -169,20 +178,24 @@ export default function NewGameScreen() {
         onPress={() => setShowOptions((open) => !open)}
         accessibilityRole="button"
         accessibilityState={{ expanded: showOptions }}
-        accessibilityLabel={t('new.options')}
+        // Le résumé fait partie de l'information : VoiceOver doit entendre les
+        // règles retenues, pas seulement « Options de règles ».
+        accessibilityLabel={
+          showOptions ? t('new.options') : t('new.optionsSummary', { summary })
+        }
         testID="toggle-options"
         className="min-h-touch flex-row items-center justify-between gap-2 px-1 active:opacity-70">
         <Text className="font-semi text-caption text-content-muted">
           {showOptions
             ? t('new.options')
-            : t('new.optionsSummary', { summary: summarizeRuleset(ruleset, t) })}
+            : t('new.optionsSummary', { summary })}
         </Text>
         <Text className="font-title text-caption text-content-muted">
           {showOptions ? '▴' : '▾'}
         </Text>
       </Pressable>
 
-      {showOptions && <RulesetOptions ruleset={ruleset} onChange={setRuleset} />}
+      {showOptions && <RulesetOptions ruleset={ruleset} onChange={setChosen} />}
 
       <Pressable
         onPress={() => {
