@@ -1,0 +1,55 @@
+# Les règles d'une partie sont retenues pour la suivante (§7.1).
+#
+# Signalé en usage réel : les pouvoirs des pirates étaient à recocher à chaque
+# partie. Le scénario active une option, lance une partie, revient à l'accueil
+# et vérifie que la configuration suivante en part.
+#
+#   maestro test .maestro/04-regles-retenues.yaml
+appId: com.lblondon.skullscores
+---
+- launchApp:
+    clearState: true
+- openLink: "com.lblondon.skullscores://expo-development-client/?url=http://localhost:8081"
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: "Nouvelle partie"
+    timeout: 30000
+
+# — Une table de deux joueurs, pouvoirs des pirates coupés ————————————————
+- tapOn:
+    id: "new-game"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Alice"
+- tapOn:
+    id: "new-player-add"
+- tapOn:
+    id: "new-player-name"
+- inputText: "Bob"
+- tapOn:
+    id: "new-player-add"
+# Sans quoi un tap suivant part dans les touches du clavier resté ouvert.
+- hideKeyboard
+- tapOn:
+    id: "toggle-options"
+# Les segments portent leur réglage dans leur libellé d'accessibilité.
+- tapOn: ".*Pouvoirs des pirates : Sans.*"
+- tapOn:
+    id: "toggle-options"
+- assertVisible: ".*Options de règles.*sans pouvoirs.*"
+# Un joueur créé s'assoit à la table : rien à sélectionner de plus.
+- tapOn:
+    id: "start-game"
+- extendedWaitUntil:
+    visible: ".*Manche 1.*"
+    timeout: 20000
+
+# — La partie suivante repart des mêmes règles ——————————————————————————
+- tapOn: ".*Retour à l.accueil.*"
+- tapOn:
+    id: "new-game"
+- assertVisible: ".*Options de règles.*sans pouvoirs.*"

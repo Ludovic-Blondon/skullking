@@ -98,13 +98,20 @@ export const MAX_PLAYERS = 8;
 /** Plan de manches par défaut : 10 manches, la manche N distribuant N cartes. */
 export const DEFAULT_ROUNDS_PLAN: number[] = Array.from({ length: 10 }, (_, i) => i + 1);
 
-/** Règles par défaut de l'app : la boîte 2021, cartes avancées comprises. */
+/**
+ * Règles par défaut de l'app : la boîte 2021 complète, cartes avancées et
+ * pouvoirs des pirates compris.
+ *
+ * Le défaut penche vers « tout est là » : une table qui joue les pouvoirs et
+ * ne les trouve pas dans l'app est bloquée au milieu d'une manche, alors qu'une
+ * table qui ne les joue pas laisse simplement un bouton de côté.
+ */
 export const DEFAULT_RULESET: Ruleset = {
   edition: 'current',
   advancedCards: true,
   scoring: 'classic',
   rascalCannonball: false,
-  pirateAbilities: false,
+  pirateAbilities: true,
   roundsPlan: DEFAULT_ROUNDS_PLAN,
 };
 

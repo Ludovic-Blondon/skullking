@@ -4,6 +4,7 @@ import { Text } from '@/ui/text';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
 import { useGame } from '@/features/game/use-game';
+import { setSetting } from '@/features/settings/use-settings';
 import { computeAwards } from '@/features/stats/awards';
 import { useT } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
@@ -36,6 +37,9 @@ export default function GameEndScreen() {
   const awards = computeAwards(state.rounds, view.inputs);
 
   async function rematch() {
+    // Une revanche redevient la dernière partie jouée : c'est de ses règles
+    // que partira la prochaine configuration.
+    await setSetting('lastRuleset', game.ruleset);
     const newGameId = await createGame(
       seats.map((seat) => seat.id),
       game.ruleset,
