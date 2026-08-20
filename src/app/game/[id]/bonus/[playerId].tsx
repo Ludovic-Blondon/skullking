@@ -11,6 +11,7 @@ import {
 import { CAPTURE_LABELS, COUNTER_UNITS } from '@/features/game/bonus-labels';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
 import { useT } from '@/i18n';
+import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 import { Avatar } from '@/ui/avatar';
 import { Stepper } from '@/ui/stepper';
 
@@ -84,7 +85,8 @@ export default function BonusScreen() {
   return (
     <View className="flex-1 bg-surface">
       {/* Pas d'en-tête natif sur cette feuille : la marge haute dégage la poignée. */}
-      <ScrollView contentContainerClassName="gap-2.5 px-4 pb-8 pt-7">
+      <ScrollView contentContainerClassName="mx-auto w-full gap-2.5 px-4 pb-8 pt-7"
+      contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
         <View className="flex-row items-center gap-2.5">
           <Avatar emoji={player.emoji} color={player.color} size="sm" />
           <Text className="font-title text-h2 text-content">

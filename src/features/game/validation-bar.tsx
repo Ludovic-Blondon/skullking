@@ -2,6 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useT } from '@/i18n';
+import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 
 /** Couleur du bandeau : ce que la table doit comprendre en un coup d'œil. */
 export type BarTone = 'ok' | 'warn' | 'error';
@@ -61,7 +62,7 @@ export function ValidationBar({
         )}
       </View>
 
-      <View className="px-5 pb-3 pt-3.5">
+      <View style={{ maxWidth: CONTENT_MAX_WIDTH }} className="mx-auto w-full px-5 pb-3 pt-3.5">
         <Pressable
           onPress={onAction}
           disabled={!ok}

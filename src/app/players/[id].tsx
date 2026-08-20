@@ -18,7 +18,7 @@ import { MIN_GAMES_FOR_RATES, type PlayerStats } from '@/features/stats/compute'
 import { useStats } from '@/features/stats/use-stats';
 import { useT, type Translate } from '@/i18n';
 import { Avatar } from '@/ui/avatar';
-import { SectionLabel } from '@/ui/screen';
+import { SectionLabel, CONTENT_MAX_WIDTH } from '@/ui/screen';
 import { PLAYER_COLORS } from '@/ui/tokens';
 import { useTokens } from '@/ui/use-tokens';
 
@@ -176,7 +176,8 @@ function PlayerForm({ player, played }: { player: Player; played: number }) {
   }
 
   return (
-    <ScrollView className="flex-1 bg-surface" contentContainerClassName="gap-3 px-4 pb-8 pt-7">
+    <ScrollView className="flex-1 bg-surface" contentContainerClassName="mx-auto w-full gap-3 px-4 pb-8 pt-7"
+      contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
       <View className="flex-row items-center gap-3">
         <Avatar emoji={player.emoji} color={player.color} size="lg" />
         <View className="flex-1 gap-1">

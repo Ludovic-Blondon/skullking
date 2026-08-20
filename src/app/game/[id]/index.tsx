@@ -18,7 +18,7 @@ import { useKeepScreenAwake } from '@/features/settings/use-keep-awake';
 import { useT } from '@/i18n';
 import { ValidationBar } from '@/features/game/validation-bar';
 import { Avatar } from '@/ui/avatar';
-import { Watermark } from '@/ui/screen';
+import { CONTENT_MAX_WIDTH, Watermark } from '@/ui/screen';
 import { Stepper } from '@/ui/stepper';
 import { useTokens } from '@/ui/use-tokens';
 
@@ -119,7 +119,9 @@ export default function GameScreen() {
     <View className="flex-1 bg-surface">
       <Watermark />
 
-      <View style={{ paddingTop: insets.top + 6 }} className="gap-2 px-5 pb-3">
+      <View
+        style={{ paddingTop: insets.top + 6, maxWidth: CONTENT_MAX_WIDTH }}
+        className="mx-auto w-full gap-2 px-5 pb-3">
         <View className="flex-row items-start justify-between gap-3">
           <Text className="flex-1 font-title text-h1 text-content">
             {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
@@ -169,7 +171,9 @@ export default function GameScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerClassName="gap-2.5 px-4 pb-4">
+      <ScrollView
+        contentContainerClassName="mx-auto w-full gap-2.5 px-4 pb-4"
+        contentContainerStyle={{ maxWidth: CONTENT_MAX_WIDTH }}>
         {seats.map((player) => {
           const entry = entryOf(player.id);
           const score = scoreOf(player.id);
