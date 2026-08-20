@@ -33,6 +33,12 @@ export default function HomeScreen() {
       .limit(1),
   );
   const current = ongoing[0];
+  // La phase fait partie de ce que la carte annonce : sans elle, VoiceOver dit
+  // « Reprendre — manche 2 » sans dire si la manche attend des annonces ou des
+  // résultats.
+  const phase = current
+    ? t(current.currentPhase === 'bidding' ? 'home.phaseBidding' : 'home.phaseResults')
+    : '';
 
   return (
     <View className="flex-1 bg-surface">
@@ -42,7 +48,7 @@ export default function HomeScreen() {
           <Link href={{ pathname: '/game/[id]', params: { id: String(current.id) } }} asChild>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={t('home.resume', { round: current.currentRound })}
+              accessibilityLabel={`${t('home.resume', { round: current.currentRound })} · ${phase}`}
               testID="resume-game"
               className="gap-1 rounded-card bg-primary p-4 active:opacity-80">
               <Text className="font-semi text-micro uppercase tracking-widest text-primary-fg opacity-70">
@@ -51,9 +57,7 @@ export default function HomeScreen() {
               <Text className="font-title text-h2 text-primary-fg">
                 {t('home.resume', { round: current.currentRound })}
               </Text>
-              <Text className="font-body text-caption text-primary-fg opacity-70">
-                {t(current.currentPhase === 'bidding' ? 'home.phaseBidding' : 'home.phaseResults')}
-              </Text>
+              <Text className="font-body text-caption text-primary-fg opacity-70">{phase}</Text>
             </Pressable>
           </Link>
         ) : (
