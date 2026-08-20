@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
-import { Link, Redirect, Stack, router, useLocalSearchParams } from 'expo-router';
+import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hasBlockingIssues, scoreRound } from '@/core';
+import { hasBlockingIssues, RASCAL_POINTS, scoreRound } from '@/core';
 import {
   setDestroyedTricks,
   setPhase,
@@ -113,7 +113,6 @@ export default function GameScreen() {
 
   return (
     <View className="flex-1 bg-surface">
-      <Stack.Screen options={{ headerShown: false }} />
       <Watermark />
 
       <View style={{ paddingTop: insets.top + 6 }} className="gap-2 px-5 pb-3">
@@ -144,14 +143,26 @@ export default function GameScreen() {
           </View>
         </View>
 
-        {view.dealer && (
-          <View className="flex-row items-center gap-2">
-            <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />
+        <View className="flex-row items-center gap-2">
+          {view.dealer && (
+            <>
+              <Avatar emoji={view.dealer.emoji} color={view.dealer.color} size="sm" />
+              <Text className="font-body text-caption text-content-muted">
+                {view.dealer.name} distribue
+              </Text>
+            </>
+          )}
+          {game.ruleset.scoring === 'rascal' && (
+            // Le potentiel de la manche est ce que Rascal met sur la table :
+            // l'afficher évite d'avoir à le recalculer de tête à chaque manche.
             <Text className="font-body text-caption text-content-muted">
-              {view.dealer.name} distribue
+              · potentiel {RASCAL_POINTS.potentialPerCard * cardsDealt}
+              {game.ruleset.rascalCannonball
+                ? ` ou ${RASCAL_POINTS.cannonballPerCard * cardsDealt} au boulet`
+                : ''}
             </Text>
-          </View>
-        )}
+          )}
+        </View>
       </View>
 
       <ScrollView contentContainerClassName="gap-2.5 px-4 pb-4">

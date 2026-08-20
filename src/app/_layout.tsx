@@ -55,8 +55,11 @@ export default function RootLayout() {
             <Stack.Screen name="rules" options={{ title: 'Aide-mémoire du barème' }} />
             <Stack.Screen name="game/new" options={{ title: 'Nouvelle partie' }} />
             <Stack.Screen
+              // L'écran porte son propre en-tête (« Manche 4/10 · 4 cartes ») :
+              // le déclarer ici plutôt que dans l'écran évite que l'en-tête
+              // natif clignote pendant le chargement de la partie.
               name="game/[id]/index"
-              options={{ title: 'Partie', headerBackVisible: false }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="game/[id]/scoresheet"
