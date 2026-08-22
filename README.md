@@ -4,7 +4,8 @@ Application mobile iOS + Android de comptage de points pour le jeu de cartes **S
 100 % hors ligne, gratuite, sans pub ni compte. Historique complet, statistiques par joueur,
 saisie sémantique des bonus, barème exact par édition de règles.
 
-Le cadrage complet (règles, modèle de données, écrans, phases) est dans [`PLAN.md`](./PLAN.md).
+Le cadrage complet (règles, modèle de données, écrans, phases) vit dans un document privé,
+non publié : les renvois `PLAN.md §x` que tu croiseras dans le code y font référence.
 
 > Application non affiliée à Grandpa Beck's Games, éditeur de Skull King.
 
@@ -77,3 +78,12 @@ les deux ne divergent pas.
 ## Conventions
 
 Commits conventionnels (`feat:`, `fix:`, `chore:`…), vérifiés par commitlint.
+
+## Contribuer
+
+Les contributions sont bienvenues — voir [`CONTRIBUTING.md`](./CONTRIBUTING.md) pour les
+invariants du code, les vérifications attendues et le fonctionnement des pull requests.
+
+## Licence
+
+[MIT](./LICENSE) © 2026 Ludovic Blondon

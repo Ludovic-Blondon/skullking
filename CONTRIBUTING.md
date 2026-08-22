@@ -1,0 +1,70 @@
+# Contribuer à Skull Scores
+
+Merci de l'intérêt porté au projet. Skull Scores est développé sur mon temps libre : les
+contributions sont bienvenues, mais le périmètre reste volontairement resserré — une app de
+comptage de points, hors ligne, sans compte ni publicité.
+
+**Avant d'écrire du code pour une nouveauté, ouvre une issue.** Ça évite d'investir du temps sur
+quelque chose qui ne rentrera pas dans le périmètre. Pour une correction de bug, une PR directe
+est parfaitement bienvenue.
+
+## Mise en route
+
+```bash
+npm install
+npm run ios       # build de développement iOS (Xcode requis)
+npm run android   # build de développement Android (Android Studio requis)
+```
+
+Le projet tourne sur **Expo SDK 57**. La documentation d'Expo évolue vite : réfère-toi à la
+version correspondante, <https://docs.expo.dev/versions/v57.0.0/>, et non à `latest`.
+
+## Vérifications
+
+Ces trois commandes doivent passer avant tout commit — elles tournent en pre-commit via Husky,
+puis sur chaque pull request :
+
+```bash
+npm run typecheck && npm run lint && npm test
+```
+
+## Invariants à ne pas casser
+
+Quatre règles structurent le code. Une PR qui les enfreint sera refusée, même si elle fonctionne :
+
+- **`src/core` reste du TypeScript pur** : ni React, ni React Native, ni accès base de données,
+  ni UI. Une règle ESLint le vérifie.
+- **Le barème n'est jamais codé en dur dans l'UI.** Il vient toujours du `Ruleset` passé au
+  moteur ; les valeurs vivent dans `src/core/rules/editions.ts`.
+- **La base stocke des données brutes** (mises, plis, bonus), jamais des points calculés ailleurs
+  que dans les snapshots recalculables.
+- **Toute édition d'une manche passée repasse par `computeGame`** — jamais de delta appliqué à la
+  main.
+
+## À propos de `PLAN.md`
+
+Le code comporte des renvois du type `// PLAN.md §4.2`. Ce document de cadrage n'est pas publié :
+il reste privé. Ces commentaires te seront donc opaques, et c'est normal — ils ne conditionnent
+pas la lecture du code. En cas de doute sur une intention, demande dans l'issue ou la PR.
+
+## Commits
+
+Commits conventionnels (`feat:`, `fix:`, `chore:`, `docs:`, `test:`…), vérifiés par commitlint.
+Les messages sont rédigés en français, à l'impératif, et décrivent l'intention plutôt que le
+diff.
+
+## Pull requests
+
+`main` est protégée : le passage par une pull request est obligatoire, et la CI
+(`Typecheck, lint et tests`) doit être verte avant le merge. Personne n'y échappe, propriétaire
+compris.
+
+Une PR par sujet. Décris ce que tu changes et pourquoi ; si le comportement visible bouge, une
+capture aide.
+
+## Licence des contributions
+
+Le projet est distribué sous [licence MIT](./LICENSE). En proposant une contribution, tu la
+places sous cette même licence — c'est le mécanisme prévu par les conditions d'utilisation de
+GitHub (section D.6, « Contributions Under Repository License »), et tu confirmes détenir les
+droits nécessaires pour le faire.
