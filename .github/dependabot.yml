@@ -36,6 +36,14 @@ updates:
       - dependency-name: react-native
       - dependency-name: react-native-*
       - dependency-name: '@types/react'
+      # Gouvernés indirectement par le SDK : `eslint-config-expo` embarque
+      # eslint-plugin-react et @typescript-eslint, `jest-expo` porte le preset
+      # Jest. Les monter seuls casse le lint ou empêche les tests de démarrer.
+      - dependency-name: eslint
+      - dependency-name: eslint-config-expo
+      - dependency-name: typescript
+      - dependency-name: jest
+      - dependency-name: '@types/jest'
       # NativeWind 4 exige Tailwind 3 : le majeur casserait tout le design system.
       - dependency-name: tailwindcss
         update-types: ['version-update:semver-major']
