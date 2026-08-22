@@ -1,0 +1,47 @@
+# Mises à jour de dépendances. Les PR passent par la CI comme les autres :
+# `main` est protégée, rien n'entre sans `Typecheck, lint et tests` au vert.
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    ignore:
+      # Ces versions sont pilotées par le SDK Expo : c'est `npx expo install --fix`
+      # qui fait foi, au moment d'une montée de SDK. Un bump isolé casse le projet.
+      - dependency-name: expo
+      - dependency-name: expo-*
+      - dependency-name: '@expo/*'
+      - dependency-name: '@expo-google-fonts/*'
+      - dependency-name: jest-expo
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-native
+      - dependency-name: react-native-*
+      - dependency-name: '@types/react'
+      # NativeWind 4 exige Tailwind 3 : le majeur casserait tout le design system.
+      - dependency-name: tailwindcss
+        update-types: ['version-update:semver-major']
+    groups:
+      # Un seul lot par semaine pour les mineures et correctives ; les majeures
+      # restent en PR séparées, elles méritent d'être lues une par une.
+      outils:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
