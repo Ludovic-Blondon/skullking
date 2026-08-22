@@ -51,8 +51,6 @@ describe('parseStoredRuleset', () => {
     expect(plan([1, 0, 3]).roundsPlan).toEqual(DEFAULT_RULESET.roundsPlan);
     expect(plan([1, 2.5]).roundsPlan).toEqual(DEFAULT_RULESET.roundsPlan);
     expect(plan('1,2,3').roundsPlan).toEqual(DEFAULT_RULESET.roundsPlan);
-    expect(plan(Array(50).fill(1)).roundsPlan).toHaveLength(
-      DEFAULT_RULESET.roundsPlan.length,
-    );
+    expect(plan(Array(50).fill(1)).roundsPlan).toHaveLength(DEFAULT_RULESET.roundsPlan.length);
   });
 });
