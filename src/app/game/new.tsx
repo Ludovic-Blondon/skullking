@@ -180,15 +180,11 @@ export default function NewGameScreen() {
         accessibilityState={{ expanded: showOptions }}
         // Le résumé fait partie de l'information : VoiceOver doit entendre les
         // règles retenues, pas seulement « Options de règles ».
-        accessibilityLabel={
-          showOptions ? t('new.options') : t('new.optionsSummary', { summary })
-        }
+        accessibilityLabel={showOptions ? t('new.options') : t('new.optionsSummary', { summary })}
         testID="toggle-options"
         className="min-h-touch flex-row items-center justify-between gap-2 px-1 active:opacity-70">
         <Text className="font-semi text-caption text-content-muted">
-          {showOptions
-            ? t('new.options')
-            : t('new.optionsSummary', { summary })}
+          {showOptions ? t('new.options') : t('new.optionsSummary', { summary })}
         </Text>
         <Text className="font-title text-caption text-content-muted">
           {showOptions ? '▴' : '▾'}

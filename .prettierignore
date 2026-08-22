@@ -16,5 +16,9 @@ assets/expo.icon/
 # Migrations et métadonnées générées par drizzle-kit.
 drizzle/
 
+# Sauvegarde de démo générée par docs/store/demo-data.py : c'est `json.dumps`
+# qui fait foi, sinon la dérive revient à chaque régénération.
+docs/store/skull-scores-demo.json
+
 # Flux Maestro : l'indentation YAML y est significative pour la lisibilité.
 .maestro/
