@@ -41,11 +41,12 @@ Quatre règles structurent le code. Une PR qui les enfreint sera refusée, même
 - **Toute édition d'une manche passée repasse par `computeGame`** — jamais de delta appliqué à la
   main.
 
-## À propos de `PLAN.md`
+## Le plan fait foi
 
-Le code comporte des renvois du type `// PLAN.md §4.2`. Ce document de cadrage n'est pas publié :
-il reste privé. Ces commentaires te seront donc opaques, et c'est normal — ils ne conditionnent
-pas la lecture du code. En cas de doute sur une intention, demande dans l'issue ou la PR.
+Le code comporte des renvois du type `// PLAN.md §4.2`. Ils pointent vers
+[`PLAN.md`](./PLAN.md), le document de cadrage validé : règles du jeu, barème par édition,
+modèle de données, écrans, découpage en phases. Toute décision technique ou de périmètre s'y
+réfère — c'est le premier endroit à lire avant de proposer un changement de comportement.
 
 ## Commits
 
