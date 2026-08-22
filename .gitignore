@@ -48,3 +48,6 @@ coverage/
 # éditeurs
 .idea/
 *.log
+
+# cadrage privé, hors versionning
+PLAN.md
