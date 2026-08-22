@@ -8,23 +8,71 @@ import { catalogs, type Language, type MessageKey, type PluralKey } from './mess
 
 export type Params = Record<string, string | number>;
 
+/** Les quatre langues de la v1, dans l'ordre du sélecteur (PLAN.md §13.3). */
+export const LANGUAGES = Object.keys(catalogs) as Language[];
+
+/** Chaque langue nommée dans sa propre langue : un sélecteur ne se traduit pas. */
+export const LANGUAGE_NAMES: Record<Language, string> = {
+  fr: 'Français',
+  en: 'English',
+  es: 'Español',
+  de: 'Deutsch',
+};
+
 /**
  * Langue de l'appareil, sans dépendance native : Hermes embarque un ICU complet,
- * donc `Intl` connaît déjà la locale du système.
+ * donc `Intl` connaît déjà la locale du système. Tout ce qui n'est pas une des
+ * quatre langues retombe sur l'anglais.
  */
 export function deviceLanguage(): Language {
   try {
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale ?? 'en';
-    return locale.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    const locale = (Intl.DateTimeFormat().resolvedOptions().locale ?? 'en').toLowerCase();
+    return LANGUAGES.find((language) => locale.startsWith(language)) ?? 'en';
   } catch {
     return 'en';
   }
 }
 
 /**
- * Choix du pluriel. Le français met **zéro au singulier** (« 0 partie »),
- * l'anglais non (« 0 games ») : c'est la seule règle qui diffère entre les deux
- * langues de la v1.
+ * Locale de formatage des dates. Elle suit le réglage de l'app, pas celui du
+ * système : une app en espagnol n'affiche pas ses dates en anglais.
+ */
+const DATE_LOCALES: Record<Language, string> = {
+  fr: 'fr-FR',
+  en: 'en-GB',
+  es: 'es-ES',
+  de: 'de-DE',
+};
+
+export function dateLocale(language: Language): string {
+  return DATE_LOCALES[language];
+}
+
+/**
+ * Suffixe ordinal — « la 3ᵉ », « the 3rd », « la 3.ª », « die 3. ». Sert au rang
+ * de la feuille de score comme au numéro de la meilleure manche ; il était
+ * français en dur aux deux endroits, y compris dans une app allemande.
+ */
+export function ordinalSuffix(language: Language, value: number): string {
+  switch (language) {
+    case 'fr':
+      return value === 1 ? 'ʳᵉ' : 'ᵉ';
+    case 'es':
+      return '.ª';
+    case 'de':
+      return '.';
+    default: {
+      // 11, 12 et 13 font exception à la règle des unités : « 11th », pas « 11st ».
+      const teens = value % 100;
+      if (teens >= 11 && teens <= 13) return 'th';
+      return { 1: 'st', 2: 'nd', 3: 'rd' }[value % 10] ?? 'th';
+    }
+  }
+}
+
+/**
+ * Choix du pluriel. Le français met **zéro au singulier** (« 0 partie ») ; les
+ * trois autres langues n'accordent au singulier que l'unité exacte.
  */
 function pluralForm(language: Language, count: number): 'one' | 'other' {
   if (language === 'fr') return Math.abs(count) < 2 ? 'one' : 'other';

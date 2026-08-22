@@ -3,7 +3,7 @@ import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 import type { GameState } from '@/core';
 import type { StoredRound } from '@/db/mappers';
-import { useT } from '@/i18n';
+import { ordinalSuffix, useLanguage, useT } from '@/i18n';
 import { PLAYER_COLORS } from '@/ui/tokens';
 
 import type { SeatedPlayer } from './use-game';
@@ -28,6 +28,7 @@ type ScoreGridProps = {
  */
 export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGridProps) {
   const t = useT();
+  const language = useLanguage();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator contentContainerClassName="grow">
       <View>
@@ -104,7 +105,9 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
                   className="font-display text-h2 tabular-nums text-content">
                   {standing?.total ?? 0}
                 </Text>
-                <Text className="font-body text-micro text-content-muted">{standing?.rank}ᵉ</Text>
+                <Text className="font-body text-micro text-content-muted">
+                  {standing ? `${standing.rank}${ordinalSuffix(language, standing.rank)}` : ''}
+                </Text>
               </View>
             );
           })}

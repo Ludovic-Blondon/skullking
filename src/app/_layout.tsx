@@ -56,7 +56,15 @@ export default function RootLayout() {
             <ActivityIndicator />
           </View>
         ) : (
-          <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'Outfit_700Bold' } }}>
+          <Stack
+            screenOptions={{
+              headerTitleStyle: { fontFamily: 'Outfit_700Bold' },
+              // Sans ce libellé, iOS reprend le titre de l'écran précédent — et
+              // ceux qui portent leur propre en-tête n'en ont pas : le bouton
+              // retour affichait alors le nom de la route, « (tabs) » ou
+              // « game/[id]/index ».
+              headerBackTitle: t('route.back'),
+            }}>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ title: t('route.settings') }} />
             <Stack.Screen name="rules" options={{ title: t('route.rules') }} />
