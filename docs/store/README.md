@@ -18,9 +18,9 @@ Communs aux quatre langues :
 | URL d'assistance             | https://github.com/Ludovic-Blondon/skullking/issues                |
 | Collecte de données          | Aucune — « Data Not Collected » (Apple), Data Safety vide (Google) |
 
-**À décider avant soumission** : l'URL de la politique suppose GitHub Pages activé sur ce dépôt
-(Settings → Pages → Deploy from branch `main`, dossier `/docs`). Le lien d'assistance pointe vers
-les issues du dépôt : une adresse e-mail dédiée serait plus solide si le dépôt reste privé.
+**Vérifié le 22/08/2026** : GitHub Pages est actif (branche `main`, dossier `/docs`) et l'URL de
+la politique répond. Le dépôt étant passé public, le lien d'assistance vers les issues est
+accessible à tous — une adresse e-mail dédiée n'est plus nécessaire.
 
 ## Captures d'écran
 
