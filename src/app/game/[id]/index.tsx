@@ -125,12 +125,18 @@ export default function GameScreen() {
       <View
         style={{ paddingTop: insets.top + 6, maxWidth: CONTENT_MAX_WIDTH }}
         className="mx-auto w-full gap-2 px-5 pb-3">
-        <View className="flex-row items-start justify-between gap-3">
-          <Text className="flex-1 font-title text-h1 text-content">
-            {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
-            {bidding ? t('game.cards', { count: cardsDealt }) : t('game.results')}
-          </Text>
-          <View className="flex-row gap-2">
+        {/* Quitter et revenir aux annonces à gauche, feuille de score à droite :
+            trois cibles tactiles côte à côte se touchaient (36 pt de bouton pour
+            8 pt d'écart, hitSlop compris), et on quittait la partie en visant le
+            classement. Le titre les sépare, et l'écart du couple de gauche
+            dépasse la marge de frappe des deux boutons. */}
+        <View className="flex-row items-start gap-3">
+          <View className="flex-row gap-4">
+            <TopAction
+              icon="home-outline"
+              label={t('common.back')}
+              onPress={() => router.replace('/')}
+            />
             {!bidding && (
               <TopAction
                 icon="arrow-undo-outline"
@@ -139,17 +145,16 @@ export default function GameScreen() {
                 onPress={() => void backToBids()}
               />
             )}
-            <TopAction
-              icon="home-outline"
-              label={t('common.back')}
-              onPress={() => router.replace('/')}
-            />
-            <TopAction
-              icon="list-outline"
-              label={t('game.scoresheet')}
-              onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
-            />
           </View>
+          <Text className="flex-1 font-title text-h1 text-content">
+            {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
+            {bidding ? t('game.cards', { count: cardsDealt }) : t('game.results')}
+          </Text>
+          <TopAction
+            icon="list-outline"
+            label={t('game.scoresheet')}
+            onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
+          />
         </View>
 
         <View className="flex-row items-center gap-2">
