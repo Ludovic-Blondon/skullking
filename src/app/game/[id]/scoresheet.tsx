@@ -15,7 +15,7 @@ import { CONTENT_MAX_WIDTH } from '@/ui/screen';
 export default function ScoreSheetScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Number(id);
-  const { ready, seats, state, storedRounds } = useGame(gameId);
+  const { ready, seats, state, storedRounds, settled, pendingRound } = useGame(gameId);
   const t = useT();
 
   if (!ready || !state) {
@@ -45,6 +45,8 @@ export default function ScoreSheetScreen() {
         seats={seats}
         state={state}
         storedRounds={storedRounds}
+        standings={settled.standings}
+        pendingRound={pendingRound}
         onPressRound={correctRound}
       />
 

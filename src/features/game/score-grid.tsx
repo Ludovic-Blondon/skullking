@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, View } from 'react-native';
 import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
-import type { GameState } from '@/core';
+import type { GameState, Standing } from '@/core';
 import type { StoredRound } from '@/db/mappers';
 import { ordinalSuffix, useLanguage, useT } from '@/i18n';
 import { PLAYER_COLORS } from '@/ui/tokens';
@@ -15,6 +15,14 @@ type ScoreGridProps = {
   seats: SeatedPlayer[];
   state: GameState;
   storedRounds: StoredRound[];
+  /**
+   * Classement du bas de grille. Par défaut celui de l'état complet ; en cours
+   * de partie on lui passe les scores acquis, pour que le total n'anticipe pas
+   * une manche qui n'est pas encore validée (§7.2).
+   */
+  standings?: Standing[];
+  /** Manche en train de se jouer : elle reste en pointillés (§7.2). */
+  pendingRound?: number;
   /** Rend chaque ligne touchable — la correction d'une manche passée (§7.2). */
   onPressRound?: (roundNumber: number) => void;
 };
@@ -26,7 +34,14 @@ type ScoreGridProps = {
  * Partagée par la feuille d'une partie en cours et par le détail d'une partie
  * de l'historique : la même grille, lue à deux moments différents.
  */
-export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGridProps) {
+export function ScoreGrid({
+  seats,
+  state,
+  storedRounds,
+  standings = state.standings,
+  pendingRound,
+  onPressRound,
+}: ScoreGridProps) {
   const t = useT();
   const language = useLanguage();
   return (
@@ -50,7 +65,10 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
         <View className="gap-1 pb-2">
           {state.rounds.map((result, index) => {
             const stored = storedRounds[index];
-            const played = stored?.entries.every((entry) => entry.tricks !== null) ?? false;
+            // Une manche ne s'inscrit sur la feuille qu'une fois validée : tant
+            // qu'elle se joue, elle reste en pointillés, comme le carnet papier
+            // qu'on ne remplit qu'à la fin du pli.
+            const played = stored !== undefined && result.roundNumber !== pendingRound;
             return (
               <Pressable
                 key={result.roundNumber}
@@ -97,7 +115,7 @@ export function ScoreGrid({ seats, state, storedRounds, onPressRound }: ScoreGri
         <View className="flex-row items-start border-t border-border pt-2">
           <View style={{ width: ROUND_COLUMN }} />
           {seats.map((seat) => {
-            const standing = state.standings.find((s) => s.playerId === String(seat.id));
+            const standing = standings.find((s) => s.playerId === String(seat.id));
             return (
               <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">
                 <Text

@@ -24,6 +24,8 @@ import {
   type Game,
 } from '@/db/schema';
 
+import { pendingRoundOf, settledScoresOf, type SettledScores } from './settled-scores';
+
 export interface SeatedPlayer {
   id: number;
   name: string;
@@ -41,6 +43,16 @@ export interface GameView {
   state?: GameState;
   /** Manche en cours de saisie, d'après `games.current_round`. */
   current?: { stored: StoredRound; input: RoundInput; index: number };
+  /**
+   * Scores **acquis** : ceux des manches déjà validées.
+   *
+   * `state` donne l'aperçu, manche ouverte comprise — c'est lui qui montre ce
+   * que la manche en cours rapportera. Les cumuls affichés, eux, ne bougent
+   * qu'à la validation (voir `settledScoresOf`).
+   */
+  settled: SettledScores;
+  /** Manche en train de se jouer : son score n'est qu'un aperçu (§7.2). */
+  pendingRound?: number;
   /** Anomalies de la manche courante, telles que renvoyées par le moteur. */
   issues: Issue[];
   /** Joueur qui distribue : la donne tourne d'une manche à l'autre (§7.2). */
@@ -105,21 +117,36 @@ export function useGame(gameId: number): GameView {
     }));
 
     if (!game || seats.length === 0) {
-      return { ready: false, seats, storedRounds, inputs: [], issues: [] };
+      return {
+        ready: false,
+        seats,
+        storedRounds,
+        inputs: [],
+        settled: { totals: {}, standings: [] },
+        issues: [],
+      };
     }
 
-    const inputs = storedRounds.map(toRoundInput);
-    const state = computeGame(
-      inputs,
-      game.ruleset,
-      seats.map((seat) => String(seat.id)),
+    const roster = seats.map((seat) => String(seat.id));
+    const inputs = storedRounds.map((stored) =>
+      toRoundInput(stored, {
+        // La manche qu'on est en train de jouer se décompte comme à la
+        // validation : un pli laissé vide vaut 0 pris (voir `toRoundInput`).
+        played:
+          stored.round.roundNumber === game.currentRound && game.currentPhase === 'results'
+            ? true
+            : undefined,
+      }),
     );
+    const state = computeGame(inputs, game.ruleset, roster);
 
     const index = storedRounds.findIndex(
       (stored) => stored.round.roundNumber === game.currentRound,
     );
     const current =
       index >= 0 ? { stored: storedRounds[index], input: inputs[index], index } : undefined;
+
+    const pendingRound = pendingRoundOf(game, storedRounds);
 
     return {
       ready: true,
@@ -129,6 +156,8 @@ export function useGame(gameId: number): GameView {
       inputs,
       state,
       current,
+      settled: settledScoresOf(state, storedRounds, roster, pendingRound),
+      pendingRound,
       issues: current ? validateRound(current.input, game.ruleset) : [],
       dealer: seats[(game.currentRound - 1) % seats.length],
     };

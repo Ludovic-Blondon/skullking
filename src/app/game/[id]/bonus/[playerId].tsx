@@ -67,7 +67,11 @@ export default function BonusScreen() {
     Math.max((entry.bid ?? 0) + (game.ruleset.pirateAbilities ? entry.bidModifier : 0), 0),
     round.cardsDealt,
   );
-  const exact = entry.tricks !== null && entry.tricks === effectiveBid;
+  // Cette feuille ne s'ouvre qu'en phase Résultats : la manche est en train de
+  // se jouer, un compteur de plis jamais touché vaut donc 0 pris — le même
+  // 0 que la validation écrira. Sans cela, une mise 0 tenue passerait pour
+  // ratée et ses bonus s'afficheraient barrés à tort (§4.2).
+  const exact = (entry.tricks ?? 0) === effectiveBid;
 
   const myAllies = events
     .filter((event) => event.playerId === numericPlayerId && event.type === 'loot')

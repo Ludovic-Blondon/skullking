@@ -22,4 +22,4 @@ export {
 } from './rules/editions';
 export { effectiveBidOf, scoreRound } from './scoring';
 export { hasBlockingIssues, validateRound } from './validation';
-export { cardsDealtFor, computeGame } from './game';
+export { cardsDealtFor, computeGame, standingsOf } from './game';

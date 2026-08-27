@@ -67,7 +67,7 @@ export default function GameScreen() {
     );
   }
 
-  const { game, seats, current, state } = view;
+  const { game, seats, current, settled } = view;
   const { round } = current.stored;
   const { cardsDealt } = round;
   const totalRounds = game.ruleset.roundsPlan.length;
@@ -177,18 +177,23 @@ export default function GameScreen() {
         {seats.map((player) => {
           const entry = entryOf(player.id);
           const score = scoreOf(player.id);
-          const total = state?.totals[String(player.id)] ?? 0;
+          // Le score affiché est celui des manches validées : la manche en cours
+          // ne bougera les compteurs qu'une fois les plis posés (§7.2).
+          const total = settled.totals[String(player.id)] ?? 0;
           // Tout ce qui s'ajoute au score de base se lit sur la pastille : bonus
           // de capture, pari de Rascal — gagné ou débité — et ajustement manuel.
           // Chacun de ces gains se règle dans la feuille qu'elle ouvre.
           const extra = score ? score.bonus + score.rascalBet + score.custom : 0;
-          const played = score?.played ?? false;
+          // Plis réellement saisis : le moteur, lui, lit déjà un pli vide comme
+          // 0 pris, mais tant que personne n'a touché au compteur il n'y a rien
+          // à annoncer — surtout pas une mise ratée à l'ouverture de la manche.
+          const entered = entry !== undefined && entry.tricks !== null;
 
           // En annonces, aucune couleur : rien n'est encore joué. En résultats,
           // le liseré ne s'allume que pour les joueurs dont les plis sont saisis.
           const tone: PlayerRowTone = bidding
             ? 'idle'
-            : !played
+            : !entered
               ? 'idle'
               : score?.exact
                 ? 'exact'
@@ -225,7 +230,7 @@ export default function GameScreen() {
                 subtitle={
                   <Text className="font-body text-micro text-content-muted">
                     {t('game.announced', { bid: entry?.bid ?? 0 })}
-                    {played && score
+                    {entered && score
                       ? ` · ${t('game.thisRound', {
                           delta: `${score.total > 0 ? '+' : ''}${score.total}`,
                         })}`
