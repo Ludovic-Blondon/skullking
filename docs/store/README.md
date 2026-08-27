@@ -45,26 +45,70 @@ Le **mode sombre** est le mode de référence (PLAN.md §13.5).
 
 ### Les refaire
 
+Le JSON de démonstration est **commité** (`skull-scores-demo.json`) : le regénérer tire une
+nouvelle graine, et le moteur refuse certaines combinaisons de bonus (une graine qui tire
+« sirène capture le Skull King » _et_ « Skull King capture un pirate » dans la même manche
+affiche une bannière rouge). Ne relancer `python3 docs/store/demo-data.py` que pour changer
+volontairement le jeu de données.
+
+L'import passe par le sélecteur de fichiers iOS, qui est l'étape pénible. **Ne la faire qu'une
+fois** : la base obtenue se recopie ensuite dans les autres simulateurs.
+
+1. Déposer le JSON dans le simulateur, sous le groupe `group.com.apple.FileProvider.LocalStorage`
+   — il y a plusieurs dossiers `File Provider Storage`, c'est bien celui-là :
+
+   ```bash
+   DEV=~/Library/Developer/CoreSimulator/Devices/<UDID>
+   for d in "$DEV/data/Containers/Shared/AppGroup"/*/; do
+     id=$(/usr/libexec/PlistBuddy -c "Print :MCMMetadataIdentifier" \
+       "$d/.com.apple.mobile_container_manager.metadata.plist" 2>/dev/null)
+     [ "$id" = "group.com.apple.FileProvider.LocalStorage" ] && \
+       cp docs/store/skull-scores-demo.json "$d/File Provider Storage/"
+   done
+   ```
+
+2. Réglages → Importer → Explorer → « Sur mon iPhone » → le fichier → Remplacer. Le fichier
+   n'est visible que sous « Explorer », jamais sous « Récents ». Son libellé n'est pas
+   sélectionnable : c'est **l'icône** qu'il faut toucher.
+
+3. Garder la base obtenue de côté — c'est la graine des deux autres appareils :
+
+   ```bash
+   cp "$(xcrun simctl get_app_container <UDID> com.lblondon.skullscores \
+     data)/Documents/SQLite/skullking.db" /tmp/seed.db
+   ```
+
+Pour les deux iPad, ni rebuild ni import : le `.app` construit pour le simulateur s'installe tel
+quel (`supportsTablet`), et la base se pose à la main. App éteinte pendant la copie, et supprimer
+les `-wal` / `-shm` qui traînent.
+
 ```bash
-python3 docs/store/demo-data.py     # écrit skull-scores-demo.json
+xcrun simctl shutdown all && xcrun simctl boot <UDID>
+xcrun simctl install <UDID> ~/Library/Developer/Xcode/DerivedData/SkullScores-*/Build/Products/Release-iphonesimulator/SkullScores.app
+xcrun simctl launch <UDID> com.lblondon.skullscores && sleep 8
+xcrun simctl terminate <UDID> com.lblondon.skullscores
+cp /tmp/seed.db "$(xcrun simctl get_app_container <UDID> com.lblondon.skullscores data)/Documents/SQLite/skullking.db"
+xcrun simctl ui <UDID> appearance dark
 ```
 
-Déposer ce fichier dans le simulateur (`.../data/Containers/Shared/AppGroup/<groupe
-group.com.apple.FileProvider.LocalStorage>/File Provider Storage/`), l'importer depuis
-Réglages → Importer, puis, pour chaque langue :
+Un seul simulateur démarré à la fois : Maestro vise celui qui est _booted_. Puis, pour chaque
+langue (`Français`, `English`, `Español`, `Deutsch`) :
 
 ```bash
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"   # Maestro veut le JDK Homebrew, keg-only
 maestro test -e LANGUE=Español .maestro/05-captures-stores.yaml
 ```
 
-Les PNG sortent dans le dossier du run Maestro, sous des noms fixes. Sur iPad, le sélecteur de
-fichiers a une barre latérale au lieu d'onglets : « Sur mon iPad » se touche par coordonnées.
+Les six PNG sortent sous des noms fixes dans
+`~/.maestro/tests/<horodatage>/05-captures-stores/takeScreenshot/`, à ranger dans le dossier de
+la langue. La langue est stockée en base : elle survit à la copie de la graine.
 
 **Deux choses à savoir avant d'envoyer** :
 
-- Sur iPad, l'écran de fin de partie est présenté en feuille modale : la capture `5-podium`
-  laisse voir une bande de l'écran de partie en haut. Rien d'anormal — c'est ce que voit un
-  joueur — mais si ça gêne, la fiche tablette peut se passer de cette image.
+- Sur iPad, la fin de partie et la feuille de score sont présentées en feuille modale : les
+  captures `5-podium` et `4-feuille` laissent voir une bande de l'écran de partie en haut. Rien
+  d'anormal — c'est ce que voit un joueur — mais si ça gêne, la fiche tablette peut se passer de
+  ces images.
 - La capture `3-annonces` montre la bannière ambre « table sous-annoncée ». C'est volontaire :
   elle donne à voir le contrôle de somme, qui est un argument de l'app.
 
