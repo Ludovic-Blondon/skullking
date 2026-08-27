@@ -10,7 +10,7 @@ import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { cardsDealtFor, computeGame, type Ruleset } from '@/core';
 
 import { db } from '../client';
-import { toRoundInput, type StoredRound } from '../mappers';
+import { isEntryPlayed, toRoundInput, type StoredRound } from '../mappers';
 import {
   bonusEvents,
   gamePlayers,
@@ -282,7 +282,7 @@ export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Pr
     // Les plis, eux, restent `null` — c'est ce qui distingue « pas encore
     // saisi » de « aucun pli pris », et donc ce qui empêche l'écran d'afficher
     // le score d'une manche que personne n'a encore jouée (§7.2). Le moteur,
-    // lui, lit déjà ces plis vides comme des 0 : `toRoundInput({ played })`.
+    // lui, lit déjà ces plis vides comme des 0 : `toRoundInput({ forcePlayed })`.
     if (roundId !== undefined) await fillBlanks(roundId, ['bid']);
   }
   await db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId));
@@ -356,6 +356,11 @@ export async function reopenRound(gameId: number, roundNumber: number): Promise<
  *
  * Jamais de delta appliqué à la main : on relit les manches et on redemande au
  * moteur, ce qui garantit qu'une correction se propage partout.
+ *
+ * Une ligne qu'on n'a pas fini de saisir n'a pas de score : ses colonnes
+ * restent `null`. Sans cela, valider une correction figerait un 0 sur toutes
+ * les manches encore à jouer — et ce 0 jamais joué ressortirait en
+ * « meilleure manche » dans les stats d'une partie tout en négatif (§8).
  */
 export async function persistScores(gameId: number): Promise<void> {
   const game = await getGame(gameId);
@@ -368,14 +373,19 @@ export async function persistScores(gameId: number): Promise<void> {
   );
 
   for (const [index, result] of state.rounds.entries()) {
-    const roundId = stored[index].round.id;
+    const { round, entries } = stored[index];
     for (const score of result.scores) {
+      const playerId = Number(score.playerId);
+      const entry = entries.find((row) => row.playerId === playerId);
+      const played = entry !== undefined && isEntryPlayed(entry);
       await db
         .update(roundEntries)
-        .set({ scoreBase: score.base, scoreBonus: score.bonus, scoreTotal: score.total })
-        .where(
-          and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, Number(score.playerId))),
-        );
+        .set(
+          played
+            ? { scoreBase: score.base, scoreBonus: score.bonus, scoreTotal: score.total }
+            : { scoreBase: null, scoreBonus: null, scoreTotal: null },
+        )
+        .where(and(eq(roundEntries.roundId, round.id), eq(roundEntries.playerId, playerId)));
     }
   }
 }

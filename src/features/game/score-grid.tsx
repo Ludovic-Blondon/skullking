@@ -2,7 +2,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 import type { GameState, Standing } from '@/core';
-import type { StoredRound } from '@/db/mappers';
+import { isEntryPlayed, type StoredRound } from '@/db/mappers';
 import { ordinalSuffix, useLanguage, useT } from '@/i18n';
 import { PLAYER_COLORS } from '@/ui/tokens';
 
@@ -16,13 +16,15 @@ type ScoreGridProps = {
   state: GameState;
   storedRounds: StoredRound[];
   /**
-   * Classement du bas de grille. Par défaut celui de l'état complet ; en cours
-   * de partie on lui passe les scores acquis, pour que le total n'anticipe pas
-   * une manche qui n'est pas encore validée (§7.2).
+   * Classement du bas de grille : les scores **acquis**, pour que le total
+   * n'anticipe pas une manche qui n'est pas encore validée (§7.2).
+   *
+   * Obligatoire, sans valeur par défaut : un écran qui oublierait de le passer
+   * retomberait en silence sur l'aperçu — le bug même que la grille évite.
    */
-  standings?: Standing[];
+  standings: Standing[];
   /** Manche en train de se jouer : elle reste en pointillés (§7.2). */
-  pendingRound?: number;
+  pendingRound: number | undefined;
   /** Rend chaque ligne touchable — la correction d'une manche passée (§7.2). */
   onPressRound?: (roundNumber: number) => void;
 };
@@ -38,7 +40,7 @@ export function ScoreGrid({
   seats,
   state,
   storedRounds,
-  standings = state.standings,
+  standings,
   pendingRound,
   onPressRound,
 }: ScoreGridProps) {
@@ -67,8 +69,13 @@ export function ScoreGrid({
             const stored = storedRounds[index];
             // Une manche ne s'inscrit sur la feuille qu'une fois validée : tant
             // qu'elle se joue, elle reste en pointillés, comme le carnet papier
-            // qu'on ne remplit qu'à la fin du pli.
-            const played = stored !== undefined && result.roundNumber !== pendingRound;
+            // qu'on ne remplit qu'à la fin du pli. Une manche jamais entamée le
+            // reste aussi — celles qui suivent la manche rouverte pour
+            // correction n'ont, elles, pas attendu pour être jouées (§7.2).
+            const played =
+              stored !== undefined &&
+              result.roundNumber !== pendingRound &&
+              stored.entries.every(isEntryPlayed);
             return (
               <Pressable
                 key={result.roundNumber}

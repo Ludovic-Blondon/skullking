@@ -145,9 +145,22 @@ describe('toRoundInput', () => {
       entries: [entry(1, { bid: 0, tricks: null }), entry(2, { bid: 2, tricks: null })],
       bonusEvents: [],
     };
-    expect(toRoundInput(stored, { played: true }).players).toMatchObject([
+    expect(toRoundInput(stored, { forcePlayed: true }).players).toMatchObject([
       { bid: 0, tricks: 0, played: true },
       { bid: 2, tricks: 0, played: true },
+    ]);
+  });
+
+  /** Le drapeau ne force que dans un sens : `false` ne peut pas effacer une manche jouée. */
+  it('laisse les données décider quand on ne force rien', () => {
+    const stored: StoredRound = {
+      round: round(),
+      entries: [entry(1, { bid: 1, tricks: 1 }), entry(2, { bid: 0, tricks: null })],
+      bonusEvents: [],
+    };
+    expect(toRoundInput(stored, { forcePlayed: false }).players.map((e) => e.played)).toEqual([
+      true,
+      false,
     ]);
   });
 

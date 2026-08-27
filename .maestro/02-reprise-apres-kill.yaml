@@ -87,6 +87,10 @@ appId: com.lblondon.skullscores
 - assertVisible: ".*annoncé 0.*"
 - assertVisible: ".*annoncé 2.*"
 - assertNotVisible: ".*ce tour.*"
+# La manche a aussi gardé ses deux cartes distribuées. Maintenant que le score
+# de la manche ne s'affiche plus avant les plis, c'est la barre de validation
+# qui porte le nombre — et lui seul prouve que la donne a survécu au kill.
+- assertVisible: "Σ plis 0 / 2"
 
 # La manche 2 se termine sans rien retoucher : personne ne prend de pli.
 # Alice 20 + 20 = 40, Bob 10 − 20 = −10. Ces deux nombres ne tombent juste que

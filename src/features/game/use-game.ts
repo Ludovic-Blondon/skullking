@@ -51,7 +51,12 @@ export interface GameView {
    * qu'à la validation (voir `settledScoresOf`).
    */
   settled: SettledScores;
-  /** Manche en train de se jouer : son score n'est qu'un aperçu (§7.2). */
+  /**
+   * Manche en train de se jouer : son score n'est qu'un aperçu (§7.2).
+   *
+   * Ce n'est pas forcément la dernière de la feuille — une manche rouverte
+   * pour correction se rejoue à sa place dans la partie.
+   */
   pendingRound?: number;
   /** Anomalies de la manche courante, telles que renvoyées par le moteur. */
   issues: Issue[];
@@ -122,7 +127,7 @@ export function useGame(gameId: number): GameView {
         seats,
         storedRounds,
         inputs: [],
-        settled: { totals: {}, standings: [] },
+        settled: { totals: {}, standings: [], leaders: [], tie: false },
         issues: [],
       };
     }
@@ -132,10 +137,8 @@ export function useGame(gameId: number): GameView {
       toRoundInput(stored, {
         // La manche qu'on est en train de jouer se décompte comme à la
         // validation : un pli laissé vide vaut 0 pris (voir `toRoundInput`).
-        played:
-          stored.round.roundNumber === game.currentRound && game.currentPhase === 'results'
-            ? true
-            : undefined,
+        forcePlayed:
+          stored.round.roundNumber === game.currentRound && game.currentPhase === 'results',
       }),
     );
     const state = computeGame(inputs, game.ruleset, roster);
@@ -156,7 +159,7 @@ export function useGame(gameId: number): GameView {
       inputs,
       state,
       current,
-      settled: settledScoresOf(state, storedRounds, roster, pendingRound),
+      settled: settledScoresOf(state, roster, pendingRound),
       pendingRound,
       issues: current ? validateRound(current.input, game.ruleset) : [],
       dealer: seats[(game.currentRound - 1) % seats.length],

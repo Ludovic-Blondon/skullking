@@ -37,11 +37,14 @@ export default function GameEndScreen() {
 
   if (!view.ready || !view.state || !view.game) return <View className="flex-1 bg-surface" />;
 
-  const { state, seats, game } = view;
+  const { state, seats, game, settled } = view;
   const seatOf = (playerId: string) => seats.find((seat) => String(seat.id) === playerId);
   const nameOf = (playerId: string) => seatOf(playerId)?.name ?? playerId;
   const awards = computeAwards(state.rounds, view.inputs);
-  const podium = podiumSteps(state.standings);
+  // Le classement acquis, pas l'aperçu : cet écran s'atteint aussi par lien
+  // profond ou par l'historique du routeur, partie non terminée — et on ne
+  // monte pas sur le podium avec des plis qui ne sont pas encore validés.
+  const podium = podiumSteps(settled.standings);
 
   async function rematch() {
     // Une revanche redevient la dernière partie jouée : c'est de ses règles
@@ -63,13 +66,13 @@ export default function GameEndScreen() {
     <View className="flex-1 bg-surface">
       <Watermark emoji="🏆" size={200} />
       <Screen edgeToEdgeBottom transparent>
-        {state.tie ? (
+        {settled.tie ? (
           <View className="gap-3 rounded-card border-[1.5px] border-accent bg-accent/10 p-4">
             <Text className="font-title text-h1 text-content">
-              {t('end.tie', { score: state.standings[0]?.total ?? 0 })}
+              {t('end.tie', { score: settled.standings[0]?.total ?? 0 })}
             </Text>
             <Text className="font-body text-body text-content-muted">
-              {t('end.tieBody', { names: state.leaders.map(nameOf).join(' · ') })}
+              {t('end.tieBody', { names: settled.leaders.map(nameOf).join(' · ') })}
             </Text>
             <Pressable
               onPress={() => void tiebreak()}
@@ -90,9 +93,12 @@ export default function GameEndScreen() {
                 if (tied.length === 0) return null;
                 const first = step === 0;
                 const shown = tied.slice(0, MAX_AVATARS);
+                const hidden = tied.length - shown.length;
                 // La marche s'élargit avec le nombre d'ex æquo : les avatars
-                // tiennent côte à côte plutôt que de se chevaucher.
-                const stepWidth = width + (shown.length - 1) * gain;
+                // tiennent côte à côte plutôt que de se chevaucher. Le compte
+                // des absents occupe une place de plus, sans quoi il déborde de
+                // la marche sur laquelle il repose.
+                const stepWidth = width + (shown.length - (hidden > 0 ? 0 : 1)) * gain;
                 return (
                   <View key={step} className="items-center gap-1.5">
                     <View className="flex-row items-end gap-1">
@@ -107,10 +113,8 @@ export default function GameEndScreen() {
                           />
                         );
                       })}
-                      {tied.length > shown.length && (
-                        <Text className="font-semi text-micro text-content-muted">
-                          +{tied.length - shown.length}
-                        </Text>
+                      {hidden > 0 && (
+                        <Text className="font-semi text-micro text-content-muted">+{hidden}</Text>
                       )}
                     </View>
                     <Text
@@ -129,7 +133,11 @@ export default function GameEndScreen() {
                         first ? 'text-content' : 'text-content-muted'
                       }`}
                       numberOfLines={2}>
-                      {tied.map((standing) => nameOf(standing.playerId)).join(' · ')}
+                      {/* Les mêmes noms que les avatars au-dessus : concaténer
+                          les absents ici les tronquerait tous dans la largeur
+                          d'une marche. Le classement complet est juste en
+                          dessous. */}
+                      {shown.map((standing) => nameOf(standing.playerId)).join(' · ')}
                     </Text>
                   </View>
                 );
@@ -166,7 +174,7 @@ export default function GameEndScreen() {
 
         <SectionLabel>{t('end.ranking')}</SectionLabel>
         <View className="gap-2">
-          {state.standings.map((standing) => {
+          {settled.standings.map((standing) => {
             const seat = seatOf(standing.playerId);
             return (
               <View
