@@ -75,6 +75,19 @@ export function standingsOf(totals: Record<PlayerId, number>, players: PlayerId[
   return standings;
 }
 
+/**
+ * Joueurs en tête : ceux qui partagent le meilleur total.
+ *
+ * Exporté pour la même raison que `standingsOf` : l'app départage aussi des
+ * classements qui ne sortent pas de `computeGame` — ceux des scores acquis,
+ * manche en cours exclue (PLAN.md §7.2). Une égalité en tête appelle une
+ * manche supplémentaire (§4.1), autant la lire au même endroit partout.
+ */
+export function leadersOf(standings: Standing[]): PlayerId[] {
+  const best = standings.length > 0 ? standings[0].total : 0;
+  return standings.filter((standing) => standing.total === best).map((s) => s.playerId);
+}
+
 /** État complet d'une partie à partir de ses manches saisies. */
 export function computeGame(
   rounds: RoundInput[],
@@ -106,8 +119,7 @@ export function computeGame(
   });
 
   const standings = standingsOf(totals, roster);
-  const best = standings.length > 0 ? standings[0].total : 0;
-  const leaders = standings.filter((standing) => standing.total === best).map((s) => s.playerId);
+  const leaders = leadersOf(standings);
 
   return {
     rounds: results,

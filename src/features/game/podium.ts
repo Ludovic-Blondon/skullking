@@ -1,5 +1,5 @@
 /**
- * Marches du podium de fin de partie (PLAN.md §7.2).
+ * Marches du podium de fin de partie (PLAN.md §7.4).
  *
  * Le livret ne départage qu'une seule égalité : celle **en tête**, par une
  * manche supplémentaire (§4.1). Aux autres rangs, deux joueurs à égalité le

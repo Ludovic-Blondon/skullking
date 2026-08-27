@@ -87,9 +87,9 @@ export default function GameHistoryDetailScreen() {
               size="sm"
             />
             <Text className="flex-1 font-body text-caption text-content-muted">
-              {t(state.tie ? 'history.tied' : 'history.winner')}
+              {t(settled.tie ? 'history.tied' : 'history.winner')}
               <Text className="font-semi text-content">
-                {state.leaders
+                {settled.leaders
                   .map((playerId) => seatOf(Number(playerId))?.name ?? playerId)
                   .join(', ')}
               </Text>

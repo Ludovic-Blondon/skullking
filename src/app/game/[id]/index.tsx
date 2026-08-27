@@ -128,16 +128,22 @@ export default function GameScreen() {
         {/* Quitter et revenir aux annonces à gauche, feuille de score à droite :
             trois cibles tactiles côte à côte se touchaient (36 pt de bouton pour
             8 pt d'écart, hitSlop compris), et on quittait la partie en visant le
-            classement. Le titre les sépare, et l'écart du couple de gauche
-            dépasse la marge de frappe des deux boutons. */}
+            classement. Le titre sépare les deux groupes, et `gap-6` sépare le
+            couple de gauche : 36 + 24 pt entre les centres pour deux cibles de
+            52 pt (36 + 8 de hitSlop de chaque côté), soit 8 pt de dégagement.
+            `gap-4` n'en laissait aucun — les deux rectangles se touchaient. */}
         <View className="flex-row items-start gap-3">
-          <View className="flex-row gap-4">
+          <View className="flex-row gap-6">
             <TopAction
               icon="home-outline"
               label={t('common.back')}
               onPress={() => router.replace('/')}
             />
-            {!bidding && (
+            {bidding ? (
+              // La place du bouton reste prise en phase Annonces : sans elle le
+              // titre glisse de 60 pt à chaque changement de phase.
+              <View className="size-9" />
+            ) : (
               <TopAction
                 icon="arrow-undo-outline"
                 label={t('game.backToBids')}

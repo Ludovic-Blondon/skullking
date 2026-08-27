@@ -2,10 +2,10 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { DENSE_MAX_SCALE, Text } from '@/ui/text';
 
 import type { GameState, Standing } from '@/core';
-import type { StoredRound } from '@/db/mappers';
+import { isEntryPlayed, type StoredRound } from '@/db/mappers';
 import { ordinalSuffix, useLanguage, useT } from '@/i18n';
-import { PLAYER_COLORS } from '@/ui/tokens';
 
+import { rankedColumns } from './score-columns';
 import type { SeatedPlayer } from './use-game';
 
 const ROUND_COLUMN = 32;
@@ -16,13 +16,15 @@ type ScoreGridProps = {
   state: GameState;
   storedRounds: StoredRound[];
   /**
-   * Classement du bas de grille. Par défaut celui de l'état complet ; en cours
-   * de partie on lui passe les scores acquis, pour que le total n'anticipe pas
-   * une manche qui n'est pas encore validée (§7.2).
+   * Classement du bas de grille : les scores **acquis**, pour que le total
+   * n'anticipe pas une manche qui n'est pas encore validée (§7.2).
+   *
+   * Obligatoire, sans valeur par défaut : un écran qui oublierait de le passer
+   * retomberait en silence sur l'aperçu — le bug même que la grille évite.
    */
-  standings?: Standing[];
+  standings: Standing[];
   /** Manche en train de se jouer : elle reste en pointillés (§7.2). */
-  pendingRound?: number;
+  pendingRound: number | undefined;
   /** Rend chaque ligne touchable — la correction d'une manche passée (§7.2). */
   onPressRound?: (roundNumber: number) => void;
 };
@@ -31,6 +33,9 @@ type ScoreGridProps = {
  * Feuille de score façon carnet papier (PLAN.md §7.2) : une colonne par joueur,
  * une ligne par manche, le cumul et le rang en bas.
  *
+ * Une liberté prise sur le carnet papier : les colonnes vont du premier au
+ * dernier et non dans l'ordre des places à table (voir `rankedColumns`).
+ *
  * Partagée par la feuille d'une partie en cours et par le détail d'une partie
  * de l'historique : la même grille, lue à deux moments différents.
  */
@@ -38,24 +43,22 @@ export function ScoreGrid({
   seats,
   state,
   storedRounds,
-  standings = state.standings,
+  standings,
   pendingRound,
   onPressRound,
 }: ScoreGridProps) {
   const t = useT();
   const language = useLanguage();
+  const columns = rankedColumns(seats, standings);
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator contentContainerClassName="grow">
       <View>
         <View className="flex-row pb-2">
           <View style={{ width: ROUND_COLUMN }} />
-          {seats.map((seat, index) => (
+          {columns.map(({ seat, color }) => (
             <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center gap-0.5">
               <Text className="text-base">{seat.emoji ?? '🏴‍☠️'}</Text>
-              <Text
-                numberOfLines={1}
-                className="font-semi text-micro"
-                style={{ color: seat.color ?? PLAYER_COLORS[index % PLAYER_COLORS.length] }}>
+              <Text numberOfLines={1} className="font-semi text-micro" style={{ color }}>
                 {seat.name}
               </Text>
             </View>
@@ -67,8 +70,13 @@ export function ScoreGrid({
             const stored = storedRounds[index];
             // Une manche ne s'inscrit sur la feuille qu'une fois validée : tant
             // qu'elle se joue, elle reste en pointillés, comme le carnet papier
-            // qu'on ne remplit qu'à la fin du pli.
-            const played = stored !== undefined && result.roundNumber !== pendingRound;
+            // qu'on ne remplit qu'à la fin du pli. Une manche jamais entamée le
+            // reste aussi — celles qui suivent la manche rouverte pour
+            // correction n'ont, elles, pas attendu pour être jouées (§7.2).
+            const played =
+              stored !== undefined &&
+              result.roundNumber !== pendingRound &&
+              stored.entries.every(isEntryPlayed);
             return (
               <Pressable
                 key={result.roundNumber}
@@ -85,7 +93,7 @@ export function ScoreGrid({
                   {result.roundNumber}
                   {stored?.round.forced ? ' !' : ''}
                 </Text>
-                {seats.map((seat) => {
+                {columns.map(({ seat }) => {
                   const score = result.scores.find((s) => s.playerId === String(seat.id));
                   return (
                     <View key={seat.id} style={{ width: SCORE_COLUMN }} className="px-0.5">
@@ -114,7 +122,7 @@ export function ScoreGrid({
 
         <View className="flex-row items-start border-t border-border pt-2">
           <View style={{ width: ROUND_COLUMN }} />
-          {seats.map((seat) => {
+          {columns.map(({ seat }) => {
             const standing = standings.find((s) => s.playerId === String(seat.id));
             return (
               <View key={seat.id} style={{ width: SCORE_COLUMN }} className="items-center">

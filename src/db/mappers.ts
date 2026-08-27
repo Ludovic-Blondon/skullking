@@ -24,6 +24,19 @@ export interface StoredRound {
   bonusEvents: BonusEvent[];
 }
 
+/**
+ * Ligne saisie de bout en bout : mise **et** plis renseignés.
+ *
+ * C'est le seul test qui distingue « aucun pli pris » de « pas encore saisi » —
+ * la base laisse les colonnes à `null` tant que personne n'a touché au
+ * compteur (§7.2). Exporté pour que le moteur, la feuille de score et les
+ * scores figés lisent tous la même définition, plutôt que d'en redériver
+ * chacun une variante.
+ */
+export function isEntryPlayed(entry: RoundEntry): boolean {
+  return entry.bid !== null && entry.tricks !== null;
+}
+
 const CAPTURE_TYPES = new Set<string>(BONUS_TYPES);
 
 /** Compteurs de capture d'un joueur, indexés par type. */
@@ -78,8 +91,12 @@ export interface ToRoundInputOptions {
    * cela, un joueur qui annonce 0 et ne prend aucun pli — donc ne touche à
    * rien — resterait hors du décompte et son alliance de Butin tomberait à
    * l'écran alors qu'elle tient après validation.
+   *
+   * Ne force que dans ce sens : `false` laisse les données décider. Un drapeau
+   * qui pourrait aussi forcer l'inverse effacerait les scores de toutes les
+   * manches déjà validées le jour où un appelant lui passe un booléen.
    */
-  played?: boolean;
+  forcePlayed?: boolean;
 }
 
 /** Manche stockée → entrée du moteur. */
@@ -96,7 +113,7 @@ export function toRoundInput(stored: StoredRound, options: ToRoundInputOptions =
       // `played` lui dit de ne pas confondre ce 0-là avec une mise 0 réussie.
       bid: entry.bid ?? 0,
       tricks: entry.tricks ?? 0,
-      played: options.played ?? (entry.bid !== null && entry.tricks !== null),
+      played: options.forcePlayed === true || isEntryPlayed(entry),
       bidModifier: entry.bidModifier as BidModifier,
       rascalBet: entry.rascalBet as RascalBet,
       cannonball: entry.cannonball,
