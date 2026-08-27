@@ -68,8 +68,22 @@ export function lootAlliancesOf(events: BonusEvent[]): LootAlliance[] {
   return alliances;
 }
 
+/** Options de traduction d'une manche. */
+export interface ToRoundInputOptions {
+  /**
+   * Force la manche à l'état « jouée ».
+   *
+   * En phase Résultats la manche est en train d'être jouée : un pli laissé
+   * vide vaut **0 pris**, exactement ce que la validation écrira (§7.2). Sans
+   * cela, un joueur qui annonce 0 et ne prend aucun pli — donc ne touche à
+   * rien — resterait hors du décompte et son alliance de Butin tomberait à
+   * l'écran alors qu'elle tient après validation.
+   */
+  played?: boolean;
+}
+
 /** Manche stockée → entrée du moteur. */
-export function toRoundInput(stored: StoredRound): RoundInput {
+export function toRoundInput(stored: StoredRound, options: ToRoundInputOptions = {}): RoundInput {
   return {
     roundNumber: stored.round.roundNumber,
     cardsDealt: stored.round.cardsDealt,
@@ -82,7 +96,7 @@ export function toRoundInput(stored: StoredRound): RoundInput {
       // `played` lui dit de ne pas confondre ce 0-là avec une mise 0 réussie.
       bid: entry.bid ?? 0,
       tricks: entry.tricks ?? 0,
-      played: entry.bid !== null && entry.tricks !== null,
+      played: options.played ?? (entry.bid !== null && entry.tricks !== null),
       bidModifier: entry.bidModifier as BidModifier,
       rascalBet: entry.rascalBet as RascalBet,
       cannonball: entry.cannonball,

@@ -135,6 +135,22 @@ describe('toRoundInput', () => {
     expect(toRoundInput(stored).players.map((entry) => entry.played)).toEqual([false, false, true]);
   });
 
+  /**
+   * En phase Résultats la manche est en train de se jouer : un compteur de plis
+   * jamais touché vaut 0 pris, comme au moment de la validation (§7.2).
+   */
+  it('décompte la manche en cours de jeu même sans plis saisis', () => {
+    const stored: StoredRound = {
+      round: round(),
+      entries: [entry(1, { bid: 0, tricks: null }), entry(2, { bid: 2, tricks: null })],
+      bonusEvents: [],
+    };
+    expect(toRoundInput(stored, { played: true }).players).toMatchObject([
+      { bid: 0, tricks: 0, played: true },
+      { bid: 2, tricks: 0, played: true },
+    ]);
+  });
+
   it('produit une entrée directement exploitable par le moteur', () => {
     const stored: StoredRound = {
       round: round({ cardsDealt: 4 }),

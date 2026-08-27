@@ -24,7 +24,7 @@ const STATUS_KEYS = {
 export default function GameHistoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const gameId = Number(id);
-  const { ready, game, seats, state, storedRounds } = useGame(gameId);
+  const { ready, game, seats, state, storedRounds, settled, pendingRound } = useGame(gameId);
   const t = useT();
   const language = useLanguage();
 
@@ -32,7 +32,9 @@ export default function GameHistoryDetailScreen() {
     return <View className="flex-1 bg-surface" />;
   }
 
-  const winner = state.standings[0];
+  // Le classement acquis, pas l'aperçu : une partie abandonnée en pleine
+  // manche n'a pas de vainqueur désigné par des plis jamais posés.
+  const winner = settled.standings[0];
   const date = new Date(game.createdAt).toLocaleDateString(dateLocale(language), {
     day: 'numeric',
     month: 'long',
@@ -101,6 +103,8 @@ export default function GameHistoryDetailScreen() {
         seats={seats}
         state={state}
         storedRounds={storedRounds}
+        standings={settled.standings}
+        pendingRound={pendingRound}
         onPressRound={correctRound}
       />
       <Text className="font-body text-micro text-content-muted">{t('sheet.hintHistory')}</Text>

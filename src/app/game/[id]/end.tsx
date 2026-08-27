@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { Text } from '@/ui/text';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
+import { podiumSteps } from '@/features/game/podium';
 import { useGame } from '@/features/game/use-game';
 import { setSetting } from '@/features/settings/use-settings';
 import { computeAwards } from '@/features/stats/awards';
@@ -13,15 +14,20 @@ import { Screen, SectionLabel, Watermark } from '@/ui/screen';
 /**
  * Marches du podium, dans l'ordre d'affichage : deuxième, premier, troisième.
  *
- * On prend les joueurs par **position au classement**, pas par rang : deux ex
- * æquo partagent le rang 2, et chercher un rang 3 ferait disparaître l'un
- * d'eux du podium.
+ * `step` est un **rang**, pas une position au classement : `podiumSteps()`
+ * groupe les ex æquo, et ils montent ensemble sur la même marche.
  */
 const STEPS = [
-  { index: 1, height: 44 },
-  { index: 0, height: 72 },
-  { index: 2, height: 30 },
+  { step: 1, height: 44, width: 48, gain: 28 },
+  { step: 0, height: 72, width: 56, gain: 42 },
+  { step: 2, height: 30, width: 48, gain: 28 },
 ];
+
+/**
+ * Avatars affichés par marche. Au-delà, la marche déborderait de l'écran : le
+ * compte des absents suffit, le classement complet est juste en dessous.
+ */
+const MAX_AVATARS = 3;
 
 export default function GameEndScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,6 +41,7 @@ export default function GameEndScreen() {
   const seatOf = (playerId: string) => seats.find((seat) => String(seat.id) === playerId);
   const nameOf = (playerId: string) => seatOf(playerId)?.name ?? playerId;
   const awards = computeAwards(state.rounds, view.inputs);
+  const podium = podiumSteps(state.standings);
 
   async function rematch() {
     // Une revanche redevient la dernière partie jouée : c'est de ses règles
@@ -76,30 +83,53 @@ export default function GameEndScreen() {
           <View className="gap-4 rounded-card bg-surface-raised p-4">
             <Text className="text-center font-title text-h1 text-content">{t('end.over')}</Text>
             <View className="flex-row items-end justify-center gap-3">
-              {STEPS.map(({ index, height }) => {
-                const standing = state.standings[index];
-                if (!standing) return null;
-                const seat = seatOf(standing.playerId);
-                const first = index === 0;
+              {STEPS.map(({ step, height, width, gain }) => {
+                const tied = podium[step];
+                // Marche vide : deux deuxièmes à égalité ne laissent pas de
+                // troisième, et le podium n'a alors que deux marches.
+                if (tied.length === 0) return null;
+                const first = step === 0;
+                const shown = tied.slice(0, MAX_AVATARS);
+                // La marche s'élargit avec le nombre d'ex æquo : les avatars
+                // tiennent côte à côte plutôt que de se chevaucher.
+                const stepWidth = width + (shown.length - 1) * gain;
                 return (
-                  <View key={standing.playerId} className="items-center gap-1.5">
-                    <Avatar emoji={seat?.emoji} color={seat?.color} size={first ? 'md' : 'sm'} />
+                  <View key={step} className="items-center gap-1.5">
+                    <View className="flex-row items-end gap-1">
+                      {shown.map(({ playerId }) => {
+                        const seat = seatOf(playerId);
+                        return (
+                          <Avatar
+                            key={playerId}
+                            emoji={seat?.emoji}
+                            color={seat?.color}
+                            size={first ? 'md' : 'sm'}
+                          />
+                        );
+                      })}
+                      {tied.length > shown.length && (
+                        <Text className="font-semi text-micro text-content-muted">
+                          +{tied.length - shown.length}
+                        </Text>
+                      )}
+                    </View>
                     <Text
                       className={`font-display tabular-nums ${
                         first ? 'text-h2 text-content' : 'text-caption text-content-muted'
                       }`}>
-                      {standing.total}
+                      {tied[0].total}
                     </Text>
                     <View
-                      style={{ height, width: first ? 56 : 48 }}
+                      style={{ height, width: stepWidth }}
                       className={`rounded-t-field ${first ? 'bg-primary' : 'bg-border'}`}
                     />
                     <Text
-                      className={`font-semi text-micro ${
+                      style={{ width: stepWidth }}
+                      className={`text-center font-semi text-micro ${
                         first ? 'text-content' : 'text-content-muted'
                       }`}
-                      numberOfLines={1}>
-                      {nameOf(standing.playerId)}
+                      numberOfLines={2}>
+                      {tied.map((standing) => nameOf(standing.playerId)).join(' · ')}
                     </Text>
                   </View>
                 );

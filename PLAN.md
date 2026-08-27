@@ -126,6 +126,7 @@ ESLint + Prettier, TS `strict`, conventional commits (commitlint), versioning se
 - **Cartes distribuées** : `cardsDealt = roundNumber`, **sauf à 8 joueurs : manches 9 et 10 → 8 cartes** (règle officielle). Valeur **modifiable manuellement** par manche (couvre les cas de table réels et variantes maison).
 - **2 joueurs** : 3e main jouée par le fantôme **« Barbe Grise »** — ne mise pas, ne marque pas, mais **peut remporter des plis**. Les cartes Butin ne sont pas utilisées à 2 joueurs.
 - Égalité au score final → **manche supplémentaire** proposée (règle officielle), ou co-vainqueurs si la table préfère.
+- Le livret ne départage **que l'égalité en tête** : aux autres rangs, deux joueurs à égalité le restent (aucun critère officiel, ni plis ni bonus). Ils partagent leur rang au classement et **la même marche du podium**.
 
 ### 4.2 Barème — édition courante (2021+), le défaut de l'app
 
@@ -294,11 +295,11 @@ stateDiagram-v2
     Resultats --> [*] : manche 10 validée → fin
 ```
 
-- **En-tête** : « Manche 4 / 10 · 4 cartes », badge donneur, accès feuille de score (tiroir).
-- **Phase Annonces** : une carte par joueur avec **gros stepper 0…N** (cible tactile ≥ 44 pt, utilisable d'une main, verre de rhum dans l'autre). **Tous les compteurs partent de 0** : autour de la table on ne touche que ce qui diffère, et annoncer 0 ne coûte aucun geste. Le 0 affiché n'est écrit en base qu'au moment où la manche avance — tant qu'il ne l'est pas, « pas encore saisi » et « a annoncé 0 » restent deux états distincts pour le moteur, ce qui empêche une manche ouverte de peser sur les totaux. Indicateur live : « Σ annonces 6 / 4 plis — table sur-annoncée » (info que les joueurs adorent). → « Lancer la manche ».
-- **Phase Résultats** : mêmes cartes joueur : stepper **plis remportés** + pastille **bonus** (affiche le total courant, ex. « +40 ») ouvrant la bottom sheet (§7.3). Contrôle de manche : compteur « pli détruit (Kraken/Baleine) » 0-2 ; à 2 joueurs, ligne fantôme « Barbe Grise » en lecture seule qui absorbe le solde.
+- **En-tête** : « Manche 4 / 10 · 4 cartes », badge donneur. Les boutons encadrent le titre plutôt que de se suivre — quitter la partie et revenir aux annonces à gauche, feuille de score (tiroir) à droite : trois cibles tactiles côte à côte se confondaient sous le pouce.
+- **Phase Annonces** : une carte par joueur avec **gros stepper 0…N** (cible tactile ≥ 44 pt, utilisable d'une main, verre de rhum dans l'autre). **Tous les compteurs partent de 0** : autour de la table on ne touche que ce qui diffère, et annoncer 0 ne coûte aucun geste. Le 0 affiché n'est écrit en base qu'au moment où la manche est lancée — tant qu'il ne l'est pas, « pas encore saisi » et « a annoncé 0 » restent deux états distincts pour le moteur, ce qui empêche une manche ouverte de peser sur les totaux. Indicateur live : « Σ annonces 6 / 4 plis — table sur-annoncée » (info que les joueurs adorent). → « Lancer la manche ».
+- **Phase Résultats** : mêmes cartes joueur : stepper **plis remportés** + pastille **bonus** (affiche le total courant, ex. « +40 ») ouvrant la bottom sheet (§7.3). Contrôle de manche : compteur « pli détruit (Kraken/Baleine) » 0-2 ; à 2 joueurs, ligne fantôme « Barbe Grise » en lecture seule qui absorbe le solde. Les plis restent « pas encore saisis » tant que personne ne touche leur compteur : la carte d'un joueur n'affiche ni liseré ni delta avant, et **rien n'est décompté sur la seule foi des annonces** — pendant que le pli se joue, la table lit toujours le score de la manche précédente.
 - **Barre de validation** : « Σ plis 3 + 1 détruit = 4 ✓ » — le bouton « Valider la manche » ne s'active que si c'est cohérent ; échappatoire « forcer » (avec marquage de la manche) pour les cas de table insolubles.
-- **Validation** → animation courte des deltas de score + haptique, puis phase Annonces de la manche suivante. Saisie complète d'une manche à 4 joueurs : **objectif < 30 s**.
+- **Validation** → c'est **elle seule** qui fait avancer les totaux : animation courte des deltas de score + haptique, puis phase Annonces de la manche suivante. Saisie complète d'une manche à 4 joueurs : **objectif < 30 s**.
 - **Feuille de score** (tiroir tirable) : façon carnet papier — colonnes joueurs, lignes 1-10 avec delta par manche, total courant, rang. **Taper une ligne = rouvrir cette manche** pour correction (recalcul en cascade automatique).
 - Écran maintenu allumé (keep-awake), portrait et paysage, lisible à 8 joueurs.
 
@@ -324,7 +325,7 @@ Bottom sheet par joueur, en phase Résultats. **Saisie sémantique, pas de calcu
 
 ### 7.4 Fin de partie, historique, joueurs, stats
 
-- **Fin de partie** : podium animé, courbe d'évolution des scores (victory-native), **awards** auto (§8), gestion d'égalité (« manche supplémentaire » officielle ou co-vainqueurs), partage de la feuille de score en image (backlog v1.1), « revanche » (relance avec les mêmes joueurs).
+- **Fin de partie** : podium animé — trois **rangs**, ex æquo groupés sur leur marche (§4.1) —, courbe d'évolution des scores (victory-native), **awards** auto (§8), gestion d'égalité (« manche supplémentaire » officielle ou co-vainqueurs), partage de la feuille de score en image (backlog v1.1), « revanche » (relance avec les mêmes joueurs).
 - **Historique** : liste antichronologique (date, joueurs, vainqueur, score), détail = feuille de score complète + bonus par manche ; correction possible même après coup ; suppression.
 - **Joueurs** : roster persistant (création à la volée pendant une config de partie, ou gestion dédiée), fiche joueur = identité + stats (§8) ; archivage.
 - **Réglages** : langue (FR/EN), thème (système/clair/sombre), keep-awake, règles par défaut (reprises de la dernière partie, §7.1 — pas d'écran dédié), export/import JSON, aide-mémoire du barème, à-propos + mention « non affilié à Grandpa Beck's Games ».

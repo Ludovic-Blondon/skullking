@@ -53,8 +53,13 @@ function ghostTricksOf(round: RoundInput): number {
   return Math.max(0, round.cardsDealt - claimed - (round.destroyedTricks ?? 0));
 }
 
-/** Classement : total décroissant, rang partagé en cas d'égalité. */
-function standingsOf(totals: Record<PlayerId, number>, players: PlayerId[]): Standing[] {
+/**
+ * Classement : total décroissant, rang partagé en cas d'égalité.
+ *
+ * Exporté parce que l'app classe aussi des totaux qui ne sont pas ceux de
+ * `computeGame` — les scores acquis, manche en cours exclue (PLAN.md §7.2).
+ */
+export function standingsOf(totals: Record<PlayerId, number>, players: PlayerId[]): Standing[] {
   const sorted = [...players].sort((a, b) => totals[b] - totals[a]);
 
   const standings: Standing[] = [];

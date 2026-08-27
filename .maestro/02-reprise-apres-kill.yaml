@@ -81,14 +81,18 @@ appId: com.lblondon.skullscores
 - extendedWaitUntil:
     visible: "Manche 2/10 · Résultats"
     timeout: 20000
-# Les annonces de la manche interrompue sont intactes — et avec elles le
-# nombre de cartes distribuées : la mise 0 d'Alice vaut +20 sur deux cartes.
-- assertVisible: ".*annoncé 0 · \\+20 ce tour.*"
-- assertVisible: ".*annoncé 2 · -20 ce tour.*"
+# Les annonces de la manche interrompue sont intactes. Aucun score en revanche :
+# tant que les plis ne sont pas posés, la manche ne rapporte rien à l'écran
+# (§7.2) — sinon la table lirait « −20 » avant même d'avoir joué une carte.
+- assertVisible: ".*annoncé 0.*"
+- assertVisible: ".*annoncé 2.*"
+- assertNotVisible: ".*ce tour.*"
 
 # La manche 2 se termine sans rien retoucher : personne ne prend de pli.
 # Alice 20 + 20 = 40, Bob 10 − 20 = −10. Ces deux nombres ne tombent juste que
-# si la manche 1 a survécu au kill avec ses 20 et ses 10.
+# si la manche 1 a survécu au kill avec ses 20 et ses 10 — et que la manche 2 a
+# gardé ses deux cartes distribuées, sans quoi la mise 0 d'Alice ne vaudrait
+# pas +20.
 - tapOn:
     id: "round-action"
 - extendedWaitUntil:

@@ -276,14 +276,14 @@ async function fillBlanks(roundId: number, fields: ('bid' | 'tricks')[]): Promis
 export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Promise<void> {
   if (phase === 'results') {
     const roundId = await currentRoundId(gameId);
-    // Annonces **et** plis : à partir d'ici, le 0 affiché est la valeur, et
-    // l'aperçu doit calculer exactement ce que la validation calculera.
+    // Les annonces, et elles seules : la phase Annonces est close, le 0 affiché
+    // à l'écran devient la mise du joueur.
     //
-    // Ne matérialiser que les annonces laissait un joueur qui annonce 0 et ne
-    // prend aucun pli — donc ne touche rien — hors du décompte : il n'était pas
-    // « exact » aux yeux du moteur, et son alliance de Butin tombait à l'écran
-    // alors qu'elle tenait après validation.
-    if (roundId !== undefined) await fillBlanks(roundId, ['bid', 'tricks']);
+    // Les plis, eux, restent `null` — c'est ce qui distingue « pas encore
+    // saisi » de « aucun pli pris », et donc ce qui empêche l'écran d'afficher
+    // le score d'une manche que personne n'a encore jouée (§7.2). Le moteur,
+    // lui, lit déjà ces plis vides comme des 0 : `toRoundInput({ played })`.
+    if (roundId !== undefined) await fillBlanks(roundId, ['bid']);
   }
   await db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId));
 }
@@ -362,7 +362,10 @@ export async function persistScores(gameId: number): Promise<void> {
   if (!game) return;
 
   const stored = await getStoredRounds(gameId);
-  const state = computeGame(stored.map(toRoundInput), game.ruleset);
+  const state = computeGame(
+    stored.map((round) => toRoundInput(round)),
+    game.ruleset,
+  );
 
   for (const [index, result] of state.rounds.entries()) {
     const roundId = stored[index].round.id;

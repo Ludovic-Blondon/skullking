@@ -67,7 +67,7 @@ export default function GameScreen() {
     );
   }
 
-  const { game, seats, current, state } = view;
+  const { game, seats, current, settled } = view;
   const { round } = current.stored;
   const { cardsDealt } = round;
   const totalRounds = game.ruleset.roundsPlan.length;
@@ -125,12 +125,18 @@ export default function GameScreen() {
       <View
         style={{ paddingTop: insets.top + 6, maxWidth: CONTENT_MAX_WIDTH }}
         className="mx-auto w-full gap-2 px-5 pb-3">
-        <View className="flex-row items-start justify-between gap-3">
-          <Text className="flex-1 font-title text-h1 text-content">
-            {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
-            {bidding ? t('game.cards', { count: cardsDealt }) : t('game.results')}
-          </Text>
-          <View className="flex-row gap-2">
+        {/* Quitter et revenir aux annonces à gauche, feuille de score à droite :
+            trois cibles tactiles côte à côte se touchaient (36 pt de bouton pour
+            8 pt d'écart, hitSlop compris), et on quittait la partie en visant le
+            classement. Le titre les sépare, et l'écart du couple de gauche
+            dépasse la marge de frappe des deux boutons. */}
+        <View className="flex-row items-start gap-3">
+          <View className="flex-row gap-4">
+            <TopAction
+              icon="home-outline"
+              label={t('common.back')}
+              onPress={() => router.replace('/')}
+            />
             {!bidding && (
               <TopAction
                 icon="arrow-undo-outline"
@@ -139,17 +145,16 @@ export default function GameScreen() {
                 onPress={() => void backToBids()}
               />
             )}
-            <TopAction
-              icon="home-outline"
-              label={t('common.back')}
-              onPress={() => router.replace('/')}
-            />
-            <TopAction
-              icon="list-outline"
-              label={t('game.scoresheet')}
-              onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
-            />
           </View>
+          <Text className="flex-1 font-title text-h1 text-content">
+            {t('game.round', { round: round.roundNumber, total: totalRounds })} ·{' '}
+            {bidding ? t('game.cards', { count: cardsDealt }) : t('game.results')}
+          </Text>
+          <TopAction
+            icon="list-outline"
+            label={t('game.scoresheet')}
+            onPress={() => router.push({ pathname: '/game/[id]/scoresheet', params: { id } })}
+          />
         </View>
 
         <View className="flex-row items-center gap-2">
@@ -177,18 +182,23 @@ export default function GameScreen() {
         {seats.map((player) => {
           const entry = entryOf(player.id);
           const score = scoreOf(player.id);
-          const total = state?.totals[String(player.id)] ?? 0;
+          // Le score affiché est celui des manches validées : la manche en cours
+          // ne bougera les compteurs qu'une fois les plis posés (§7.2).
+          const total = settled.totals[String(player.id)] ?? 0;
           // Tout ce qui s'ajoute au score de base se lit sur la pastille : bonus
           // de capture, pari de Rascal — gagné ou débité — et ajustement manuel.
           // Chacun de ces gains se règle dans la feuille qu'elle ouvre.
           const extra = score ? score.bonus + score.rascalBet + score.custom : 0;
-          const played = score?.played ?? false;
+          // Plis réellement saisis : le moteur, lui, lit déjà un pli vide comme
+          // 0 pris, mais tant que personne n'a touché au compteur il n'y a rien
+          // à annoncer — surtout pas une mise ratée à l'ouverture de la manche.
+          const entered = entry !== undefined && entry.tricks !== null;
 
           // En annonces, aucune couleur : rien n'est encore joué. En résultats,
           // le liseré ne s'allume que pour les joueurs dont les plis sont saisis.
           const tone: PlayerRowTone = bidding
             ? 'idle'
-            : !played
+            : !entered
               ? 'idle'
               : score?.exact
                 ? 'exact'
@@ -225,7 +235,7 @@ export default function GameScreen() {
                 subtitle={
                   <Text className="font-body text-micro text-content-muted">
                     {t('game.announced', { bid: entry?.bid ?? 0 })}
-                    {played && score
+                    {entered && score
                       ? ` · ${t('game.thisRound', {
                           delta: `${score.total > 0 ? '+' : ''}${score.total}`,
                         })}`
