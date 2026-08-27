@@ -126,6 +126,7 @@ ESLint + Prettier, TS `strict`, conventional commits (commitlint), versioning se
 - **Cartes distribuées** : `cardsDealt = roundNumber`, **sauf à 8 joueurs : manches 9 et 10 → 8 cartes** (règle officielle). Valeur **modifiable manuellement** par manche (couvre les cas de table réels et variantes maison).
 - **2 joueurs** : 3e main jouée par le fantôme **« Barbe Grise »** — ne mise pas, ne marque pas, mais **peut remporter des plis**. Les cartes Butin ne sont pas utilisées à 2 joueurs.
 - Égalité au score final → **manche supplémentaire** proposée (règle officielle), ou co-vainqueurs si la table préfère.
+- Le livret ne départage **que l'égalité en tête** : aux autres rangs, deux joueurs à égalité le restent (aucun critère officiel, ni plis ni bonus). Ils partagent leur rang au classement et **la même marche du podium**.
 
 ### 4.2 Barème — édition courante (2021+), le défaut de l'app
 
@@ -324,7 +325,7 @@ Bottom sheet par joueur, en phase Résultats. **Saisie sémantique, pas de calcu
 
 ### 7.4 Fin de partie, historique, joueurs, stats
 
-- **Fin de partie** : podium animé, courbe d'évolution des scores (victory-native), **awards** auto (§8), gestion d'égalité (« manche supplémentaire » officielle ou co-vainqueurs), partage de la feuille de score en image (backlog v1.1), « revanche » (relance avec les mêmes joueurs).
+- **Fin de partie** : podium animé — trois **rangs**, ex æquo groupés sur leur marche (§4.1) —, courbe d'évolution des scores (victory-native), **awards** auto (§8), gestion d'égalité (« manche supplémentaire » officielle ou co-vainqueurs), partage de la feuille de score en image (backlog v1.1), « revanche » (relance avec les mêmes joueurs).
 - **Historique** : liste antichronologique (date, joueurs, vainqueur, score), détail = feuille de score complète + bonus par manche ; correction possible même après coup ; suppression.
 - **Joueurs** : roster persistant (création à la volée pendant une config de partie, ou gestion dédiée), fiche joueur = identité + stats (§8) ; archivage.
 - **Réglages** : langue (FR/EN), thème (système/clair/sombre), keep-awake, règles par défaut (reprises de la dernière partie, §7.1 — pas d'écran dédié), export/import JSON, aide-mémoire du barème, à-propos + mention « non affilié à Grandpa Beck's Games ».
