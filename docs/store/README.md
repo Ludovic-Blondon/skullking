@@ -26,13 +26,14 @@ accessible à tous — une adresse e-mail dédiée n'est plus nécessaire.
 
 ## Captures d'écran
 
-Trois jeux, quatre langues chacun, six écrans par langue — 72 images :
+Quatre jeux, quatre langues chacun, six écrans par langue — 96 images :
 
-| Dossier                  | Appareil            | Taille      | Sert à                             |
-| ------------------------ | ------------------- | ----------- | ---------------------------------- |
-| `screenshots/phone/`     | iPhone 17 Pro Max   | 1320 × 2868 | App Store 6,9" · Play téléphone    |
-| `screenshots/tablet-7/`  | iPad mini (A17 Pro) | 1488 × 2266 | Play tablette 7"                   |
-| `screenshots/tablet-10/` | iPad Pro 11" (M5)   | 1668 × 2420 | Play tablette 10" · App Store iPad |
+| Dossier                  | Appareil            | Taille      | Sert à                                 |
+| ------------------------ | ------------------- | ----------- | -------------------------------------- |
+| `screenshots/phone/`     | iPhone 17 Pro Max   | 1320 × 2868 | App Store 6,9" · Play téléphone        |
+| `screenshots/tablet-7/`  | iPad mini (A17 Pro) | 1488 × 2266 | Play tablette 7"                       |
+| `screenshots/tablet-10/` | iPad Pro 11" (M5)   | 1668 × 2420 | Play tablette 10" · App Store iPad 11" |
+| `screenshots/tablet-13/` | iPad Pro 13" (M5)   | 2064 × 2752 | App Store iPad 13" — **obligatoire**   |
 
 Les six écrans, dans l'ordre :
 
@@ -113,6 +114,24 @@ la langue. La langue est stockée en base : elle survit à la copie de la graine
   ces images.
 - La capture `3-annonces` montre la bannière ambre « table sous-annoncée ». C'est volontaire :
   elle donne à voir le contrôle de somme, qui est un argument de l'app.
+
+**L'iPad 13 pouces n'est pas optionnel** : App Store Connect refuse la soumission sans lui
+(« Veuillez charger une capture d'écran adaptée aux iPad munis d'un écran de 13 pouces »), et le
+format 1668 × 2420 du 11" y est rejeté en `IMAGE_INCORRECT_DIMENSIONS`. Le simulateur
+_iPad Pro 13-inch (M5)_ sort exactement le 2064 × 2752 attendu.
+
+### Fabriquer la base sans le sélecteur de fichiers
+
+L'import du JSON par le sélecteur iOS reste faisable, mais il n'est plus nécessaire : la base se
+sème directement en SQL. Lancer l'app une fois sur le simulateur pour qu'elle crée le schéma et
+inscrive les migrations Drizzle, la fermer, puis insérer les données de
+`skull-scores-demo.json`.
+
+Un point à ne pas rater : les colonnes `score_base`, `score_bonus` et `score_total` doivent être
+**calculées par le moteur**, pas laissées à `null` — la feuille de score lit ces colonnes figées,
+et une base semée sans elles s'affiche vide. C'est ce que fait `persistScores` après un import
+(§12.5) : relire les manches, appeler `computeGame`, écrire le résultat. Un script jetable qui
+importe `@/core` et `@/db/mappers` sous Jest produit le SQL correspondant en quelques lignes.
 
 **Reste à produire** : le format 6,5" si l'App Store le réclame encore pour les anciens iPhone.
 
