@@ -27,22 +27,34 @@ et un build EAS de développement exigerait `expo-dev-client`, qui n'est pas une
 `production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
 lisible, elle, reste tenue à la main dans `app.json`.
 
+## Credentials
+
+Le dossier `credentials/` est **gitignoré, donc absent d'un clone frais** : le recréer avec
+`mkdir -p credentials`. Rien de ce qu'il contient ne doit être commité.
+
+| Fichier                     | Quoi                                                        |
+| --------------------------- | ----------------------------------------------------------- |
+| `asc-api-key.p8`            | clé API App Store Connect, rôle **Admin**, onglet Team Keys |
+| `play-service-account.json` | compte de service Google                                    |
+
+La clé Apple se crée dans App Store Connect → Users and Access → Integrations → App Store Connect
+API → **Team Keys**. Le rôle **Admin** est nécessaire : la clé ne sert pas qu'à `eas submit`, EAS
+Build s'en sert pour créer et renouveler le certificat de distribution et le provisioning profile,
+ce qu'App Manager ne permet pas. Le `.p8` ne se télécharge **qu'une fois** — perdu, il faut
+révoquer la clé et en refaire une. Le compte de service Google se crée en suivant
+https://expo.fyi/creating-google-service-account
+
 ## À remplir avant la première soumission
 
-Trois valeurs sont des marqueurs `REMPLACER_...` dans `eas.json` :
+Deux marqueurs `REMPLACER_...` restent dans `eas.json` :
 
-| Champ         | Où le trouver                                                        |
-| ------------- | -------------------------------------------------------------------- |
-| `appleId`     | l'e-mail du compte Apple Developer                                   |
-| `ascAppId`    | App Store Connect → l'app → General → App Information → **Apple ID** |
-| `appleTeamId` | developer.apple.com → Membership                                     |
+| Champ               | Où le trouver                                                        |
+| ------------------- | -------------------------------------------------------------------- |
+| `ascApiKeyIssuerId` | App Store Connect → Integrations, en haut de la liste des clés       |
+| `ascAppId`          | App Store Connect → l'app → General → App Information → **Apple ID** |
 
 L'app doit donc exister dans App Store Connect (bundle `com.lblondon.skullscores`) **avant** le
-premier `eas submit`.
-
-Côté Google, le fichier de compte de service se dépose en `credentials/play-service-account.json`
-(dossier gitignoré, la clé ne doit jamais être commitée) — procédure :
-https://expo.fyi/creating-google-service-account
+premier `eas submit` : c'est sa création qui produit l'`ascAppId`.
 
 ## L'ordre, et pourquoi
 

@@ -28,9 +28,10 @@
         "releaseStatus": "draft"
       },
       "ios": {
-        "appleId": "REMPLACER_PAR_EMAIL_COMPTE_APPLE",
-        "ascAppId": "REMPLACER_PAR_APPLE_ID_DE_L_APP",
-        "appleTeamId": "REMPLACER_PAR_TEAM_ID"
+        "ascApiKeyPath": "./credentials/asc-api-key.p8",
+        "ascApiKeyId": "<KEY_ID>",
+        "ascApiKeyIssuerId": "REMPLACER_PAR_ISSUER_ID",
+        "ascAppId": "REMPLACER_PAR_APPLE_ID_DE_L_APP"
       }
     }
   }
