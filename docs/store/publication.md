@@ -95,6 +95,12 @@ eas submit --platform ios              # → TestFlight
 La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
 ce passage qui démarre les 14 jours.
 
+Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
+TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;
+et `--auto-testflight-setup` ne fait rien tant que la clé App Store Connect n'est lue qu'en local
+(« No complete App Store Connect credentials »), il faut alors créer le groupe de test interne à
+la main dans App Store Connect.
+
 ## Conformité
 
 - **Confidentialité** : « Data Not Collected » (Apple), formulaire Data Safety vide (Google).
