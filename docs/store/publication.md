@@ -54,10 +54,29 @@ l'environnement — sans quoi il réclame un identifiant Apple et un code 2FA :
 export EXPO_ASC_API_KEY_PATH="$PWD/credentials/asc-api-key.p8"
 export EXPO_ASC_KEY_ID=<KEY_ID>
 export EXPO_ASC_ISSUER_ID=<ISSUER_ID>
+export EXPO_APPLE_TEAM_ID=<TEAM_ID>
 ```
 
 C'est avec ça qu'EAS crée et renouvelle le certificat de distribution et le provisioning profile,
 qu'il garde ensuite côté serveur (`credentialsSource: remote`).
+
+## Renouvellements
+
+Rien à recopier des identifiants de credentials : ils vivent sur le serveur Expo et se relisent
+à tout moment avec `eas credentials --platform ios`. **Seule la date d'expiration compte.**
+
+| Échéance       | Quoi                                                           |
+| -------------- | -------------------------------------------------------------- |
+| **28/08/2027** | certificat de distribution iOS **et** provisioning profile     |
+| **28/08/2027** | adhésion Apple Developer Program (99 $/an, à renouveler avant) |
+
+À l'échéance, EAS refait le provisioning profile tout seul, mais le certificat de distribution
+demande de repasser une fois en mode interactif — comme à la création. Une app déjà en ligne ne
+tombe pas pour autant : un certificat expiré empêche de **signer de nouveaux builds**, il ne
+désactive pas ce qui est déjà publié.
+
+Apple n'accorde que **deux certificats de distribution** par compte. Ne pas en révoquer un à la
+légère : les builds signés avec deviennent invalides.
 
 ## L'ordre, et pourquoi
 
