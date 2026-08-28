@@ -2,7 +2,7 @@
   "expo": {
     "name": "Skull Scores",
     "slug": "skullking",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "skullking",
@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.lblondon.skullscores",
       "supportsTablet": true,
       "infoPlist": {
-        "CFBundleLocalizations": ["en", "fr", "es", "de"]
+        "CFBundleLocalizations": ["en", "fr", "es", "de"],
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {

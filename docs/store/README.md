@@ -4,6 +4,8 @@ Un fichier par langue (`fr`, `en`, `es`, `de`), à recopier dans App Store Conne
 Play Console. Chaque fiche donne les champs des deux plateformes, avec la limite de caractères
 en regard — les textes sont écrits pour tenir dedans.
 
+La chaîne de build et de soumission est décrite dans [`publication.md`](./publication.md).
+
 Communs aux quatre langues :
 
 | Champ                        | Valeur                                                             |
