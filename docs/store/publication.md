@@ -52,9 +52,17 @@ l'environnement — sans quoi il réclame un identifiant Apple et un code 2FA :
 
 ```bash
 export EXPO_ASC_API_KEY_PATH="$PWD/credentials/asc-api-key.p8"
-export EXPO_ASC_KEY_ID=<KEY_ID>
-export EXPO_ASC_ISSUER_ID=<ISSUER_ID>
-export EXPO_APPLE_TEAM_ID=<TEAM_ID>
+export EXPO_ASC_KEY_ID=<KEY_ID>          # les 10 caractères de AuthKey_<KEY_ID>.p8
+export EXPO_ASC_ISSUER_ID=<ISSUER_ID>    # l'UUID en haut de Users and Access > Integrations
+export EXPO_APPLE_TEAM_ID=<TEAM_ID>      # developer.apple.com > Membership
+```
+
+**Ces valeurs ne sont pas dans le dépôt, et ne doivent pas y entrer** : il est public. Seul
+l'`ascAppId` reste dans `eas.json`, il est de toute façon dans l'URL App Store de l'app. Le plus
+simple est de garder un `credentials/asc.env` — le dossier est gitignoré — et de le sourcer :
+
+```bash
+source credentials/asc.env
 ```
 
 C'est avec ça qu'EAS crée et renouvelle le certificat de distribution et le provisioning profile,
@@ -77,6 +85,39 @@ désactive pas ce qui est déjà publié.
 
 Apple n'accorde que **deux certificats de distribution** par compte. Ne pas en révoquer un à la
 légère : les builds signés avec deviennent invalides.
+
+## Remplir la fiche sans formulaire
+
+Deux scripts évitent de recopier à la main, en quatre langues, ce que le dépôt sait déjà :
+
+| Fichier              | Rôle                                                              |
+| -------------------- | ----------------------------------------------------------------- |
+| `asc.py`             | client de l'API App Store Connect (JWT ES256 signé par `openssl`) |
+| `publish-listing.py` | remplit une version depuis `docs/store/`                          |
+
+```bash
+export ASC_KEY_ID=... ASC_ISSUER_ID=...
+python3 docs/store/publish-listing.py          # la version en préparation
+python3 docs/store/publish-listing.py --version 1.1
+```
+
+Il écrit les descriptions, mots-clés et textes promotionnels des quatre langues, le nom, le
+sous-titre, la politique de confidentialité, les catégories, les **72 captures** des trois formats
+d'appareil, le copyright, la publication en manuel, la déclaration de contenu tiers, et attache le
+dernier build `VALID`. Il est **idempotent** : relançable après un échec réseau, il ne renvoie pas
+ce qui est déjà en place et refait toute capture restée incomplète — une capture en
+`AWAITING_UPLOAD` bloque la soumission sans le dire.
+
+Les coordonnées de vérification s'ajoutent au premier passage :
+
+```bash
+python3 docs/store/publish-listing.py --prenom Ludovic --nom Blondon \
+  --telephone +33XXXXXXXXX --email ...
+```
+
+Trois choses restent à la main dans la console, et c'est volontaire — ce sont des déclarations
+dont on répond devant Apple : **confidentialité** (penser au bouton _Publier_, séparé des
+réponses), **classification d'âge**, et **statut de commerçant DSA**.
 
 ## L'ordre, et pourquoi
 

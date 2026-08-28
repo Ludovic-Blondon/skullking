@@ -28,9 +28,6 @@
         "releaseStatus": "draft"
       },
       "ios": {
-        "ascApiKeyPath": "./credentials/asc-api-key.p8",
-        "ascApiKeyId": "<KEY_ID>",
-        "ascApiKeyIssuerId": "<ISSUER_ID>",
         "ascAppId": "6806288500"
       }
     }
