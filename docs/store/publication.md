@@ -44,17 +44,20 @@ ce qu'App Manager ne permet pas. Le `.p8` ne se télécharge **qu'une fois** —
 révoquer la clé et en refaire une. Le compte de service Google se crée en suivant
 https://expo.fyi/creating-google-service-account
 
-## À remplir avant la première soumission
+## Authentification Apple
 
-Deux marqueurs `REMPLACER_...` restent dans `eas.json` :
+`eas.json` porte l'`ascApiKeyId`, l'`ascApiKeyIssuerId` et l'`ascAppId` : `eas submit -p ios` n'a
+donc plus rien à demander. Pour un **build**, en revanche, EAS a besoin de la même clé par
+l'environnement — sans quoi il réclame un identifiant Apple et un code 2FA :
 
-| Champ               | Où le trouver                                                        |
-| ------------------- | -------------------------------------------------------------------- |
-| `ascApiKeyIssuerId` | App Store Connect → Integrations, en haut de la liste des clés       |
-| `ascAppId`          | App Store Connect → l'app → General → App Information → **Apple ID** |
+```bash
+export EXPO_ASC_API_KEY_PATH="$PWD/credentials/asc-api-key.p8"
+export EXPO_ASC_KEY_ID=<KEY_ID>
+export EXPO_ASC_ISSUER_ID=<ISSUER_ID>
+```
 
-L'app doit donc exister dans App Store Connect (bundle `com.lblondon.skullscores`) **avant** le
-premier `eas submit` : c'est sa création qui produit l'`ascAppId`.
+C'est avec ça qu'EAS crée et renouvelle le certificat de distribution et le provisioning profile,
+qu'il garde ensuite côté serveur (`credentialsSource: remote`).
 
 ## L'ordre, et pourquoi
 
