@@ -111,7 +111,8 @@ la main dans App Store Connect.
 - **Conformité export** : `ITSAppUsesNonExemptEncryption: false` est dans `app.json`, ce qui évite
   la question à chaque upload — l'app ne chiffre rien.
 
-## Reste à produire
+## Visuels
 
-Le **bandeau de la fiche Play (« feature graphic »), 1024 × 500** : obligatoire, et absent du
-dépôt. L'icône 1024 × 1024 (`assets/images/icon.png`) et les captures, elles, sont prêtes.
+Tout est dans le dépôt : icône 1024 × 1024 (`assets/images/icon.png`), 72 captures
+(`screenshots/`) et les quatre bandeaux Play (`feature-graphic/`). Rien à produire avant de
+remplir les fiches.

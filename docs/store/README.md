@@ -115,3 +115,28 @@ la langue. La langue est stockée en base : elle survit à la copie de la graine
   elle donne à voir le contrôle de somme, qui est un argument de l'app.
 
 **Reste à produire** : le format 6,5" si l'App Store le réclame encore pour les anciens iPhone.
+
+## Bandeau Play
+
+Le « feature graphic » **1024 × 500** est obligatoire sur une fiche Play — sans lui, impossible de
+soumettre. Quatre images dans `feature-graphic/`, une par langue : seules les trois puces
+d'arguments changent, le reste est identique.
+
+Il reprend l'identité de l'app plutôt qu'un montage : la marque au crâne redessinée en SVG depuis
+`assets/images/icon.png`, la palette du mode sombre de `src/global.css`, les fontes Outfit de
+`node_modules`, et un fragment de feuille de score avec les joueurs des captures — les nombres se
+lisent dans les quatre langues.
+
+Pour les refaire :
+
+```bash
+python3 docs/store/feature-graphic.py
+```
+
+Le script rend la page dans Chrome en mode headless puis aplatit en **PNG 24 bits** : Play refuse
+la transparence, et la capture Chrome sort en RGBA.
+
+Deux choses à savoir : le centre de l'image tombe sur le mot « Scores », donc si une vidéo
+promotionnelle est ajoutée un jour, le bouton de lecture que Play superpose se posera dessus — il
+faudra décaler le bloc de gauche. Et l'allemand est la langue la plus large : c'est elle qui fixe
+la limite avant que les puces ne touchent la carte.
