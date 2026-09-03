@@ -20,6 +20,16 @@ données, écrans, découpage en phases P0→P7. Toute décision technique ou de
   dans les snapshots recalculables.
 - Toute édition d'une manche passée repasse par `computeGame` — jamais de delta appliqué à la main.
 
+## Flux de branches
+
+`branche de travail → develop → main`. Les PR de travail visent **`develop`** ; `main` ne reçoit
+que les PR de release, taguées (`1.0.0`, `1.1.0`…). Il n'y a pas de branche `master`.
+
+Concrètement : partir de `develop`, et créer la PR avec `gh pr create --base develop` — sans ce
+drapeau, `gh` cible `main`, qui est la branche par défaut du dépôt. Les deux branches exigent une
+PR et la CI verte, sans bypass : ne jamais tenter de pousser directement dessus. Le merge revient
+au mainteneur.
+
 ## Vérifications avant commit
 
 ```bash
