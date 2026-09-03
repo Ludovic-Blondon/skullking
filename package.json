@@ -1,7 +1,7 @@
 {
   "name": "skullking",
   "main": "expo-router/entry",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
     "@expo-google-fonts/outfit": "^0.4.3",
