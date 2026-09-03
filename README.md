@@ -124,8 +124,8 @@ les deux ne divergent pas.
 Les contributions sont bienvenues. [`CONTRIBUTING.md`](./CONTRIBUTING.md) détaille la mise en
 route, les invariants à respecter et le fonctionnement des pull requests.
 
-En résumé : commits conventionnels (`feat:`, `fix:`, `chore:`…) vérifiés par commitlint, `main`
-protégée, CI verte obligatoire avant merge.
+En résumé : commits conventionnels (`feat:`, `fix:`, `chore:`…) vérifiés par commitlint, PR
+ouvertes contre `develop`, `main` réservée aux releases taguées, CI verte obligatoire avant merge.
 
 ## Licence
 
