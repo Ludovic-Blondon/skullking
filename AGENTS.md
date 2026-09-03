@@ -25,10 +25,9 @@ données, écrans, découpage en phases P0→P7. Toute décision technique ou de
 `branche de travail → develop → main`. Les PR de travail visent **`develop`** ; `main` ne reçoit
 que les PR de release, taguées (`1.0.0`, `1.1.0`…). Il n'y a pas de branche `master`.
 
-Concrètement : partir de `develop`, et créer la PR avec `gh pr create --base develop` — sans ce
-drapeau, `gh` cible `main`, qui est la branche par défaut du dépôt. Les deux branches exigent une
-PR et la CI verte, sans bypass : ne jamais tenter de pousser directement dessus. Le merge revient
-au mainteneur.
+Concrètement : partir de `develop`, qui est la branche par défaut du dépôt — `gh pr create` la
+cible donc sans avoir à passer `--base`. Les deux branches exigent une PR et la CI verte, sans
+bypass : ne jamais tenter de pousser directement dessus. Le merge revient au mainteneur.
 
 ## Vérifications avant commit
 
