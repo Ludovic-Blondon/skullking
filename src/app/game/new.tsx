@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Alert, Pressable, TextInput, View } from 'react-native';
 import { Text } from '@/ui/text';
 
-import { DEFAULT_RULESET, MAX_PLAYERS, MIN_PLAYERS, type Ruleset } from '@/core';
+import { DEFAULT_RULESET, maxPlayersFor, MIN_PLAYERS, type Ruleset } from '@/core';
 import { createGame } from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
 import { RulesetOptions } from '@/features/game/ruleset-options';
@@ -20,6 +20,7 @@ function summarizeRuleset(ruleset: Ruleset, t: Translate): string {
   if (ruleset.rascalCannonball) parts.push(t('rules.summaryCannonball'));
   if (!ruleset.pirateAbilities) parts.push(t('rules.summaryNoPowers'));
   if (!ruleset.advancedCards) parts.push(t('rules.summaryNoAdvanced'));
+  if (ruleset.expansion) parts.push(t('rules.summaryExpansion'));
   if (ruleset.edition === 'legacy') parts.push(t('rules.summaryLegacy'));
   if (ruleset.roundsPlan.length !== DEFAULT_RULESET.roundsPlan.length) {
     parts.push(t('rules.summaryRounds', { count: ruleset.roundsPlan.length }));
@@ -45,6 +46,8 @@ export default function NewGameScreen() {
   const [showOptions, setShowOptions] = useState(false);
 
   const summary = summarizeRuleset(ruleset, t);
+  // L'extension agrandit le paquet : une place de plus à table (PLAN.md §4.6).
+  const maxPlayers = maxPlayersFor(ruleset);
   const enough = selected.length >= MIN_PLAYERS;
   const seated = selected
     .map((id) => players.find((player) => player.id === id))
@@ -54,7 +57,7 @@ export default function NewGameScreen() {
     setSelected((current) =>
       current.includes(playerId)
         ? current.filter((id) => id !== playerId)
-        : current.length >= MAX_PLAYERS
+        : current.length >= maxPlayers
           ? current
           : [...current, playerId],
     );
@@ -66,9 +69,7 @@ export default function NewGameScreen() {
     try {
       const created = await createPlayer(trimmed);
       setName('');
-      setSelected((current) =>
-        current.length >= MAX_PLAYERS ? current : [...current, created.id],
-      );
+      setSelected((current) => (current.length >= maxPlayers ? current : [...current, created.id]));
     } catch (error) {
       // Une écriture qui échoue en silence est le pire des cas : l'utilisateur
       // retape son prénom sans comprendre pourquoi rien ne se passe.
@@ -84,7 +85,7 @@ export default function NewGameScreen() {
 
   return (
     <Screen edgeToEdgeBottom>
-      <SectionLabel>{t('new.who', { min: MIN_PLAYERS, max: MAX_PLAYERS })}</SectionLabel>
+      <SectionLabel>{t('new.who', { min: MIN_PLAYERS, max: maxPlayers })}</SectionLabel>
 
       {players.length === 0 ? (
         <EmptyState emoji="🗺️" title={t('new.noPlayer')}>

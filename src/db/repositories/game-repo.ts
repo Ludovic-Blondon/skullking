@@ -118,7 +118,8 @@ export async function ensureRound(gameId: number, roundNumber: number): Promise<
 
   const seats = await playerIdsOf(gameId);
   const planned = game.ruleset.roundsPlan[roundNumber - 1] ?? roundNumber;
-  const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length));
+  // Le paquet dépend des règles : l'extension en ajoute 19 cartes (§4.6).
+  const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length, game.ruleset));
 
   const [round] = await db.insert(rounds).values({ gameId, roundNumber, cardsDealt }).returning();
 

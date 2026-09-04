@@ -8,6 +8,7 @@ const RASCAL: Ruleset = {
   scoring: 'rascal',
   rascalCannonball: true,
   pirateAbilities: true,
+  expansion: true,
   roundsPlan: [1, 2, 3, 4, 5],
 };
 
