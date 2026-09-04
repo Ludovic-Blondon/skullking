@@ -1,0 +1,166 @@
+# Réglages d'une partie en cours (PLAN.md §7.5) : la table change entre deux
+# manches, et la partie s'arrête quand la table le décide.
+#
+# Quatre joueurs. Alice remporte tous les plis, les autres annoncent 0 : les
+# totaux se vérifient de tête. Entre la manche 1 et la 2, Chloé quitte la table
+# et la partie est ramenée à 3 manches ; entre la 2 et la 3, Erin s'assoit.
+#
+# Ce que le flux prouve :
+#   - un partant garde ses points et reste au classement final ;
+#   - un arrivant démarre à 0 et n'a rien sur les manches passées ;
+#   - le nombre de manches se change en cours de partie.
+#
+#   maestro test .maestro/06-table-en-cours-de-partie.yaml
+appId: com.lblondon.skullscores
+---
+- launchApp:
+    clearState: true
+# `clearState` efface aussi l'URL mémorisée par le client de développement :
+# on la lui redonne pour qu'il se rebranche sur Metro.
+- openLink: 'com.lblondon.skullscores://expo-development-client/?url=http://localhost:8081'
+- extendedWaitUntil:
+    visible: 'Nouvelle partie'
+    timeout: 90000
+- waitForAnimationToEnd:
+    timeout: 15000
+- extendedWaitUntil:
+    visible: 'Nouvelle partie'
+    timeout: 30000
+
+# — Quatre joueurs à table ——————————————————————————————————————————————
+- tapOn:
+    id: 'new-game'
+- tapOn:
+    id: 'new-player-name'
+- inputText: 'Alice'
+- tapOn:
+    id: 'new-player-add'
+- tapOn:
+    id: 'new-player-name'
+- inputText: 'Bob'
+- tapOn:
+    id: 'new-player-add'
+- tapOn:
+    id: 'new-player-name'
+- inputText: 'Chloe'
+- tapOn:
+    id: 'new-player-add'
+- tapOn:
+    id: 'new-player-name'
+- inputText: 'Dan'
+- tapOn:
+    id: 'new-player-add'
+- hideKeyboard
+- tapOn:
+    id: 'start-game'
+
+# — Manche 1 : Alice 20, les trois autres 10 ——————————————————————————
+- extendedWaitUntil:
+    visible: 'Manche 1/10.*'
+    timeout: 20000
+- tapOn:
+    id: 'bid-1-plus'
+- tapOn:
+    id: 'round-action'
+- tapOn:
+    id: 'tricks-1-plus'
+- tapOn:
+    id: 'round-action'
+
+# — Entre les manches : Chloé s'en va, la partie tombe à 3 manches ————————
+- assertVisible: 'Manche 2/10.*'
+- tapOn:
+    id: 'game-settings'
+- assertVisible: 'Joueurs à table'
+- repeat:
+    times: 7
+    commands:
+      - tapOn:
+          id: 'rounds-count-minus'
+- tapOn:
+    id: 'remove-3'
+# Le titre de l'alerte est « Retirer Chloe ? » : la comparaison portant sur le
+# texte entier, « Retirer » ne désigne que le bouton.
+- tapOn: 'Retirer'
+- assertNotVisible: 'remove-3'
+# La feuille se referme au glissé, comme la feuille de score : elle n'a que sa
+# poignée, pas de bouton retour.
+- swipe:
+    start: '50%, 12%'
+    end: '50%, 92%'
+
+# La table n'a plus que trois joueurs, et la partie s'arrête à la manche 3.
+- extendedWaitUntil:
+    visible: 'Manche 2/3.*'
+    timeout: 20000
+- assertNotVisible: 'Chloe'
+
+# — Manche 2 : Alice 40, Bob et Dan 20 ————————————————————————————————
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: 'bid-1-plus'
+- tapOn:
+    id: 'round-action'
+- repeat:
+    times: 2
+    commands:
+      - tapOn:
+          id: 'tricks-1-plus'
+- tapOn:
+    id: 'round-action'
+
+# — Entre les manches : Erin s'assoit, à 0 point ————————————————————————
+- assertVisible: 'Manche 3/3.*'
+- tapOn:
+    id: 'game-settings'
+- tapOn:
+    id: 'settings-player-name'
+- inputText: 'Erin'
+# Clavier refermé **avant** de viser le « + » : sous le clavier, la feuille
+# glisse encore quand Maestro tape, et le geste tombe à côté.
+- hideKeyboard
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    id: 'settings-player-add'
+- extendedWaitUntil:
+    visible: 'Erin'
+    timeout: 10000
+- swipe:
+    start: '50%, 12%'
+    end: '50%, 92%'
+- extendedWaitUntil:
+    visible: 'Manche 3/3.*'
+    timeout: 20000
+- assertVisible: 'Erin'
+
+# — Manche 3, la dernière : Alice 60, les trois autres 30 ————————————————
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          id: 'bid-1-plus'
+- tapOn:
+    id: 'round-action'
+- repeat:
+    times: 3
+    commands:
+      - tapOn:
+          id: 'tricks-1-plus'
+- tapOn:
+    id: 'round-action'
+
+# — Podium ————————————————————————————————————————————————————————————————
+# Alice 20+40+60 = 120. Bob et Dan 10+20+30 = 60. Erin, arrivée en manche 3, 30.
+# Chloé, partie après la manche 1, garde ses 10 points et reste au classement.
+- extendedWaitUntil:
+    visible: 'Alice'
+    timeout: 20000
+- assertVisible: '120'
+- assertVisible: '60'
+- assertVisible: 'Erin'
+- assertVisible: '30'
+- assertVisible: 'Chloe'
+- assertVisible: '10'

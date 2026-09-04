@@ -356,10 +356,12 @@ Bottom sheet par joueur, en phase Résultats. **Saisie sémantique, pas de calcu
 
 ### 7.5 Réglages d'une partie en cours
 
-Une vraie soirée ne se déroule pas comme la configuration de départ : quelqu'un part avant la fin, un retardataire s'assoit à la manche 3, la table décide d'arrêter à la 7ᵉ. Un écran dédié, ouvert depuis l'en-tête de la partie, couvre ces trois cas — et **rien d'autre** : les règles restent figées à la création (elles y sont rappelées en lecture seule), pour qu'aucun geste ne recalcule en silence une feuille déjà écrite.
+Une vraie soirée ne se déroule pas comme la configuration de départ : quelqu'un part avant la fin, un retardataire s'assoit à la manche 3, la table décide d'arrêter à la 7ᵉ. Un écran dédié couvre ces trois cas — et **rien d'autre** : les règles restent figées à la création (elles y sont rappelées en lecture seule), pour qu'aucun geste ne recalcule en silence une feuille déjà écrite.
+
+Il s'ouvre depuis l'en-tête de la partie, **en phase Annonces** : le bouton prend la place que « revenir aux annonces » y laisse libre, ce qui évite un cinquième bouton dans une barre où le titre manque déjà de largeur — et c'est de toute façon entre deux manches que ces réglages ont un sens.
 
 - **Nombre de manches** : stepper borné à `[manche en cours, 10]`. Le ramener sur la manche en cours en fait la dernière : la valider termine la partie.
-- **Joueurs, entre deux manches** (phase Annonces seulement) : retirer un joueur ou en ajouter un, dans les bornes de `[2, max joueurs]` (§4.6 pour le maximum).
+- **Joueurs** : retirer un joueur ou en ajouter un, dans les bornes de `[2, max joueurs]` (§4.6 pour le maximum).
   - Un joueur **retiré est gelé** : ses manches passées restent sur la feuille, son total ne bouge plus, il figure au classement final. Rien n'est effacé — la partie s'est vraiment jouée comme ça.
   - Un joueur **ajouté démarre à 0**, sans ligne sur les manches passées.
 - **Modélisation** : c'est la **présence d'une ligne `round_entries` qui dit qui est à table à cette manche** ; `game_players` garde l'ordre des places et le roster complet de la partie. Aucune colonne ajoutée, et le moteur n'a rien à connaître de tout ça — `computeGame()` reçoit déjà un roster et tolère un joueur absent d'une manche.

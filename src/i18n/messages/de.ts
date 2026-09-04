@@ -22,6 +22,7 @@ export const de: Record<MessageKey, string> = {
   'route.rules': 'Punkte-Spickzettel',
   'route.newGame': 'Neue Partie',
   'route.scoresheet': 'Punkteblatt',
+  'route.gameSettings': 'Partie-Einstellungen',
   'route.gameEnd': 'Spielende',
   'route.gameDetail': 'Partiedetails',
 
@@ -94,6 +95,7 @@ export const de: Record<MessageKey, string> = {
   'game.potentialCannonball': '· Potenzial {value} oder {cannonball} mit der Kanonenkugel',
   'game.backToBids': 'Zurück zu den Ansagen',
   'game.scoresheet': 'Punkteblatt',
+  'game.settings': 'Partie-Einstellungen',
   'game.points': '{points} Pkt.',
   'game.announced': 'angesagt {bid}',
   'game.thisRound': '{delta} diese Runde',
@@ -114,6 +116,22 @@ export const de: Record<MessageKey, string> = {
   'game.force': 'erzwingen',
   'game.bidLabel': 'Ansage',
   'game.tricksLabel': 'Stiche',
+
+  'gset.rounds': 'Dauer der Partie',
+  'gset.roundsHint': 'Nie unter der laufenden Runde ({round})',
+  'gset.lastRound': 'Runde {round} wird die letzte: mit ihr endet die Partie.',
+  'gset.players': 'Spieler am Tisch',
+  'gset.duringRound': 'Die Runde läuft — zurück zu den Ansagen, um den Tisch zu ändern.',
+  'gset.playersHint': '{min} bis {max} Spieler. Wer geht, behält Punkte und Platz.',
+  'gset.tableFull': 'Tisch voll — {max} Spieler',
+  'gset.remove': 'Entfernen',
+  'gset.removeOf': '{name} vom Tisch nehmen',
+  'gset.removeTitle': '{name} entfernen?',
+  'gset.removeBody':
+    '{name} behält die {points} Punkte und bleibt in der Endwertung. Ab Runde {round} wird nicht mehr für sie oder ihn eingetragen.',
+  'gset.addOf': '{name} an den Tisch setzen',
+  'gset.rules': 'Regeln der Partie',
+  'gset.rulesHint': 'Beim Erstellen festgelegt — sie ändern sich nicht mehr.',
 
   'issue.trickCountMismatch#one': 'Das passt nicht: {value} Stich bei {expected} Karten',
   'issue.trickCountMismatch#other': 'Das passt nicht: {value} Stiche bei {expected} Karten',

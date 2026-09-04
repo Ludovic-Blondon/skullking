@@ -16,6 +16,7 @@ export const en: Record<MessageKey, string> = {
   'route.rules': 'Scoring cheat sheet',
   'route.newGame': 'New game',
   'route.scoresheet': 'Score sheet',
+  'route.gameSettings': 'Game settings',
   'route.gameEnd': 'Game over',
   'route.gameDetail': 'Game detail',
 
@@ -87,6 +88,7 @@ export const en: Record<MessageKey, string> = {
   'game.potentialCannonball': '· potential {value}, or {cannonball} with the cannonball',
   'game.backToBids': 'Back to bids',
   'game.scoresheet': 'Score sheet',
+  'game.settings': 'Game settings',
   'game.points': '{points} pts',
   'game.announced': 'bid {bid}',
   'game.thisRound': '{delta} this round',
@@ -107,6 +109,22 @@ export const en: Record<MessageKey, string> = {
   'game.force': 'force',
   'game.bidLabel': 'Bid',
   'game.tricksLabel': 'Tricks',
+
+  'gset.rounds': 'Game length',
+  'gset.roundsHint': 'Never below the current round ({round})',
+  'gset.lastRound': 'Round {round} will be the last one: validating it ends the game.',
+  'gset.players': 'Players at the table',
+  'gset.duringRound': 'The round is under way — go back to bids to change the table.',
+  'gset.playersHint': '{min} to {max} players. Someone who leaves keeps their points and rank.',
+  'gset.tableFull': 'Table full — {max} players',
+  'gset.remove': 'Remove',
+  'gset.removeOf': 'Remove {name} from the table',
+  'gset.removeTitle': 'Remove {name}?',
+  'gset.removeBody':
+    '{name} keeps their {points} points and stays in the final standings. They are no longer scored from round {round} on.',
+  'gset.addOf': 'Seat {name} at the table',
+  'gset.rules': 'Game rules',
+  'gset.rulesHint': 'Set when the game was created — they no longer change mid-game.',
 
   'issue.trickCountMismatch#one': 'Something is off: {value} trick for {expected} cards',
   'issue.trickCountMismatch#other': 'Something is off: {value} tricks for {expected} cards',
