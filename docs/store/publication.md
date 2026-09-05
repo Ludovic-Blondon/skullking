@@ -24,6 +24,29 @@ projet où stocker les numéros de build.
 Il n'y a pas de profil `development` : le quotidien passe par `expo run:ios` / `expo run:android`,
 et un build EAS de développement exigerait `expo-dev-client`, qui n'est pas une dépendance.
 
+## Variante « dev », pour tester à côté de l'app publiée
+
+Un build de test porte par défaut l'identifiant de l'app publiée : sur un téléphone qui a déjà
+l'app du store, il la **remplace**, base de données comprise. `app.config.js` lève ce conflit en
+donnant à la variante son propre identifiant, son propre nom et son propre scheme — deux apps,
+deux conteneurs, deux historiques.
+
+```bash
+APP_VARIANT=dev npx expo prebuild -p ios --clean
+xcodebuild -workspace ios/SkullScoresdev.xcworkspace -scheme SkullScoresdev \
+  -configuration Release -destination "id=<UDID de l'iPhone>" \
+  -allowProvisioningUpdates CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
+xcrun devicectl device install app --device <identifiant devicectl> \
+  ~/Library/Developer/Xcode/DerivedData/SkullScoresdev-*/Build/Products/Release-iphoneos/SkullScoresdev.app
+```
+
+Sans `APP_VARIANT`, `app.config.js` renvoie `app.json` mot pour mot : les builds de production ne
+le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `prebuild` — repasser un
+`prebuild` **sans** la variable avant de fabriquer un build destiné au store.
+
+La base de la variante est vide au départ : pour tester sur de vraies parties, exporter la
+sauvegarde JSON depuis les Réglages de l'app publiée et l'importer dans la variante.
+
 `production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
 lisible, elle, reste tenue à la main dans `app.json`.
 
