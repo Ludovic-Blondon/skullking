@@ -5,9 +5,9 @@
  * la reprise après un kill de l'app exacte, sans état à restaurer.
  */
 
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 
-import { cardsDealtFor, computeGame, type Ruleset } from '@/core';
+import { cardsDealtFor, computeGame, DEFAULT_ROUNDS_PLAN, type Ruleset } from '@/core';
 
 import { db } from '../client';
 import { isEntryPlayed, toRoundInput, type StoredRound } from '../mappers';
@@ -101,9 +101,33 @@ export async function playerIdsOf(gameId: number): Promise<number[]> {
 }
 
 /**
+ * Joueurs assis à une manche donnée, dans l'ordre de la table.
+ *
+ * C'est la **ligne de manche qui fait foi** (PLAN.md §7.5) : un joueur parti à
+ * la manche 5 n'a plus de ligne à partir de la 6, un arrivant en a une à partir
+ * de son arrivée. `game_players` garde, lui, le roster complet de la partie.
+ */
+export async function seatedAtRound(gameId: number, roundNumber: number): Promise<number[]> {
+  const seats = await db
+    .select({ playerId: roundEntries.playerId, seatIndex: gamePlayers.seatIndex })
+    .from(roundEntries)
+    .innerJoin(rounds, eq(roundEntries.roundId, rounds.id))
+    .innerJoin(
+      gamePlayers,
+      and(eq(gamePlayers.gameId, rounds.gameId), eq(gamePlayers.playerId, roundEntries.playerId)),
+    )
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
+  return seats.sort((a, b) => a.seatIndex - b.seatIndex).map((seat) => seat.playerId);
+}
+
+/**
  * Garantit l'existence d'une manche et de ses lignes joueurs, vides.
  * Le nombre de cartes distribuées suit le plan de manches, corrigé pour les
  * tables de 8 joueurs (PLAN.md §4.1).
+ *
+ * La table héritée est celle de la manche précédente, pas celle de la création
+ * de la partie : c'est ce qui fait qu'un départ ou une arrivée entre deux
+ * manches se propage tout seul aux manches suivantes (§7.5).
  */
 export async function ensureRound(gameId: number, roundNumber: number): Promise<number> {
   const existing = await db
@@ -116,7 +140,8 @@ export async function ensureRound(gameId: number, roundNumber: number): Promise<
   const game = await getGame(gameId);
   if (!game) throw new Error(`Partie ${gameId} introuvable`);
 
-  const seats = await playerIdsOf(gameId);
+  const previous = roundNumber > 1 ? await seatedAtRound(gameId, roundNumber - 1) : [];
+  const seats = previous.length > 0 ? previous : await playerIdsOf(gameId);
   const planned = game.ruleset.roundsPlan[roundNumber - 1] ?? roundNumber;
   // Le paquet dépend des règles : l'extension en ajoute 19 cartes (§4.6).
   const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length, game.ruleset));
@@ -416,6 +441,114 @@ export async function addTiebreakRound(gameId: number): Promise<void> {
     .where(eq(games.id, gameId));
 
   await ensureRound(gameId, roundNumber);
+}
+
+// — Réglages d'une partie en cours (PLAN.md §7.5) ——————————————————————————
+
+/**
+ * Change le nombre de manches d'une partie déjà commencée.
+ *
+ * Le plancher est la manche en cours : raccourcir une partie ne peut pas
+ * effacer ce qui s'est joué. Le format des manches déjà prévues est conservé —
+ * une manche de départage ajoutée par `addTiebreakRound()` garde le sien.
+ */
+export async function setRoundsCount(gameId: number, count: number): Promise<void> {
+  const game = await getGame(gameId);
+  if (!game) return;
+
+  const target = Math.max(count, game.currentRound);
+  const current = game.ruleset.roundsPlan;
+  const roundsPlan = Array.from(
+    { length: target },
+    (_, index) => current[index] ?? DEFAULT_ROUNDS_PLAN[index] ?? index + 1,
+  );
+
+  await db
+    .update(games)
+    .set({ ruleset: { ...game.ruleset, roundsPlan } })
+    .where(eq(games.id, gameId));
+}
+
+/**
+ * Recalcule les cartes distribuées d'une manche après un changement de table.
+ *
+ * Le paquet ne suit pas : à 9 joueurs, la dernière manche ne peut plus en
+ * distribuer 10 (§4.1). Une arrivée ou un départ peut donc faire bouger la
+ * donne de la manche en cours.
+ */
+async function refreshCardsDealt(gameId: number, roundNumber: number): Promise<void> {
+  const game = await getGame(gameId);
+  if (!game) return;
+
+  const seats = await seatedAtRound(gameId, roundNumber);
+  if (seats.length === 0) return;
+
+  const planned = game.ruleset.roundsPlan[roundNumber - 1] ?? roundNumber;
+  const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length, game.ruleset));
+  await db
+    .update(rounds)
+    .set({ cardsDealt })
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
+}
+
+/**
+ * Assoit un joueur à partir de la manche en cours.
+ *
+ * Il démarre à 0 : aucune ligne n'est créée sur les manches passées, donc le
+ * moteur ne lui compte rien avant son arrivée (PLAN.md §7.5). Sa place à table
+ * est la dernière — la donne continuera de tourner dans le même ordre.
+ */
+export async function addPlayerToGame(gameId: number, playerId: number): Promise<void> {
+  const game = await getGame(gameId);
+  const roundId = await currentRoundId(gameId);
+  if (!game || roundId === undefined) return;
+
+  const seats = await db.select().from(gamePlayers).where(eq(gamePlayers.gameId, gameId));
+  if (!seats.some((seat) => seat.playerId === playerId)) {
+    const seatIndex = seats.reduce((last, seat) => Math.max(last, seat.seatIndex), -1) + 1;
+    await db.insert(gamePlayers).values({ gameId, playerId, seatIndex });
+  }
+
+  const existing = await db
+    .select({ id: roundEntries.id })
+    .from(roundEntries)
+    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
+    .limit(1);
+  if (existing.length === 0) {
+    await db.insert(roundEntries).values({ roundId, playerId });
+  }
+
+  await refreshCardsDealt(gameId, game.currentRound);
+  await persistScores(gameId);
+}
+
+/**
+ * Sort un joueur de la table à partir de la manche en cours.
+ *
+ * Sa ligne `game_players` reste : ses manches passées, son total et sa place au
+ * classement ne bougent plus, mais ils restent (PLAN.md §7.5). Seule sa ligne de
+ * la manche en cours disparaît, avec les bonus qu'elle portait — alliances de
+ * Butin comprises, dont la ligne miroir vit chez l'allié.
+ */
+export async function removePlayerFromGame(gameId: number, playerId: number): Promise<void> {
+  const game = await getGame(gameId);
+  const roundId = await currentRoundId(gameId);
+  if (!game || roundId === undefined) return;
+
+  await db
+    .delete(bonusEvents)
+    .where(
+      and(
+        eq(bonusEvents.roundId, roundId),
+        or(eq(bonusEvents.playerId, playerId), eq(bonusEvents.allyPlayerId, playerId)),
+      ),
+    );
+  await db
+    .delete(roundEntries)
+    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)));
+
+  await refreshCardsDealt(gameId, game.currentRound);
+  await persistScores(gameId);
 }
 
 export async function abandonGame(gameId: number): Promise<void> {

@@ -67,7 +67,9 @@ export default function GameScreen() {
     );
   }
 
-  const { game, seats, current, settled } = view;
+  // La saisie ne concerne que les joueurs assis à cette manche : un partant
+  // garde ses manches passées mais n'a plus de ligne ici (PLAN.md §7.5).
+  const { game, activeSeats: seats, current, settled } = view;
   const { round } = current.stored;
   const { cardsDealt } = round;
   const totalRounds = game.ruleset.roundsPlan.length;
@@ -140,9 +142,16 @@ export default function GameScreen() {
               onPress={() => router.replace('/')}
             />
             {bidding ? (
-              // La place du bouton reste prise en phase Annonces : sans elle le
-              // titre glisse de 60 pt à chaque changement de phase.
-              <View className="size-9" />
+              // Les réglages de la partie prennent la place que « revenir aux
+              // annonces » laisse libre entre deux manches (PLAN.md §7.5) : le
+              // titre garde sa largeur, et c'est de toute façon le seul moment
+              // où l'on change la table.
+              <TopAction
+                icon="options-outline"
+                label={t('game.settings')}
+                testID="game-settings"
+                onPress={() => router.push({ pathname: '/game/[id]/settings', params: { id } })}
+              />
             ) : (
               <TopAction
                 icon="arrow-undo-outline"

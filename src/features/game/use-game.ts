@@ -37,7 +37,19 @@ export interface SeatedPlayer {
 export interface GameView {
   ready: boolean;
   game?: Game;
+  /**
+   * Tous les joueurs de la partie, ceux qui l'ont quittée compris.
+   *
+   * C'est ce roster que voient la feuille de score, le podium et le moteur : un
+   * joueur retiré en cours de route garde ses manches et son rang (PLAN.md §7.5).
+   */
   seats: SeatedPlayer[];
+  /**
+   * Joueurs assis à la manche en cours — ceux qui ont une ligne dedans.
+   *
+   * C'est la table du moment : l'écran de partie ne saisit que ceux-là.
+   */
+  activeSeats: SeatedPlayer[];
   storedRounds: StoredRound[];
   inputs: RoundInput[];
   state?: GameState;
@@ -125,6 +137,7 @@ export function useGame(gameId: number): GameView {
       return {
         ready: false,
         seats,
+        activeSeats: seats,
         storedRounds,
         inputs: [],
         settled: { totals: {}, standings: [], leaders: [], tie: false },
@@ -151,10 +164,18 @@ export function useGame(gameId: number): GameView {
 
     const pendingRound = pendingRoundOf(game, storedRounds);
 
+    // La table du moment se lit dans les lignes de la manche en cours : c'est
+    // elle qui dit qui est assis, une fois qu'on peut partir ou arriver en
+    // cours de partie (PLAN.md §7.5).
+    const activeSeats = current
+      ? seats.filter((seat) => current.stored.entries.some((entry) => entry.playerId === seat.id))
+      : seats;
+
     return {
       ready: true,
       game,
       seats,
+      activeSeats,
       storedRounds,
       inputs,
       state,
@@ -162,7 +183,8 @@ export function useGame(gameId: number): GameView {
       settled: settledScoresOf(state, roster, pendingRound),
       pendingRound,
       issues: current ? validateRound(current.input, game.ruleset) : [],
-      dealer: seats[(game.currentRound - 1) % seats.length],
+      // La donne tourne sur la table du moment, pas sur les partants.
+      dealer: activeSeats[(game.currentRound - 1) % Math.max(activeSeats.length, 1)],
     };
   }, [game, seatsQuery.data, roundsQuery.data, entriesQuery.data, eventsQuery.data]);
 }

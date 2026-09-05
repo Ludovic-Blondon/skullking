@@ -29,6 +29,7 @@ export const fr = {
   'route.rules': 'Aide-mémoire du barème',
   'route.newGame': 'Nouvelle partie',
   'route.scoresheet': 'Feuille de score',
+  'route.gameSettings': 'Réglages de la partie',
   'route.gameEnd': 'Fin de partie',
   'route.gameDetail': 'Détail de la partie',
 
@@ -101,6 +102,7 @@ export const fr = {
   'game.potentialCannonball': '· potentiel {value} ou {cannonball} au boulet',
   'game.backToBids': 'Revenir aux annonces',
   'game.scoresheet': 'Feuille de score',
+  'game.settings': 'Réglages de la partie',
   'game.points': '{points} pts',
   'game.announced': 'annoncé {bid}',
   'game.thisRound': '{delta} ce tour',
@@ -121,6 +123,22 @@ export const fr = {
   'game.force': 'forcer',
   'game.bidLabel': 'Annonce',
   'game.tricksLabel': 'Plis',
+
+  'gset.rounds': 'Durée de la partie',
+  'gset.roundsHint': 'Jamais moins que la manche en cours ({round})',
+  'gset.lastRound': 'La manche {round} sera la dernière : la valider terminera la partie.',
+  'gset.players': 'Joueurs à table',
+  'gset.duringRound': 'La manche est lancée : reviens aux annonces pour changer la table.',
+  'gset.playersHint': 'De {min} à {max} joueurs. Un partant garde ses points et son rang.',
+  'gset.tableFull': 'Table complète — {max} joueurs',
+  'gset.remove': 'Retirer',
+  'gset.removeOf': 'Retirer {name} de la table',
+  'gset.removeTitle': 'Retirer {name} ?',
+  'gset.removeBody':
+    '{name} garde ses {points} points et reste au classement final. Il ne sera plus saisi à partir de la manche {round}.',
+  'gset.addOf': 'Asseoir {name} à table',
+  'gset.rules': 'Règles de la partie',
+  'gset.rulesHint': 'Figées à la création : elles ne se changent plus en cours de partie.',
 
   'issue.trickCountMismatch#one': 'Le compte n’y est pas : {value} pli pour {expected} cartes',
   'issue.trickCountMismatch#other': 'Le compte n’y est pas : {value} plis pour {expected} cartes',

@@ -60,7 +60,9 @@ export default function BonusScreen() {
 
   if (!view.ready || !view.game || !view.current) return <View className="flex-1 bg-surface" />;
 
-  const { game, seats, current } = view;
+  // Les alliances et les plafonds de bonus se jouent entre joueurs assis à
+  // cette manche (PLAN.md §7.5).
+  const { game, activeSeats: seats, current } = view;
   const { round, bonusEvents: events } = current.stored;
   const scale = BONUS_POINTS[game.ruleset.edition];
   // Les compteurs de l'extension n'apparaissent que si elle est en jeu (§4.6).

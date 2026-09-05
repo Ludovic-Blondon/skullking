@@ -24,6 +24,7 @@ export const es: Record<MessageKey, string> = {
   'route.rules': 'Resumen de puntuación',
   'route.newGame': 'Nueva partida',
   'route.scoresheet': 'Hoja de puntuación',
+  'route.gameSettings': 'Ajustes de la partida',
   'route.gameEnd': 'Fin de la partida',
   'route.gameDetail': 'Detalle de la partida',
 
@@ -96,6 +97,7 @@ export const es: Record<MessageKey, string> = {
   'game.potentialCannonball': '· potencial {value} o {cannonball} con la bala',
   'game.backToBids': 'Volver a las apuestas',
   'game.scoresheet': 'Hoja de puntuación',
+  'game.settings': 'Ajustes de la partida',
   'game.points': '{points} pts',
   'game.announced': 'apuesta {bid}',
   'game.thisRound': '{delta} esta ronda',
@@ -116,6 +118,22 @@ export const es: Record<MessageKey, string> = {
   'game.force': 'forzar',
   'game.bidLabel': 'Apuesta',
   'game.tricksLabel': 'Bazas',
+
+  'gset.rounds': 'Duración de la partida',
+  'gset.roundsHint': 'Nunca por debajo de la ronda actual ({round})',
+  'gset.lastRound': 'La ronda {round} será la última: validarla terminará la partida.',
+  'gset.players': 'Jugadores en la mesa',
+  'gset.duringRound': 'La ronda está en juego: vuelve a las apuestas para cambiar la mesa.',
+  'gset.playersHint': 'De {min} a {max} jugadores. Quien se va conserva sus puntos y su puesto.',
+  'gset.tableFull': 'Mesa completa — {max} jugadores',
+  'gset.remove': 'Quitar',
+  'gset.removeOf': 'Quitar a {name} de la mesa',
+  'gset.removeTitle': '¿Quitar a {name}?',
+  'gset.removeBody':
+    '{name} conserva sus {points} puntos y sigue en la clasificación final. Ya no se anota desde la ronda {round}.',
+  'gset.addOf': 'Sentar a {name} en la mesa',
+  'gset.rules': 'Reglas de la partida',
+  'gset.rulesHint': 'Fijadas al crear la partida: ya no cambian durante el juego.',
 
   'issue.trickCountMismatch#one': 'Las cuentas no salen: {value} baza para {expected} cartas',
   'issue.trickCountMismatch#other': 'Las cuentas no salen: {value} bazas para {expected} cartas',

@@ -37,7 +37,7 @@ export default function GameEndScreen() {
 
   if (!view.ready || !view.state || !view.game) return <View className="flex-1 bg-surface" />;
 
-  const { state, seats, game, settled } = view;
+  const { state, seats, activeSeats, game, settled } = view;
   const seatOf = (playerId: string) => seats.find((seat) => String(seat.id) === playerId);
   const nameOf = (playerId: string) => seatOf(playerId)?.name ?? playerId;
   const awards = computeAwards(state.rounds, view.inputs);
@@ -50,8 +50,11 @@ export default function GameEndScreen() {
     // Une revanche redevient la dernière partie jouée : c'est de ses règles
     // que partira la prochaine configuration.
     await setSetting('lastRuleset', game.ruleset);
+    // La revanche rassemble la table de la **dernière manche**, pas tous ceux
+    // qui sont passés : celui qui est parti avant la fin garde sa place au
+    // classement, pas une chaise dans la partie suivante (PLAN.md §7.5).
     const newGameId = await createGame(
-      seats.map((seat) => seat.id),
+      activeSeats.map((seat) => seat.id),
       game.ruleset,
     );
     router.replace({ pathname: '/game/[id]', params: { id: String(newGameId) } });
