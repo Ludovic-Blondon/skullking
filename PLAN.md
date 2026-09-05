@@ -35,7 +35,7 @@ Découpage en 8 phases (P0 → P7), moteur de score isolé et testé à 100 % d�
 
 **Ce que personne ne fait bien** (nos différenciateurs) : historique + stats, cross-platform de qualité égale, localisation FR, sélecteur d'édition de règles propre, saisie sémantique des bonus qui prévient les erreurs et « éduque » les nouveaux joueurs.
 
-**Hors périmètre v1** (assumé) : mode multi-appareils temps réel (créneau ouvert mais gros chantier), extension 2026 (Mary Thorne, cartes 15, First Mate — prévu v1.2), annonces vocales, widget. Voir backlog §11.
+**Hors périmètre v1** (assumé) : mode multi-appareils temps réel (créneau ouvert mais gros chantier), annonces vocales, widget. Voir backlog §11. L'**extension officielle** (Second, Raie tachetée, Casier de Davy Jones, cartes 7/8 — longtemps listée ici sous le nom « extension 2026 ») est livrée en v1.1 : §4.6.
 
 ---
 
@@ -154,7 +154,7 @@ ESLint + Prettier, TS `strict`, conventional commits (commitlint), versioning se
 
 - **Kraken** : pli détruit, personne ne le gagne.
 - **Baleine blanche** : le plus haut numéro gagne (couleurs ignorées) ; pli 100 % cartes spéciales → pli défaussé.
-- → Par manche, `plis détruits ∈ {0, 1, 2}` et **Σ plis attribués + plis détruits = cartes distribuées** (à 2 joueurs : + plis du fantôme).
+- → Par manche, `plis détruits ∈ {0, 1, 2}` et **Σ plis attribués + plis détruits = cartes distribuées** (à 2 joueurs : + plis du fantôme). La **Raie tachetée** de l'extension est un troisième léviathan : la borne passe à 3 quand elle est en jeu (§4.6).
 
 **Tigresse** : déclarée pirate ou fuite au moment de jouer ; en pirate, elle compte pour les bonus (capturable par le SK à +30).
 
@@ -175,6 +175,7 @@ interface Ruleset {
   scoring: "classic" | "rascal"; // Rascal : potentiel 10×cartes ; exact = 100 %, ±1 = 50 %, sinon 0 ; jamais négatif
   rascalCannonball: boolean; // option Boulet de canon : 15×cartes si exact, 0 sinon (choix par joueur/manche)
   pirateAbilities: boolean; // v1 — pari de Rascal le Flambeur (±10/±20), Harry le Géant (mise ±1)
+  expansion: boolean; // v1.1 — extension officielle : cartes 7/8, Second, Raie, Casier (§4.6)
   roundsPlan: number[]; // défaut [1..10] ; formats officiels alternatifs en v1.1
 }
 ```
@@ -191,6 +192,7 @@ interface Ruleset {
 - contraintes de cohérence des bonus (tableau §4.2, unicité inter-joueurs) — _error_ ;
 - bonus saisis sur une mise ratée — _toléré_ : le moteur les neutralise (l'UI les affiche barrés « sans effet » ; conservés pour la stat « bonus perdus ») ;
 - Butin à 2 joueurs, alliance avec soi-même — _error_ ;
+- bonus d'extension saisi alors que l'extension est éteinte — _error_ (comme le Butin sans cartes avancées) ;
 - `bid_modifier` ou `rascal_bet` non nuls alors que les pouvoirs des pirates sont désactivés — _error_ ; plus d'un Harry ou d'un pari de Rascal dans la même manche — _error_ ; mise effective hors `[0, cartes distribuées]` — _error_.
 
 ### 4.5 API du moteur (esquisse)
@@ -200,10 +202,32 @@ interface Ruleset {
 scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScore[]   // { base, bonus, total } par joueur
 validateRound(input: RoundInput, ruleset: Ruleset): Issue[]
 computeGame(rounds: RoundInput[], ruleset: Ruleset): GameState        // cumuls, classement, égalités
-cardsDealtFor(roundNumber: number, playerCount: number): number       // règle 8 joueurs
+cardsDealtFor(round: number, playerCount: number, ruleset?: Ruleset): number  // taille du paquet
 ```
 
 Toute édition d'une manche passée = re-exécution de `computeGame` (10 manches × 8 joueurs : trivial).
+
+### 4.6 Extension officielle (option `expansion`)
+
+Extension Skull King® (réf. GRA004SK, livret FR) : **19 cartes jouables** — 12 cartes de couleur (un 7, un 8 et un 0/14 par couleur), 1 quinze joker, 1 nouvelle Pirate, 1 Dernière salve, 1 Second, 1 Raie tachetée, 1 Casier de Davy Jones, 1 Supplice de la planche. La table ajoute les cartes qu'elle veut ; l'app n'a qu'un interrupteur, parce que seul le barème l'intéresse — un compteur non utilisé reste à zéro.
+
+**Ce qui compte des points** (bonus classiques : uniquement si la mise est exacte) :
+
+| Événement                                    | Points          | Contrainte par manche                     |
+| -------------------------------------------- | --------------- | ----------------------------------------- |
+| Nouveau **7** remporté (un par couleur)      | **−5 chacun**   | max 4                                     |
+| Nouveau **8** remporté (un par couleur)      | **+5 chacun**   | max 4                                     |
+| **Casier de Davy Jones**                     | **+20 / léviathan détruit** | max 3 (Kraken, Baleine, Raie) |
+| **Second** capturé par le Skull King ou une Sirène | **+30**   | max 1                                     |
+
+Le **0/14** ne rapporte aucun bonus, même joué en 14 : rien à saisir. Les cartes 15, la nouvelle Pirate, la Dernière salve et le Supplice de la planche ne touchent pas au décompte.
+
+**Conséquences structurelles** :
+
+- **Raie tachetée** : troisième léviathan (la carte la plus basse remporte le pli ; le dernier léviathan joué décide). `plis détruits ∈ {0, 1, 2, 3}` avec l'extension.
+- **Paquet de 89 cartes** (70 + 19) → **jusqu'à 9 joueurs**, et `cardsDealtFor()` borne les dernières manches à `⌊89 / joueurs⌋` comme il le fait déjà à 8 joueurs.
+- Le Second capturé n'est **pas** une capture de pirate (le livret le distingue) : compteur à part, aucune interaction avec la limite des pirates du Skull King.
+- Les −5 sont des points de pénalité soumis à la même condition que les bonus : **une mise ratée les annule aussi**.
 
 ---
 
@@ -226,7 +250,7 @@ bonus_events   id PK · round_id FK · player_id FK (bénéficiaire) · type · 
 
 Décisions :
 
-- **`bonus_events` en table dédiée** (plutôt qu'un JSON ou des colonnes) : extensible sans migration quand l'extension 2026 arrivera, et agrégeable en SQL pour les stats (`GROUP BY type`).
+- **`bonus_events` en table dédiée** (plutôt qu'un JSON ou des colonnes) : extensible sans migration — l'extension officielle (§4.6) a ajouté quatre types de bonus sans y toucher — et agrégeable en SQL pour les stats (`GROUP BY type`).
 - **Snapshots de score sur `round_entries`** : rendu instantané de la feuille de score et de l'historique ; le moteur reste la seule source de vérité, les snapshots sont recalculés à chaque édition.
 - **Saisie = données brutes** (mises, plis, événements), jamais des points : on peut corriger un barème par mise à jour d'app et recalculer tout l'historique.
 - `bid`/`tricks` nullables : la partie est sauvegardée **à chaque interaction** (annonces posées mais manche non jouée = état légitime après un kill de l'app).
@@ -330,6 +354,16 @@ Bottom sheet par joueur, en phase Résultats. **Saisie sémantique, pas de calcu
 - **Joueurs** : roster persistant (création à la volée pendant une config de partie, ou gestion dédiée), fiche joueur = identité + stats (§8) ; archivage.
 - **Réglages** : langue (FR/EN), thème (système/clair/sombre), keep-awake, règles par défaut (reprises de la dernière partie, §7.1 — pas d'écran dédié), export/import JSON, aide-mémoire du barème, à-propos + mention « non affilié à Grandpa Beck's Games ».
 
+### 7.5 Réglages d'une partie en cours
+
+Une vraie soirée ne se déroule pas comme la configuration de départ : quelqu'un part avant la fin, un retardataire s'assoit à la manche 3, la table décide d'arrêter à la 7ᵉ. Un écran dédié, ouvert depuis l'en-tête de la partie, couvre ces trois cas — et **rien d'autre** : les règles restent figées à la création (elles y sont rappelées en lecture seule), pour qu'aucun geste ne recalcule en silence une feuille déjà écrite.
+
+- **Nombre de manches** : stepper borné à `[manche en cours, 10]`. Le ramener sur la manche en cours en fait la dernière : la valider termine la partie.
+- **Joueurs, entre deux manches** (phase Annonces seulement) : retirer un joueur ou en ajouter un, dans les bornes de `[2, max joueurs]` (§4.6 pour le maximum).
+  - Un joueur **retiré est gelé** : ses manches passées restent sur la feuille, son total ne bouge plus, il figure au classement final. Rien n'est effacé — la partie s'est vraiment jouée comme ça.
+  - Un joueur **ajouté démarre à 0**, sans ligne sur les manches passées.
+- **Modélisation** : c'est la **présence d'une ligne `round_entries` qui dit qui est à table à cette manche** ; `game_players` garde l'ordre des places et le roster complet de la partie. Aucune colonne ajoutée, et le moteur n'a rien à connaître de tout ça — `computeGame()` reçoit déjà un roster et tolère un joueur absent d'une manche.
+
 ---
 
 ## 8. Statistiques proposées
@@ -395,7 +429,7 @@ La CI GitHub Actions exécute typecheck + lint + Jest sur chaque PR. Maestro en 
 
 **Écart assumé sur le calendrier** : le **design system a été implémenté à la fin de P2** (19/08/2026) plutôt qu'en P6, la maquette étant arrivée pendant les tests de la partie jouable — jetons, composants et les sept écrans déjà livrés. P6 garde donc les micro-interactions, le paysage/tablette, l'accessibilité, l'i18n, l'icône et le splash ; les écrans de P3 à P5 s'écrivent directement au design system.
 
-**Backlog post-v1** (ordre indicatif) : v1.1 = formats de manches officiels (Tourbillon, Attaque éclair…) + partage de la feuille de score en image + mode « scores cachés jusqu'à la fin ». v1.2 = **extension 2026** (Mary Thorne, cartes 15, First Mate — la concurrence vient d'y passer). Plus tard : fusion de joueurs doublons, multi-appareils temps réel (créneau identifié, personne n'a percé), widget « qui a gagné hier ».
+**Backlog post-v1** (ordre indicatif) : v1.1 = **extension officielle** (§4.6) + **réglages en cours de partie** (nombre de manches, joueur retiré ou ajouté entre deux manches — §7.5) + formats de manches officiels (Tourbillon, Attaque éclair…) + partage de la feuille de score en image + mode « scores cachés jusqu'à la fin ». Plus tard : fusion de joueurs doublons, multi-appareils temps réel (créneau identifié, personne n'a percé), widget « qui a gagné hier ».
 
 ---
 
@@ -406,7 +440,7 @@ La CI GitHub Actions exécute typecheck + lint + Jest sur chaque PR. Maestro en 
 3. **Kraken/Baleine** : toute validation « Σ plis = N » stricte est un bug ; le compteur « pli détruit » doit être visible sans être envahissant. À 2 joueurs, le fantôme absorbe le solde.
 4. **Mise 0 = ±10 × cartes distribuées** (pas × numéro de manche) — visible uniquement à 8 joueurs manches 9-10, exactement le genre de bug silencieux.
 5. **Édition d'une manche passée** : recalcul en cascade des snapshots — passer systématiquement par `computeGame`, jamais de delta manuel.
-6. **Migrations DB dès la v1** (drizzle-kit) : la v1.2 (extension 2026) ajoutera des types de bonus ; `bonus_events` est extensible mais la discipline de migration doit exister avant. Export JSON = filet de sécurité utilisateur.
+6. **Migrations DB dès la v1** (drizzle-kit) : l'extension officielle (§4.6) a ajouté quatre types de bonus sans migration, `bonus_events` ayant été prévue pour ça — mais la discipline de migration doit rester en place. Export JSON = filet de sécurité utilisateur.
 7. **Google Play compte perso** : 12 testeurs × 14 jours — à anticiper dès P3, sinon la release glisse d'un mois.
 8. **Fenêtres de conformité** : builds iOS sous Xcode 26 obligatoires ; target API 36 au 31/08/2026 (OK avec SDK 57) ; rester proche du dernier SDK Expo (la régression Hermes du SDK 56, corrigée en 57, a montré le coût de traîner).
 9. **NativeWind v5 en fin de RC** : démarrer en v4 stable, migrer quand la v5 est promue (changement faible).
@@ -449,6 +483,10 @@ La CI GitHub Actions exécute typecheck + lint + Jest sur chaque PR. Maestro en 
 | Harry le Géant (pouvoir)     | mise ±1 (ou inchangée) avant décompte | pouvoirs des pirates activés ; un seul par manche |
 | Kraken joué                  | pli détruit              | Σ plis attribués < cartes distribuées            |
 | Baleine, pli 100 % spécial   | pli défaussé             | idem                                             |
+| 7 de couleur capturé _(extension)_ | −5 chacun          | mise exacte ; max 4                              |
+| 8 de couleur capturé _(extension)_ | +5 chacun          | mise exacte ; max 4                              |
+| Casier de Davy Jones _(extension)_ | +20 / léviathan détruit | mise exacte ; max 3                         |
+| Second capturé (SK ou Sirène) _(extension)_ | +30       | mise exacte ; max 1                              |
 
 ## Annexe B — Sources principales
 

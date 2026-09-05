@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hasBlockingIssues, RASCAL_POINTS, scoreRound } from '@/core';
+import { hasBlockingIssues, maxDestroyedTricksFor, RASCAL_POINTS, scoreRound } from '@/core';
 import {
   setDestroyedTricks,
   setPhase,
@@ -281,12 +281,13 @@ export default function GameScreen() {
         {!bidding && game.ruleset.advancedCards && (
           <View className="flex-row items-center justify-between gap-3 px-1 pt-1">
             <Text className="flex-1 font-body text-caption text-content-muted">
-              {t('game.destroyed')}
+              {/* La Raie tachetée est un léviathan de plus à compter (§4.6). */}
+              {t(game.ruleset.expansion ? 'game.destroyedWithRay' : 'game.destroyed')}
             </Text>
             <Stepper
               value={round.destroyedTricks}
               onChange={(count) => void setDestroyedTricks(round.id, count)}
-              max={2}
+              max={maxDestroyedTricksFor(game.ruleset)}
               size="sm"
               label={t('game.destroyedLabel')}
             />

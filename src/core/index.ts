@@ -8,13 +8,19 @@
 
 export * from './types';
 export {
+  ALL_BONUS_TYPES,
   BASE_POINTS,
   BONUS_POINTS,
   BONUS_TYPES,
+  bonusTypesFor,
+  DECK_SIZE,
   DEFAULT_ROUNDS_PLAN,
   DEFAULT_RULESET,
+  EXPANSION_BONUS_TYPES,
   MAX_DESTROYED_TRICKS,
   MAX_PLAYERS,
+  maxDestroyedTricksFor,
+  maxPlayersFor,
   MIN_PLAYERS,
   RASCAL_BETS,
   RASCAL_POINTS,

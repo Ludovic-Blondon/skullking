@@ -25,6 +25,8 @@ export function issueMessage(issue: Issue): { key: MessageKey | PluralKey; param
       return { key: 'issue.skullKingAlreadyCaptured' };
     case 'bonusUnavailableInEdition':
       return { key: 'issue.bonusUnavailableInEdition' };
+    case 'bonusUnavailableWithoutExpansion':
+      return { key: 'issue.bonusUnavailableWithoutExpansion' };
     case 'multipleHarry':
       return { key: 'issue.multipleHarry' };
     case 'multipleRascalBets':

@@ -3,14 +3,25 @@ import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/text';
 
-import { BONUS_POINTS, RASCAL_POINTS, ROUND_BONUS_LIMITS, type BonusType } from '@/core';
+import {
+  BONUS_POINTS,
+  bonusTypesFor,
+  RASCAL_POINTS,
+  ROUND_BONUS_LIMITS,
+  type BonusType,
+} from '@/core';
 import {
   addLootAlliance,
   removeLootAlliance,
   setCaptureBonus,
   updateEntry,
 } from '@/db/repositories/game-repo';
-import { CAPTURE_LABELS, COUNTER_UNITS } from '@/features/game/bonus-labels';
+import {
+  CAPTURE_LABELS,
+  COUNTER_UNITS,
+  signedPer,
+  signedValue,
+} from '@/features/game/bonus-labels';
 import { useGame, type SeatedPlayer } from '@/features/game/use-game';
 import { useT } from '@/i18n';
 import { CONTENT_MAX_WIDTH } from '@/ui/screen';
@@ -18,14 +29,18 @@ import { Avatar } from '@/ui/avatar';
 import { AnimatedNumber } from '@/ui/animated-number';
 import { Stepper } from '@/ui/stepper';
 
-const TOGGLES: BonusType[] = [
+/**
+ * Cartes uniques : une pastille qui s'allume, pas un compteur à un cran
+ * (PLAN.md §7.3). Tout le reste se compte.
+ */
+const UNIQUE: BonusType[] = [
   'yellow14',
   'green14',
   'purple14',
   'black14',
   'mermaidCapturesSkullKing',
+  'firstMateCaptured',
 ];
-const COUNTERS: BonusType[] = ['skullKingCapturesPirate', 'pirateCapturesMermaid'];
 
 /** Ligne de la feuille : un libellé à gauche, un contrôle à droite. */
 function Row({ children }: { children: React.ReactNode }) {
@@ -48,6 +63,10 @@ export default function BonusScreen() {
   const { game, seats, current } = view;
   const { round, bonusEvents: events } = current.stored;
   const scale = BONUS_POINTS[game.ruleset.edition];
+  // Les compteurs de l'extension n'apparaissent que si elle est en jeu (§4.6).
+  const counted = bonusTypesFor(game.ruleset);
+  const toggles = counted.filter((type) => UNIQUE.includes(type));
+  const counters = counted.filter((type) => !UNIQUE.includes(type));
   const player = seats.find((seat) => seat.id === numericPlayerId);
   const entry = current.stored.entries.find((e) => e.playerId === numericPlayerId);
   if (!player || !entry) return <View className="flex-1 bg-surface" />;
@@ -82,7 +101,7 @@ export default function BonusScreen() {
   // Ce que la feuille rapporte à ce joueur, ajustement manuel compris. Les
   // bonus d'une mise ratée restent affichés, mais ne comptent pas (§4.2).
   const captured =
-    TOGGLES.concat(COUNTERS).reduce((sum, type) => {
+    counted.reduce((sum, type) => {
       const value = scale[type];
       return value === null ? sum : sum + value * countOf(numericPlayerId, type);
     }, 0) +
@@ -110,9 +129,10 @@ export default function BonusScreen() {
         )}
 
         <View className="flex-row flex-wrap gap-2">
-          {TOGGLES.map((type) => {
+          {toggles.map((type) => {
             const value = scale[type];
             if (value === null) return null;
+            const label = signedValue(value);
             const mine = countOf(numericPlayerId, type) > 0;
             const holder = holderOf(type);
             const locked = !mine && roundTotalOf(type) >= ROUND_BONUS_LIMITS[type];
@@ -135,7 +155,7 @@ export default function BonusScreen() {
                   className={`font-semi text-caption ${mine ? 'text-accent-fg' : 'text-content'} ${
                     mine && !exact ? 'line-through' : ''
                   }`}>
-                  {t(CAPTURE_LABELS[type].key)} {t('bonus.value', { value })}
+                  {t(CAPTURE_LABELS[type].key)} {t(label.key, { value: label.value })}
                 </Text>
                 {locked && holder && (
                   <Text className="font-body text-micro text-content-muted">
@@ -147,9 +167,10 @@ export default function BonusScreen() {
           })}
         </View>
 
-        {COUNTERS.map((type) => {
+        {counters.map((type) => {
           const value = scale[type];
           if (value === null) return null;
+          const per = signedPer(value);
           const mine = countOf(numericPlayerId, type);
           const others = roundTotalOf(type) - mine;
           // Une sirène qui a pris le Skull King a gagné son pli : elle n'est plus
@@ -164,8 +185,8 @@ export default function BonusScreen() {
               <Text className="flex-1 font-semi text-caption text-content">
                 {CAPTURE_LABELS[type].emoji} {t(CAPTURE_LABELS[type].key)}{' '}
                 <Text className="font-body text-content-muted">
-                  {t('bonus.per', {
-                    value,
+                  {t(per.key, {
+                    value: per.value,
                     unit: COUNTER_UNITS[type] ? t(COUNTER_UNITS[type]) : '',
                   })}
                 </Text>
@@ -339,12 +360,12 @@ export default function BonusScreen() {
             <Pressable
               onPress={() =>
                 void updateEntry(round.id, numericPlayerId, {
-                  customBonus: entry.customBonus - 10,
+                  customBonus: entry.customBonus - 5,
                 })
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={t('bonus.remove10')}
+              accessibilityLabel={t('bonus.remove5')}
               className="size-7 items-center justify-center rounded-full bg-border active:opacity-60">
               <Text className="font-title text-caption text-content-muted">−</Text>
             </Pressable>
@@ -355,12 +376,12 @@ export default function BonusScreen() {
             <Pressable
               onPress={() =>
                 void updateEntry(round.id, numericPlayerId, {
-                  customBonus: entry.customBonus + 10,
+                  customBonus: entry.customBonus + 5,
                 })
               }
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={t('bonus.add10')}
+              accessibilityLabel={t('bonus.add5')}
               className="size-7 items-center justify-center rounded-full bg-primary active:opacity-60">
               <Text className="font-title text-caption text-primary-fg">+</Text>
             </Pressable>

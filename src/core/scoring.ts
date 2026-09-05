@@ -9,7 +9,7 @@
 import {
   BASE_POINTS,
   BONUS_POINTS,
-  BONUS_TYPES,
+  bonusTypesFor,
   RASCAL_POINTS,
   type BonusScale,
 } from './rules/editions';
@@ -69,10 +69,17 @@ function rascalBase(bid: number, tricks: number, cardsDealt: number, cannonball:
   return 0;
 }
 
-/** Somme des bonus de capture saisis, aux valeurs de l'édition. */
-function captureBonusPoints(player: PlayerRoundInput, scale: BonusScale): number {
+/**
+ * Somme des bonus de capture saisis, aux valeurs de l'édition.
+ *
+ * Le total peut être négatif : les 7 de l'extension retirent 5 points chacun
+ * (PLAN.md §4.6). Rien de spécial à faire pour autant — le livret les soumet à
+ * la même condition d'exactitude que les bonus, donc au même calcul.
+ */
+function captureBonusPoints(player: PlayerRoundInput, scale: BonusScale, ruleset: Ruleset): number {
   let points = 0;
-  for (const type of BONUS_TYPES) {
+  // Extension éteinte : ses compteurs ne sont pas dans la liste, donc ignorés.
+  for (const type of bonusTypesFor(ruleset)) {
     const value = scale[type];
     // `null` : le bonus n'existe pas dans cette édition — il ne rapporte rien.
     if (value === null) continue;
@@ -167,7 +174,7 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
 
     // Les bonus ne comptent que si la mise est exacte. Ceux d'une mise ratée
     // sont conservés à part : l'UI les barre, les statistiques les comptent.
-    const captures = captureBonusPoints(player, scale);
+    const captures = captureBonusPoints(player, scale, ruleset);
     const loot = lootPointsFor(player.playerId, input, exactByPlayer, scale, ruleset);
     const bonus = (exact ? captures : 0) + loot.earned;
     const lostBonus = (exact ? 0 : captures) + loot.lost;
