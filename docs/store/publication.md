@@ -159,6 +159,20 @@ eas submit --platform ios              # → TestFlight
 La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
 ce passage qui démarre les 14 jours.
 
+Deux profils de soumission, et la différence tient en un mot :
+
+| Profil       | `releaseStatus` | Ce qui se passe                                                    |
+| ------------ | --------------- | ------------------------------------------------------------------ |
+| `production` | `draft`         | le binaire monte, la release attend un clic dans la console        |
+| `internal`   | `completed`     | la release part **tout de suite** aux testeurs de la piste interne |
+
+```bash
+eas submit --platform android --profile internal --id <build>
+```
+
+Le défaut reste le brouillon : rien ne s'ouvre à des testeurs sans qu'on l'ait demandé. Le profil
+`internal` est là pour les allers-retours de test, où le clic dans la console n'apporte rien.
+
 Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
 TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;
 et `--auto-testflight-setup` ne fait rien tant que la clé App Store Connect n'est lue qu'en local
