@@ -173,6 +173,17 @@ eas submit --platform android          # piste interne, release en brouillon
 eas submit --platform ios              # → TestFlight
 ```
 
+`eas submit -p ios` veut enregistrer la clé App Store Connect **sur les serveurs EAS**, ce qu'il
+ne sait pas faire en `--non-interactive` (« App Store Connect API Keys cannot be set up in
+--non-interactive mode »). Pour envoyer une build depuis le poste avec la clé locale :
+
+```bash
+set -a && . credentials/asc.env && set +a
+curl -sL -o build.ipa "<Application Archive URL du build EAS>"
+mkdir -p private_keys && cp credentials/asc-api-key.p8 "private_keys/AuthKey_${ASC_KEY_ID}.p8"
+xcrun altool --upload-app -f build.ipa -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+```
+
 La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
 ce passage qui démarre les 14 jours.
 
@@ -189,6 +200,18 @@ eas submit --platform android --profile internal --id <build>
 
 Le défaut reste le brouillon : rien ne s'ouvre à des testeurs sans qu'on l'ait demandé. Le profil
 `internal` est là pour les allers-retours de test, où le clic dans la console n'apporte rien.
+
+### Envoyer en validation
+
+```bash
+python3 docs/store/submit-for-review.py --version 1.1.0
+```
+
+Dans la console, _Add for Review_ fait passer l'élément en `READY_FOR_REVIEW` et **n'envoie
+rien** : il faut ensuite « Submit to App Review » sur la page de **soumission**, pas sur celle de
+la version. Trois jours perdus sur la 1.0 à cause de ces deux boutons. Le script fait les trois
+appels — soumission, élément, `submitted: true` — et **relit l'état** : une soumission sans
+`submittedDate` n'est pas partie, quoi qu'affiche la console.
 
 Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
 TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;
