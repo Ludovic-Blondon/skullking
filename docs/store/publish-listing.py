@@ -12,6 +12,12 @@ présente. On peut le relancer après un échec réseau.
     python3 docs/store/publish-listing.py            # version modifiable en cours
     python3 docs/store/publish-listing.py --version 1.1
 
+Sur une mise à jour, il pousse en plus deux champs qui repartent vides à chaque version :
+« Nouveautés » (section finale de `docs/store/*.md`) et les **notes de vérification**
+(`docs/store/review-notes.md`). Les oublier, c'est le rejet *Guideline 2.1* de la 1.0.
+
+Une version demandée par `--version` qui n'existe pas encore est créée.
+
 Ce qu'il ne fait **pas**, volontairement : la confidentialité, la classification d'âge et le
 statut de commerçant DSA. Ce sont des déclarations dont le développeur répond devant Apple, et
 l'API ne les expose pas toutes.
@@ -67,10 +73,36 @@ def version_cible(demandee: str | None) -> str:
         if not demandee and modifiable:
             print(f"version {attributs['versionString']} ({attributs['appStoreState']})")
             return entree["id"]
-    raise SystemExit("aucune version modifiable trouvée")
+
+    if not demandee:
+        raise SystemExit("aucune version modifiable trouvée")
+
+    # Une version demandée qui n'existe pas encore se crée : c'est le premier geste
+    # d'une mise à jour, et il n'y a rien à décider dedans.
+    creee = asc.post("/v1/appStoreVersions", {"data": {
+        "type": "appStoreVersions",
+        "attributes": {"platform": "IOS", "versionString": demandee},
+        "relationships": {"app": {"data": {"type": "apps", "id": APP_ID}}}}})
+    if "erreur" in creee:
+        raise SystemExit(f"création de la version {demandee} impossible : {creee['corps'][:300]}")
+    print(f"version {demandee} créée")
+    return creee["data"]["id"]
 
 
-def textes(version: str) -> None:
+def deja_publiee() -> bool:
+    """Vrai si l'app a déjà une version en ligne.
+
+    Apple **refuse** `whatsNew` sur une première version — il n'y a rien de neuf à
+    raconter — et l'**exige** sur une mise à jour. C'est ce test qui tranche.
+    """
+    versions = asc.get(f"/v1/apps/{APP_ID}/appStoreVersions?limit=50").get("data", [])
+    return any(v["attributes"]["appStoreState"] in (
+        "READY_FOR_SALE", "PENDING_DEVELOPER_RELEASE", "PROCESSING_FOR_APP_STORE",
+        "REPLACED_WITH_NEW_INFO",
+    ) for v in versions)
+
+
+def textes(version: str, nouveautes: bool) -> None:
     existantes = {
         d["attributes"]["locale"]: d["id"]
         for d in asc.get(
@@ -83,6 +115,8 @@ def textes(version: str) -> None:
             "description": v["description"], "keywords": v["mots_cles"],
             "promotionalText": v["promo"], "supportUrl": SUPPORT_URL,
         }
+        if nouveautes:
+            attributs["whatsNew"] = v["nouveautes"]
         if locale in existantes:
             reponse = asc.patch(f"/v1/appStoreVersionLocalizations/{existantes[locale]}", {
                 "data": {"type": "appStoreVersionLocalizations", "id": existantes[locale],
@@ -202,16 +236,33 @@ def build_et_conformite(version: str, contact: dict[str, str] | None) -> None:
     else:
         print("  build : aucun build VALID à attacher")
 
-    if contact and not asc.get(f"/v1/appStoreVersions/{version}/appStoreReviewDetail").get("data"):
+    verification(version, contact)
+
+
+def verification(version: str, contact: dict[str, str] | None) -> None:
+    """Notes de vérification — attachées à la **version**, donc à réécrire à chaque fois.
+
+    Les laisser vides, ou les réduire à deux phrases, c'est le rejet *Guideline 2.1* qui a
+    coûté trois jours sur la 1.0. Elles vivent dans `docs/store/review-notes.md`.
+    """
+    source = RACINE / "docs/store/review-notes.md"
+    notes = re.split(r"^## .*$", source.read_text(encoding="utf-8"), flags=re.M)[1].strip()
+
+    attributs = {"notes": notes, "demoAccountRequired": False}
+    if contact:
+        attributs.update(contact)
+
+    existant = asc.get(f"/v1/appStoreVersions/{version}/appStoreReviewDetail").get("data")
+    if existant:
+        reponse = asc.patch(f"/v1/appStoreReviewDetails/{existant['id']}", {"data": {
+            "type": "appStoreReviewDetails", "id": existant["id"], "attributes": attributs}})
+    else:
         reponse = asc.post("/v1/appStoreReviewDetails", {"data": {
-            "type": "appStoreReviewDetails",
-            "attributes": {**contact, "demoAccountRequired": False,
-                           "notes": "Application 100 % hors ligne, sans compte ni connexion. "
-                                    "Toutes les fonctions sont accessibles au premier lancement."},
+            "type": "appStoreReviewDetails", "attributes": attributs,
             "relationships": {"appStoreVersion": {
                 "data": {"type": "appStoreVersions", "id": version}}}}})
-        print("  coordonnées de vérification :",
-              "ERREUR " + reponse["corps"][:160] if "erreur" in reponse else "ok")
+    print(f"  notes de vérification ({len(notes)} car.) :",
+          "ERREUR " + reponse["corps"][:200] if "erreur" in reponse else "ok")
 
 
 def main() -> None:
@@ -226,11 +277,14 @@ def main() -> None:
         contact = {"contactFirstName": arguments.prenom, "contactLastName": arguments.nom,
                    "contactPhone": arguments.telephone, "contactEmail": arguments.email}
 
+    nouveautes = deja_publiee()
     version = version_cible(arguments.version)
-    textes(version)
+    textes(version, nouveautes)
     identite()
     captures(version)
     build_et_conformite(version, contact)
+    if not nouveautes:
+        print("\nPremière version : « Nouveautés » non envoyé, Apple le refuse à ce stade.")
     print("\nRestent à la main dans App Store Connect : confidentialité, classification d'âge, "
           "statut de commerçant DSA.")
 

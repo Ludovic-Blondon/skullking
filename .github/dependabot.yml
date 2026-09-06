@@ -1,5 +1,10 @@
-# Mises à jour de dépendances. Les PR passent par la CI comme les autres :
-# `main` est protégée, rien n'entre sans `Typecheck, lint et tests` au vert.
+# Mises à jour de dépendances. Les PR passent par la CI comme les autres : `develop` et `main`
+# sont protégées, rien n'entre sans `Typecheck, lint et tests` au vert.
+#
+# Pas de `target-branch` ici, volontairement : Dependabot cible déjà la branche par défaut, qui
+# est `develop`. Le fixer explicitement n'apporterait rien aujourd'hui, et deviendrait un piège
+# si la branche par défaut changeait — GitHub cesse de créer les PR de sécurité dès qu'un
+# `target-branch` désigne une branche non-défaut.
 version: 2
 
 updates:

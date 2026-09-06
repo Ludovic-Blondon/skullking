@@ -6,12 +6,18 @@ import {
   BASE_POINTS,
   BONUS_POINTS,
   BONUS_TYPES,
+  EXPANSION_BONUS_TYPES,
   MAX_DESTROYED_TRICKS,
   RASCAL_BETS,
   RASCAL_POINTS,
   type Edition,
 } from '@/core';
-import { CAPTURE_LABELS } from '@/features/game/bonus-labels';
+import {
+  CAPTURE_LABELS,
+  COUNTER_UNITS,
+  signedPer,
+  signedValue,
+} from '@/features/game/bonus-labels';
 import { useT, type Translate } from '@/i18n';
 import { Screen, SectionLabel } from '@/ui/screen';
 
@@ -50,6 +56,36 @@ function CaptureRules({ edition, t }: { edition: Edition; t: Translate }) {
         value={t('cheat.eachAlly', { value: scale.loot })}
         hint={t('cheat.bothExact')}
       />
+    </View>
+  );
+}
+
+/**
+ * Bonus de l'extension officielle (PLAN.md §4.6), qui s'ajoutent au barème de
+ * l'édition sans le remplacer — d'où une section à part plutôt qu'un troisième
+ * onglet à côté de « 2021+ » et « Ancienne ».
+ */
+function ExpansionRules({ edition, t }: { edition: Edition; t: Translate }) {
+  const scale = BONUS_POINTS[edition];
+
+  return (
+    <View className="gap-2">
+      {EXPANSION_BONUS_TYPES.map((type) => {
+        const value = scale[type];
+        if (value === null) return null;
+        const unit = COUNTER_UNITS[type];
+        // Un compteur s'annonce « +20/léviathan », une carte unique « +30 ».
+        const label = unit ? signedPer(value) : signedValue(value);
+
+        return (
+          <Rule
+            key={type}
+            label={`${CAPTURE_LABELS[type].emoji} ${t(CAPTURE_LABELS[type].key)}`}
+            value={t(label.key, { value: label.value, unit: unit ? t(unit) : '' })}
+          />
+        );
+      })}
+      <Rule label={`🥏 ${t('cheat.ray')}`} value={t('cheat.rayValue')} />
     </View>
   );
 }
@@ -153,6 +189,10 @@ export default function RulesScreen() {
       <Text className="font-body text-micro text-content-muted">
         {t('cheat.advancedHint')} ({MAX_DESTROYED_TRICKS} max)
       </Text>
+
+      <SectionLabel>{t('cheat.expansion')}</SectionLabel>
+      <ExpansionRules edition={edition} t={t} />
+      <Text className="font-body text-micro text-content-muted">{t('cheat.expansionHint')}</Text>
     </Screen>
   );
 }

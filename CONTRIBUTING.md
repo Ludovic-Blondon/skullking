@@ -56,9 +56,26 @@ diff.
 
 ## Pull requests
 
-`main` est protégée : le passage par une pull request est obligatoire, et la CI
-(`Typecheck, lint et tests`) doit être verte avant le merge. Personne n'y échappe, propriétaire
-compris.
+Le dépôt suit un flux à deux niveaux :
+
+```
+branche de travail  →  develop  →  main
+```
+
+- **`develop`** est la branche d'intégration. Toutes les PR y vont : correctifs, nouveautés,
+  documentation. Pars de `develop`, jamais de `main`.
+- **`main`** ne reçoit que les PR de release. Chaque merge dans `main` correspond à une version
+  publiée sur les stores, et porte un tag (`1.0.0`, `1.1.0`…).
+
+Les deux branches sont protégées à l'identique : passage par pull request obligatoire, CI
+(`Typecheck, lint et tests`) verte avant le merge, ni force-push ni suppression. Personne n'y
+échappe, propriétaire compris.
+
+Sans accès en écriture au dépôt, passe par un **fork** : pousse ta branche sur ton fork, puis
+ouvre la pull request vers `develop`.
+
+**L'intégration est faite par le mainteneur** — les merges dans `develop` comme les releases vers
+`main`. Ouvre ta PR et laisse-la : elle sera relue puis intégrée.
 
 Une PR par sujet. Décris ce que tu changes et pourquoi ; si le comportement visible bouge, une
 capture aide.

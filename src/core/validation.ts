@@ -8,10 +8,11 @@
  */
 
 import {
+  ALL_BONUS_TYPES,
   BONUS_POINTS,
-  BONUS_TYPES,
-  MAX_DESTROYED_TRICKS,
-  MAX_PLAYERS,
+  bonusTypesFor,
+  maxDestroyedTricksFor,
+  maxPlayersFor,
   MIN_PLAYERS,
   RASCAL_BETS,
   ROUND_BONUS_LIMITS,
@@ -33,19 +34,24 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
   const { cardsDealt } = input;
   const scale = BONUS_POINTS[ruleset.edition];
   const destroyed = input.destroyedTricks ?? 0;
+  // Compteurs réellement décomptés : ceux de la boîte, plus ceux de l'extension
+  // quand elle est en jeu (PLAN.md §4.6).
+  const countedTypes = bonusTypesFor(ruleset);
+  const maxPlayers = maxPlayersFor(ruleset);
+  const maxDestroyed = maxDestroyedTricksFor(ruleset);
 
   // — Cadre de la manche ————————————————————————————————————————————————
   if (!isInteger(cardsDealt) || cardsDealt < 1) {
     issues.push({ code: 'cardsDealtOutOfRange', severity: 'error', value: cardsDealt, min: 1 });
   }
 
-  if (input.players.length < MIN_PLAYERS || input.players.length > MAX_PLAYERS) {
+  if (input.players.length < MIN_PLAYERS || input.players.length > maxPlayers) {
     issues.push({
       code: 'playerCountOutOfRange',
       severity: 'error',
       value: input.players.length,
       min: MIN_PLAYERS,
-      max: MAX_PLAYERS,
+      max: maxPlayers,
     });
   }
 
@@ -57,13 +63,13 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
     seen.add(player.playerId);
   }
 
-  if (!isInteger(destroyed) || destroyed < 0 || destroyed > MAX_DESTROYED_TRICKS) {
+  if (!isInteger(destroyed) || destroyed < 0 || destroyed > maxDestroyed) {
     issues.push({
       code: 'destroyedTricksOutOfRange',
       severity: 'error',
       value: destroyed,
       min: 0,
-      max: MAX_DESTROYED_TRICKS,
+      max: maxDestroyed,
     });
   }
   if (destroyed > 0 && !ruleset.advancedCards) {
@@ -146,7 +152,7 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
     }
 
     // — Compteurs de bonus —
-    for (const type of BONUS_TYPES) {
+    for (const type of ALL_BONUS_TYPES) {
       const count = player.bonuses?.[type] ?? 0;
       if (!isInteger(count) || count < 0) {
         issues.push({
@@ -155,6 +161,17 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
           playerId,
           bonus: type,
           value: count,
+        });
+        continue;
+      }
+      // Seuls les compteurs d'extension peuvent manquer à l'appel : les cartes
+      // ne sont pas sur la table, la saisie n'a pas de sens.
+      if (count > 0 && !countedTypes.includes(type)) {
+        issues.push({
+          code: 'bonusUnavailableWithoutExpansion',
+          severity: 'error',
+          playerId,
+          bonus: type,
         });
         continue;
       }
@@ -179,7 +196,7 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
   // — Cohérence des bonus sur la manche ——————————————————————————————————
   const mermaidOnSkullKing = totalBonus(input, 'mermaidCapturesSkullKing');
 
-  for (const type of BONUS_TYPES) {
+  for (const type of countedTypes) {
     const total = totalBonus(input, type);
     // Une sirène qui a capturé le Skull King a remporté son pli : elle n'a pas
     // pu être capturée par un pirate dans le même temps.
@@ -258,7 +275,7 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
     const effectiveBid = effectiveBidOf(player, cardsDealt, ruleset);
     if (player.tricks === effectiveBid) continue;
 
-    const hasCaptures = BONUS_TYPES.some((type) => (player.bonuses?.[type] ?? 0) > 0);
+    const hasCaptures = countedTypes.some((type) => (player.bonuses?.[type] ?? 0) > 0);
     const inAlliance = alliances.some(
       (alliance) => alliance.playerId === player.playerId || alliance.allyId === player.playerId,
     );

@@ -94,6 +94,16 @@ export default function RootLayout() {
                 sheetGrabberVisible: true,
               }}
             />
+            <Stack.Screen
+              // Même feuille modale que la feuille de score : on y jette un œil
+              // entre deux manches, puis on revient à la table (§7.5).
+              name="game/[id]/settings"
+              options={{
+                title: t('route.gameSettings'),
+                presentation: 'formSheet',
+                sheetGrabberVisible: true,
+              }}
+            />
             <Stack.Screen name="game/[id]/end" options={{ title: t('route.gameEnd') }} />
             <Stack.Screen name="history/[id]" options={{ title: t('route.gameDetail') }} />
             <Stack.Screen

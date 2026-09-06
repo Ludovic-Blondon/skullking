@@ -176,6 +176,7 @@ describe('toRoundInput', () => {
       scoring: 'classic',
       rascalCannonball: false,
       pirateAbilities: false,
+      expansion: false,
       roundsPlan: [],
     });
     expect(first.total).toBe(40 + 20);

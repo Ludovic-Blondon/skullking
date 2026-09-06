@@ -24,6 +24,29 @@ projet où stocker les numéros de build.
 Il n'y a pas de profil `development` : le quotidien passe par `expo run:ios` / `expo run:android`,
 et un build EAS de développement exigerait `expo-dev-client`, qui n'est pas une dépendance.
 
+## Variante « dev », pour tester à côté de l'app publiée
+
+Un build de test porte par défaut l'identifiant de l'app publiée : sur un téléphone qui a déjà
+l'app du store, il la **remplace**, base de données comprise. `app.config.js` lève ce conflit en
+donnant à la variante son propre identifiant, son propre nom et son propre scheme — deux apps,
+deux conteneurs, deux historiques.
+
+```bash
+APP_VARIANT=dev npx expo prebuild -p ios --clean
+xcodebuild -workspace ios/SkullScoresdev.xcworkspace -scheme SkullScoresdev \
+  -configuration Release -destination "id=<UDID de l'iPhone>" \
+  -allowProvisioningUpdates CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
+xcrun devicectl device install app --device <identifiant devicectl> \
+  ~/Library/Developer/Xcode/DerivedData/SkullScoresdev-*/Build/Products/Release-iphoneos/SkullScoresdev.app
+```
+
+Sans `APP_VARIANT`, `app.config.js` renvoie `app.json` mot pour mot : les builds de production ne
+le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `prebuild` — repasser un
+`prebuild` **sans** la variable avant de fabriquer un build destiné au store.
+
+La base de la variante est vide au départ : pour tester sur de vraies parties, exporter la
+sauvegarde JSON depuis les Réglages de l'app publiée et l'importer dans la variante.
+
 `production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
 lisible, elle, reste tenue à la main dans `app.json`.
 
@@ -115,6 +138,23 @@ python3 docs/store/publish-listing.py --prenom Ludovic --nom Blondon \
   --telephone +33XXXXXXXXX --email ...
 ```
 
+### La fiche Play
+
+```bash
+python3 docs/store/publish-play-listing.py --dry-run   # montre, ne commite pas
+python3 docs/store/publish-play-listing.py             # écrit la fiche
+```
+
+Le pendant Google du script ci-dessus : mêmes sources (`docs/store/*.md`, `screenshots/`,
+`feature-graphic/`), recopiées dans les quatre fiches de langue. Il efface les images d'un type
+avant de les renvoyer, donc il se relance sans empiler de doublons. L'icône du dépôt fait
+1024 px, Play en veut 512 : le script la redimensionne à la volée (`sips`).
+
+Ce qu'il ne fait pas, et qui n'est pas un oubli : **créer l'application** — l'API Play n'a aucun
+appel pour ça, c'est la console qui la crée —, les déclarations **Data Safety**, **classification
+d'âge IARC**, **public cible** et **statut de commerçant DSA**, et la **liste des testeurs** d'une
+piste.
+
 Trois choses restent à la main dans la console, et c'est volontaire — ce sont des déclarations
 dont on répond devant Apple : **confidentialité** (penser au bouton _Publier_, séparé des
 réponses), **classification d'âge**, et **statut de commerçant DSA**.
@@ -135,6 +175,20 @@ eas submit --platform ios              # → TestFlight
 
 La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
 ce passage qui démarre les 14 jours.
+
+Deux profils de soumission, et la différence tient en un mot :
+
+| Profil       | `releaseStatus` | Ce qui se passe                                                    |
+| ------------ | --------------- | ------------------------------------------------------------------ |
+| `production` | `draft`         | le binaire monte, la release attend un clic dans la console        |
+| `internal`   | `completed`     | la release part **tout de suite** aux testeurs de la piste interne |
+
+```bash
+eas submit --platform android --profile internal --id <build>
+```
+
+Le défaut reste le brouillon : rien ne s'ouvre à des testeurs sans qu'on l'ait demandé. Le profil
+`internal` est là pour les allers-retours de test, où le clic dans la console n'apporte rien.
 
 Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
 TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;

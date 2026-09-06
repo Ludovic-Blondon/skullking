@@ -61,4 +61,10 @@ skull,king,score,scorepad,points,card,game,pirate,tricks,bidding,tabletop,boardg
 
 ## What's new in this version
 
-First release.
+OFFICIAL EXPANSION
+Turn it on when you create a game and the app scores all of it: the suited 7s and 8s, the First Mate captured by the Skull King or a mermaid, Davy Jones's Locker, and the Spotted Stingray alongside the Kraken and the White Whale. Tables of up to nine players are supported.
+
+THE TABLE CHANGES MID-GAME
+Someone has to leave, a latecomer sits down, the evening ends early: a settings screen now lets you change the number of rounds and reshape the table between two rounds. Whoever leaves keeps their points, their played rounds and their place in the final standings.
+
+The manual adjustment on the bonus sheet now moves in steps of 5.

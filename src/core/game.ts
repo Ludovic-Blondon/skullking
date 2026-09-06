@@ -6,29 +6,24 @@
  * pour 8 joueurs est instantané.
  */
 
-import { MIN_PLAYERS } from './rules/editions';
+import { deckSizeFor, MIN_PLAYERS } from './rules/editions';
 import { scoreRound } from './scoring';
 import type { GameState, PlayerId, RoundInput, RoundResult, Ruleset, Standing } from './types';
-
-/**
- * Cartes du jeu réellement distribuables : 56 cartes numérotées (4 couleurs × 14)
- * et 14 cartes spéciales (5 fuites, 5 pirates, la Tigresse, 2 sirènes, le Skull
- * King). Les cartes avancées de la boîte 2021 remplacent des fuites plutôt que
- * de s'y ajouter : le total ne bouge pas.
- */
-const DECK_SIZE = 70;
 
 /**
  * Cartes distribuées à la manche demandée.
  *
  * La manche N distribue N cartes, sauf quand le paquet ne suffit plus : à
  * 8 joueurs, les manches 9 et 10 se jouent à 8 cartes (PLAN.md §4.1). La borne
- * se déduit de la taille du paquet, ce qui couvre aussi les formats de manches
- * alternatifs prévus en v1.1.
+ * se déduit de la taille du paquet, ce qui couvre aussi bien les 19 cartes de
+ * l'extension (§4.6) que les formats de manches alternatifs prévus en v1.1.
+ *
+ * Sans `ruleset`, c'est le paquet de base qui borne : un appelant qui n'a pas
+ * les règles sous la main ne doit pas distribuer des cartes qui n'existent pas.
  */
-export function cardsDealtFor(roundNumber: number, playerCount: number): number {
+export function cardsDealtFor(roundNumber: number, playerCount: number, ruleset?: Ruleset): number {
   if (playerCount < 1) return roundNumber;
-  return Math.min(roundNumber, Math.floor(DECK_SIZE / playerCount));
+  return Math.min(roundNumber, Math.floor(deckSizeFor(ruleset) / playerCount));
 }
 
 /** Liste des joueurs d'une partie, dans l'ordre où ils apparaissent. */

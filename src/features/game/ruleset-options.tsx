@@ -125,6 +125,17 @@ export function RulesetOptions({
       />
 
       <Segmented
+        label={t('rules.expansion')}
+        hint={t('rules.expansionHint')}
+        value={ruleset.expansion}
+        options={[
+          { value: false, label: t('rules.without') },
+          { value: true, label: t('rules.with') },
+        ]}
+        onChange={(expansion) => patch({ expansion })}
+      />
+
+      <Segmented
         label={t('rules.edition')}
         hint={t(
           ruleset.edition === 'current' ? 'rules.editionCurrentHint' : 'rules.editionLegacyHint',

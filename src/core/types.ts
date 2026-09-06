@@ -30,6 +30,15 @@ export interface Ruleset {
   rascalCannonball: boolean;
   /** Pouvoirs des pirates : Harry le Géant et pari de Rascal le Flambeur. */
   pirateAbilities: boolean;
+  /**
+   * Extension officielle en jeu (PLAN.md §4.6) : cartes 7 et 8, Second, Raie
+   * tachetée, Casier de Davy Jones.
+   *
+   * Une boîte à part, pas une édition : elle s'ajoute au barème choisi plutôt
+   * que de le remplacer. Absent des parties enregistrées avant sa sortie —
+   * `undefined` s'y lit « éteinte », ce qui laisse leur décompte intact.
+   */
+  expansion: boolean;
   /** Nombre de cartes distribuées par manche, avant correction à 8 joueurs. */
   roundsPlan: number[];
 }
@@ -37,6 +46,11 @@ export interface Ruleset {
 /**
  * Bonus de capture, saisis par joueur sous forme de compteurs.
  * Les quatre premiers sont des cartes uniques : leur compteur vaut 0 ou 1.
+ *
+ * Les quatre derniers viennent de l'extension officielle (PLAN.md §4.6) et ne
+ * sont décomptés que si elle est en jeu. `expansionSeven` est le seul compteur
+ * qui **retire** des points : le livret en fait une pénalité soumise aux mêmes
+ * conditions qu'un bonus.
  */
 export type BonusType =
   | 'yellow14'
@@ -45,7 +59,11 @@ export type BonusType =
   | 'black14'
   | 'mermaidCapturesSkullKing'
   | 'skullKingCapturesPirate'
-  | 'pirateCapturesMermaid';
+  | 'pirateCapturesMermaid'
+  | 'expansionSeven'
+  | 'expansionEight'
+  | 'davyJonesLeviathan'
+  | 'firstMateCaptured';
 
 export type BonusCounts = Partial<Record<BonusType, number>>;
 
@@ -101,7 +119,10 @@ export interface RoundInput {
   roundNumber: number;
   /** Cartes distribuées : `cardsDealtFor()` par défaut, modifiable à la main. */
   cardsDealt: number;
-  /** Plis détruits par le Kraken ou la Baleine blanche (0 à 2). */
+  /**
+   * Plis détruits par les léviathans : Kraken et Baleine blanche (0 à 2), plus
+   * la Raie tachetée quand l'extension est en jeu (0 à 3, PLAN.md §4.6).
+   */
   destroyedTricks?: number;
   players: PlayerRoundInput[];
   lootAlliances?: LootAlliance[];
@@ -118,7 +139,11 @@ export interface PlayerRoundScore {
   base: number;
   /** Bonus effectivement comptés. */
   bonus: number;
-  /** Bonus annulés par une mise ratée : sans effet ici, mais suivis en statistiques. */
+  /**
+   * Bonus annulés par une mise ratée : sans effet ici, mais suivis en
+   * statistiques. Peut être négatif quand la mise ratée annule surtout des 7
+   * de l'extension — une pénalité échappée n'est pas un bonus perdu.
+   */
   lostBonus: number;
   /** Gain ou perte du pari de Rascal (négatif si perdu). */
   rascalBet: number;
@@ -185,6 +210,7 @@ export type IssueCode =
   | 'invalidBonusCount'
   | 'bonusCountExceeded'
   | 'bonusUnavailableInEdition'
+  | 'bonusUnavailableWithoutExpansion'
   | 'skullKingAlreadyCaptured'
   | 'lootWithoutAdvancedCards'
   | 'lootWithTwoPlayers'

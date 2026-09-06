@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { hasBlockingIssues, RASCAL_POINTS, scoreRound } from '@/core';
+import { hasBlockingIssues, maxDestroyedTricksFor, RASCAL_POINTS, scoreRound } from '@/core';
 import {
   setDestroyedTricks,
   setPhase,
@@ -67,7 +67,9 @@ export default function GameScreen() {
     );
   }
 
-  const { game, seats, current, settled } = view;
+  // La saisie ne concerne que les joueurs assis à cette manche : un partant
+  // garde ses manches passées mais n'a plus de ligne ici (PLAN.md §7.5).
+  const { game, activeSeats: seats, current, settled } = view;
   const { round } = current.stored;
   const { cardsDealt } = round;
   const totalRounds = game.ruleset.roundsPlan.length;
@@ -140,9 +142,16 @@ export default function GameScreen() {
               onPress={() => router.replace('/')}
             />
             {bidding ? (
-              // La place du bouton reste prise en phase Annonces : sans elle le
-              // titre glisse de 60 pt à chaque changement de phase.
-              <View className="size-9" />
+              // Les réglages de la partie prennent la place que « revenir aux
+              // annonces » laisse libre entre deux manches (PLAN.md §7.5) : le
+              // titre garde sa largeur, et c'est de toute façon le seul moment
+              // où l'on change la table.
+              <TopAction
+                icon="options-outline"
+                label={t('game.settings')}
+                testID="game-settings"
+                onPress={() => router.push({ pathname: '/game/[id]/settings', params: { id } })}
+              />
             ) : (
               <TopAction
                 icon="arrow-undo-outline"
@@ -281,12 +290,13 @@ export default function GameScreen() {
         {!bidding && game.ruleset.advancedCards && (
           <View className="flex-row items-center justify-between gap-3 px-1 pt-1">
             <Text className="flex-1 font-body text-caption text-content-muted">
-              {t('game.destroyed')}
+              {/* La Raie tachetée est un léviathan de plus à compter (§4.6). */}
+              {t(game.ruleset.expansion ? 'game.destroyedWithRay' : 'game.destroyed')}
             </Text>
             <Stepper
               value={round.destroyedTricks}
               onChange={(count) => void setDestroyedTricks(round.id, count)}
-              max={2}
+              max={maxDestroyedTricksFor(game.ruleset)}
               size="sm"
               label={t('game.destroyedLabel')}
             />

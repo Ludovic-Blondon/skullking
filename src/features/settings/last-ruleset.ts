@@ -55,6 +55,7 @@ export function parseStoredRuleset(stored: string | undefined): Ruleset {
       typeof value.pirateAbilities === 'boolean'
         ? value.pirateAbilities
         : DEFAULT_RULESET.pirateAbilities,
+    expansion: typeof value.expansion === 'boolean' ? value.expansion : DEFAULT_RULESET.expansion,
     roundsPlan: isRoundsPlan(value.roundsPlan)
       ? value.roundsPlan.slice(0, DEFAULT_ROUNDS_PLAN.length)
       : DEFAULT_RULESET.roundsPlan,
