@@ -49,6 +49,10 @@ APPAREILS = {
     "tablet-10": "APP_IPAD_PRO_3GEN_11",
     "tablet-13": "APP_IPAD_PRO_3GEN_129",
 }
+# États dans lesquels Apple accepte encore une écriture, pour une version comme pour une fiche.
+MODIFIABLES = (
+    "PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED",
+)
 
 
 def fiche(langue: str) -> dict[str, str]:
@@ -65,9 +69,7 @@ def version_cible(demandee: str | None) -> str:
     reponse = asc.get(f"/v1/apps/{APP_ID}/appStoreVersions?limit=20")
     for entree in reponse.get("data", []):
         attributs = entree["attributes"]
-        modifiable = attributs["appStoreState"] in (
-            "PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED",
-        )
+        modifiable = attributs["appStoreState"] in MODIFIABLES
         if demandee and attributs["versionString"] == demandee:
             return entree["id"]
         if not demandee and modifiable:
@@ -132,8 +134,16 @@ def textes(version: str, nouveautes: bool) -> None:
 
 
 def identite() -> None:
-    """Nom, sous-titre, politique de confidentialité, catégories."""
-    info = asc.get(f"/v1/apps/{APP_ID}/appInfos?limit=5")["data"][0]["id"]
+    """Nom, sous-titre, politique de confidentialité, catégories.
+
+    Pendant une mise à jour, **deux fiches coexistent** : celle de la version en ligne, que
+    l'API verrouille, et celle de la version en préparation. Prendre la première venue renvoie
+    409 sur chaque champ — et comme les valeurs sont héritées, l'erreur passe inaperçue jusqu'au
+    jour où l'on change un sous-titre.
+    """
+    fiches = asc.get(f"/v1/apps/{APP_ID}/appInfos?limit=5")["data"]
+    ouvertes = [f for f in fiches if f["attributes"].get("appStoreState") in MODIFIABLES]
+    info = (ouvertes or fiches)[0]["id"]
     existantes = {
         d["attributes"]["locale"]: d["id"]
         for d in asc.get(f"/v1/appInfos/{info}/appInfoLocalizations?limit=20").get("data", [])
