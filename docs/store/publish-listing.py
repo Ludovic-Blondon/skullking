@@ -225,7 +225,11 @@ def build_et_conformite(version: str, contact: dict[str, str] | None) -> None:
     print("  droits contenu :", "ERREUR " + reponse["corps"][:160]
           if "erreur" in reponse else "aucun contenu tiers")
 
-    builds = asc.get(f"/v1/builds?filter%5Bapp%5D={APP_ID}&limit=1").get("data", [])
+    # Trié explicitement : sans `sort`, l'ordre des builds n'est pas garanti, et attacher
+    # celui de la version précédente à une mise à jour ne se verrait qu'au rejet.
+    builds = asc.get(
+        f"/v1/builds?filter%5Bapp%5D={APP_ID}&limit=1&sort=-uploadedDate"
+    ).get("data", [])
     valides = [b for b in builds if b["attributes"].get("processingState") == "VALID"]
     if valides:
         reponse = asc.patch(f"/v1/appStoreVersions/{version}", {"data": {
