@@ -138,6 +138,23 @@ python3 docs/store/publish-listing.py --prenom Ludovic --nom Blondon \
   --telephone +33XXXXXXXXX --email ...
 ```
 
+### La fiche Play
+
+```bash
+python3 docs/store/publish-play-listing.py --dry-run   # montre, ne commite pas
+python3 docs/store/publish-play-listing.py             # écrit la fiche
+```
+
+Le pendant Google du script ci-dessus : mêmes sources (`docs/store/*.md`, `screenshots/`,
+`feature-graphic/`), recopiées dans les quatre fiches de langue. Il efface les images d'un type
+avant de les renvoyer, donc il se relance sans empiler de doublons. L'icône du dépôt fait
+1024 px, Play en veut 512 : le script la redimensionne à la volée (`sips`).
+
+Ce qu'il ne fait pas, et qui n'est pas un oubli : **créer l'application** — l'API Play n'a aucun
+appel pour ça, c'est la console qui la crée —, les déclarations **Data Safety**, **classification
+d'âge IARC**, **public cible** et **statut de commerçant DSA**, et la **liste des testeurs** d'une
+piste.
+
 Trois choses restent à la main dans la console, et c'est volontaire — ce sont des déclarations
 dont on répond devant Apple : **confidentialité** (penser au bouton _Publier_, séparé des
 réponses), **classification d'âge**, et **statut de commerçant DSA**.
