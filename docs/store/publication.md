@@ -219,6 +219,28 @@ et `--auto-testflight-setup` ne fait rien tant que la clé App Store Connect n'e
 (« No complete App Store Connect credentials »), il faut alors créer le groupe de test interne à
 la main dans App Store Connect.
 
+### Publier la version approuvée
+
+```bash
+python3 docs/store/release-version.py --version 1.1.0
+```
+
+L'approbation d'Apple ne met rien en ligne : avec `releaseType: MANUAL`, la version s'arrête en
+`PENDING_DEVELOPER_RELEASE` et attend un geste de plus. Le mail « Ready for Distribution » ne le
+dit pas, et le bouton est facile à ne pas trouver — il est dans le **bandeau d'état de la page
+Distribution**, une fois la version sélectionnée dans la colonne de gauche : « Release This
+Version ». Ni sur la vue d'ensemble de l'app, ni sur TestFlight.
+
+C'est le troisième bouton caché de la chaîne, après les deux de la soumission. Le script fait
+l'unique appel qui publie (`POST /v1/appStoreVersionReleaseRequests`) et **relit l'état** :
+`READY_FOR_SALE` est la seule preuve que la version est partie. Il demande confirmation avant —
+`--oui` la saute — parce qu'une publication **ne s'annule pas** : une version en ligne ne se
+retire qu'en sortant l'app de la vente.
+
+Les états qu'on croise, dans l'ordre : `PREPARE_FOR_SUBMISSION` → `WAITING_FOR_REVIEW` →
+`IN_REVIEW` → `PENDING_DEVELOPER_RELEASE` → `READY_FOR_SALE`. Le seul qui demande une action est
+l'avant-dernier ; c'est aussi celui qui ressemble le plus à « c'est bon, c'est fait ».
+
 ## Conformité
 
 - **Confidentialité** : « Data Not Collected » (Apple), formulaire Data Safety vide (Google).
