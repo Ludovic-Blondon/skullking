@@ -17,7 +17,7 @@ import {
   RASCAL_BETS,
   ROUND_BONUS_LIMITS,
 } from './rules/editions';
-import { effectiveBidOf } from './scoring';
+import { captureShareOf, effectiveBidOf } from './scoring';
 import type { BonusType, Issue, PlayerId, RoundInput, Ruleset } from './types';
 
 function isInteger(value: number): boolean {
@@ -275,7 +275,11 @@ export function validateRound(input: RoundInput, ruleset: Ruleset): Issue[] {
     const effectiveBid = effectiveBidOf(player, cardsDealt, ruleset);
     if (player.tricks === effectiveBid) continue;
 
-    const hasCaptures = countedTypes.some((type) => (player.bonuses?.[type] ?? 0) > 0);
+    // À un pli près en décompte Rascal, les captures comptent encore à moitié :
+    // rien de suspect à les avoir saisies.
+    const hasCaptures =
+      captureShareOf(player, cardsDealt, ruleset) === 0 &&
+      countedTypes.some((type) => (player.bonuses?.[type] ?? 0) > 0);
     const inAlliance = alliances.some(
       (alliance) => alliance.playerId === player.playerId || alliance.allyId === player.playerId,
     );

@@ -32,20 +32,60 @@ describe('décompte Rascal', () => {
     expect(score.base).toBe(25);
   });
 
-  it('conserve les bonus, toujours conditionnés à l’exactitude', () => {
-    const exact = scoreRound(
-      round([player('a', 2, 2, bonuses({ black14: 1 }))], { cardsDealt: 4 }),
-      rascal,
-    );
-    const nearMiss = scoreRound(
-      round([player('a', 2, 3, bonuses({ black14: 1 }))], { cardsDealt: 4 }),
-      rascal,
-    );
-    expect(exact[0].total).toBe(40 + 20);
-    // Un pli d'écart rapporte la moitié du potentiel, mais pas le bonus.
-    expect(nearMiss[0].base).toBe(20);
-    expect(nearMiss[0].bonus).toBe(0);
-    expect(nearMiss[0].lostBonus).toBe(20);
+  /** Fiche « Rascal's Scoring », « Bonus Points » : la même règle que le potentiel. */
+  describe('bonus de capture', () => {
+    const withBlack14 = (bid: number, tricks: number) =>
+      scoreRound(
+        round([player('a', bid, tricks, bonuses({ black14: 1 }))], { cardsDealt: 4 }),
+        rascal,
+      )[0];
+
+    it('comptent entiers si la mise est exacte', () => {
+      const score = withBlack14(2, 2);
+      expect(score.bonus).toBe(20);
+      expect(score.total).toBe(40 + 20);
+    });
+
+    it('comptent à moitié à un pli près', () => {
+      const score = withBlack14(2, 3);
+      expect(score.base).toBe(20);
+      expect(score.bonus).toBe(10);
+      expect(score.lostBonus).toBe(10);
+      expect(score.total).toBe(20 + 10);
+    });
+
+    it('ne comptent plus à deux plis d’écart', () => {
+      const score = withBlack14(2, 4);
+      expect(score.bonus).toBe(0);
+      expect(score.lostBonus).toBe(20);
+    });
+
+    it('règlent le demi-point de l’extension en faveur du joueur', () => {
+      const [eight, seven] = scoreRound(
+        round([
+          player('a', 1, 2, bonuses({ expansionEight: 1 })),
+          player('b', 2, 1, bonuses({ expansionSeven: 1 })),
+        ]),
+        rules({ scoring: 'rascal', expansion: true }),
+      );
+      // +2,5 arrondi à +3, −2,5 arrondi à −2.
+      expect(eight.bonus).toBe(3);
+      expect(eight.lostBonus).toBe(2);
+      expect(seven.bonus).toBe(-2);
+      expect(seven.lostBonus).toBe(-3);
+    });
+
+    it('laissent le Butin exiger deux mises exactes', () => {
+      const [poser, ally] = scoreRound(
+        round([player('a', 1, 2), player('b', 1, 1), player('c', 0, 0)], {
+          lootAlliances: [{ playerId: 'a', allyId: 'b' }],
+        }),
+        rascal,
+      );
+      expect(poser.bonus).toBe(0);
+      expect(poser.lostBonus).toBe(20);
+      expect(ally.bonus).toBe(0);
+    });
   });
 });
 
@@ -66,6 +106,17 @@ describe('option Boulet de canon', () => {
       cannonballRules,
     );
     expect(score.base).toBe(0);
+  });
+
+  it('reste tout ou rien pour les bonus de capture', () => {
+    const [score] = scoreRound(
+      round([player('a', 2, 3, { cannonball: true, ...bonuses({ black14: 1 }) })], {
+        cardsDealt: 6,
+      }),
+      cannonballRules,
+    );
+    expect(score.bonus).toBe(0);
+    expect(score.lostBonus).toBe(20);
   });
 
   it('se choisit joueur par joueur', () => {

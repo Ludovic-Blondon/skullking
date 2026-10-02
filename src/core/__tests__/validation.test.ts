@@ -304,6 +304,14 @@ describe('validateRound — cohérence des bonus', () => {
     expect(hasBlockingIssues([warning as Issue])).toBe(false);
   });
 
+  it('ne signale pas les captures d’un revers en décompte Rascal : elles comptent à moitié', () => {
+    const issues = validateRound(
+      round([player('a', 2, 1, bonuses({ black14: 1 })), player('b', 0, 2)], { cardsDealt: 3 }),
+      rules({ scoring: 'rascal' }),
+    );
+    expect(codes(issues)).not.toContain('bonusOnMissedBid');
+  });
+
   it('signale aussi une alliance de Butin sur une mise ratée', () => {
     const issues = validateRound(
       round([player('a', 1, 0), player('b', 1, 1), player('c', 1, 1)], {
