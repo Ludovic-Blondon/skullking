@@ -89,7 +89,8 @@ export function captureShareOf(
 ): number {
   const gap = Math.abs(player.tricks - effectiveBidOf(player, cardsDealt, ruleset));
   if (gap === 0) return 1;
-  const glancingBlow = gap === 1 && ruleset.scoring === 'rascal' && !playsCannonball(player, ruleset);
+  const glancingBlow =
+    gap === 1 && ruleset.scoring === 'rascal' && !playsCannonball(player, ruleset);
   return glancingBlow ? RASCAL_POINTS.nearMissRatio : 0;
 }
 
