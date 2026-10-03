@@ -61,10 +61,7 @@ skull,king,puntos,puntuacion,contador,cartas,pirata,bazas,ronda,mesa,juego,parti
 
 ## Novedades de esta versión
 
-EXPANSIÓN OFICIAL
-Actívala al crear la partida y la app puntúa todo: los 7 y los 8 de color, el Segundo capturado por el Rey Calavera o una sirena, el Cofre de Davy Jones y la Raya moteada junto al Kraken y la Ballena Blanca. La mesa puede llegar a nueve jugadores.
+PUNTUACIÓN RASCAL CORREGIDA
+Quien falla su apuesta por una sola baza conserva ahora la mitad de sus bonus de captura, como dicen las reglas oficiales de Rascal; hasta ahora la app se los quitaba todos. La hoja de bonus lo indica de un vistazo.
 
-LA MESA CAMBIA DURANTE LA PARTIDA
-Alguien tiene que irse, llega un rezagado, la noche termina antes: una pantalla de ajustes permite cambiar el número de rondas y recomponer la mesa entre dos rondas. Quien se va conserva sus puntos, sus rondas jugadas y su puesto en la clasificación final.
-
-El ajuste manual de la hoja de bonus avanza ahora de 5 en 5.
+Y algunas actualizaciones técnicas, sin efecto en tus partidas.

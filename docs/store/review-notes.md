@@ -46,10 +46,9 @@ No credentials, no sample file and no setup are required. Everything is availabl
 
 DEVICE MODELS AND OPERATING SYSTEMS TESTED
 
-- iPhone 17 Pro simulator, iOS 26.2 — automated UI tests play complete games end to end,
-  including the two features new to this version.
-- iPhone 15 Pro, physical device, iOS 26.6.1 — this version was installed and launched on it
+- iPhone 15 Pro, physical device, iOS 27.0.1 — this version was installed and launched on it
   as a signed release build.
+- iPhone 17 Pro simulator, iOS 26.2 — release build launched, Rascal rounds played.
 
 EXTERNAL SERVICES, TOOLS AND PLATFORMS
 
@@ -83,8 +82,8 @@ scores from numbers the user types in.
 
 WHAT IS NEW IN THIS VERSION
 
-Version 1.1.0 adds two optional features, both off by default, so a game created with the default
-rules behaves exactly as in 1.0: scoring for the card game's official expansion (four more bonus
-counters, a third sea monster, tables of up to nine players), switched on in the rule options; and
-a game settings screen that changes the number of rounds and lets a player leave or join between
-two rounds.
+Version 1.1.1 is a maintenance release with no new feature. It aligns the optional Rascal scoring
+variant with the official Rascal scoring sheet: a player who misses their bid by exactly one trick
+now keeps half of their capture bonuses instead of none. To check it, set "Scoring variant" to
+"Rascal" in "Rule options", then give a player one trick off their bid and a capture bonus. The
+app also adopts the scene lifecycle required by the iOS 27 SDK.
