@@ -53,6 +53,7 @@ describe('score de base — décompte classique', () => {
       exact: true,
       bonus: 0,
       lostBonus: 0,
+      captureShare: 1,
       rascalBet: 0,
       custom: 0,
     });

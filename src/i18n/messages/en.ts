@@ -213,7 +213,7 @@ export const en: Record<MessageKey, string> = {
   'bonus.penaltyPer': '−{value}/{unit}',
   'bonus.title': 'Bonuses — {name}',
   'bonus.missed': 'Bid missed — bonuses do not count',
-  'bonus.glancingBlow': 'One trick off — bonuses count half',
+  'bonus.glancingBlow': 'One trick off — captures count half',
   'bonus.takenBy': '· {name}',
   'bonus.lootHint': '+{value} each',
   'bonus.cannonball': '💣 Cannonball',
@@ -378,7 +378,8 @@ export const en: Record<MessageKey, string> = {
   'cheat.zeroLostValue': '−{value} × cards dealt',
   'cheat.zeroHint': 'On the cards dealt, never on the round number',
   'cheat.bonuses': 'Capture bonuses',
-  'cheat.bonusCondition': 'All of them need an exact bid: a missed bid wipes them.',
+  'cheat.bonusCondition':
+    'All of them need an exact bid: a missed bid wipes them. In Rascal, one trick off, captures count half.',
   'cheat.eachAlly': '+{value} per ally',
   'cheat.bothExact': 'Both bids must be exact',
   'cheat.notInEdition': 'Does not exist in this edition',

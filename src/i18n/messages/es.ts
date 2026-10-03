@@ -224,7 +224,7 @@ export const es: Record<MessageKey, string> = {
   'bonus.penaltyPer': '−{value}/{unit}',
   'bonus.title': 'Bonus — {name}',
   'bonus.missed': 'Apuesta fallada — los bonus no cuentan',
-  'bonus.glancingBlow': 'A una baza — los bonus cuentan la mitad',
+  'bonus.glancingBlow': 'A una baza — los bonus de captura cuentan la mitad',
   'bonus.takenBy': '· {name}',
   'bonus.lootHint': '+{value} cada uno',
   'bonus.cannonball': '💣 Bala de cañón',
@@ -393,7 +393,8 @@ export const es: Record<MessageKey, string> = {
   'cheat.zeroLostValue': '−{value} × cartas repartidas',
   'cheat.zeroHint': 'Sobre las cartas repartidas, nunca sobre el número de ronda',
   'cheat.bonuses': 'Bonus de captura',
-  'cheat.bonusCondition': 'Todos exigen una apuesta exacta: una apuesta fallada los anula.',
+  'cheat.bonusCondition':
+    'Todos exigen una apuesta exacta: una apuesta fallada los anula. En Rascal, a una baza, los bonus de captura cuentan la mitad.',
   'cheat.eachAlly': '+{value} por aliado',
   'cheat.bothExact': 'Las dos apuestas deben ser exactas',
   'cheat.notInEdition': 'No existe en esta edición',
