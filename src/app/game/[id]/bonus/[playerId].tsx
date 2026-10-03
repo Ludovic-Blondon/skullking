@@ -6,8 +6,10 @@ import { Text } from '@/ui/text';
 import {
   BONUS_POINTS,
   bonusTypesFor,
+  captureShareOf,
   RASCAL_POINTS,
   ROUND_BONUS_LIMITS,
+  scoreRound,
   type BonusType,
 } from '@/core';
 import {
@@ -89,10 +91,17 @@ export default function BonusScreen() {
     round.cardsDealt,
   );
   // Cette feuille ne s'ouvre qu'en phase Résultats : la manche est en train de
-  // se jouer, un compteur de plis jamais touché vaut donc 0 pris — le même
-  // 0 que la validation écrira. Sans cela, une mise 0 tenue passerait pour
-  // ratée et ses bonus s'afficheraient barrés à tort (§4.2).
-  const exact = (entry.tricks ?? 0) === effectiveBid;
+  // se jouer, `current.input` compte donc un compteur de plis jamais touché
+  // pour 0 pris — le même 0 que la validation écrira. Sans cela, une mise 0
+  // tenue passerait pour ratée et ses bonus s'afficheraient barrés à tort (§4.2).
+  const playerInput = current.input.players.find((p) => p.playerId === String(numericPlayerId));
+  const score = scoreRound(current.input, game.ruleset).find(
+    (s) => s.playerId === String(numericPlayerId),
+  );
+  if (!playerInput || !score) return <View className="flex-1 bg-surface" />;
+  // Captures comptées entières, à moitié (revers du décompte Rascal) ou pas du
+  // tout : seules les dernières s'affichent barrées.
+  const captureShare = captureShareOf(playerInput, round.cardsDealt, game.ruleset);
 
   const myAllies = events
     .filter((event) => event.playerId === numericPlayerId && event.type === 'loot')
@@ -100,15 +109,9 @@ export default function BonusScreen() {
     .filter((allyId): allyId is number => allyId !== null);
   const lootCount = Math.ceil(events.filter((event) => event.type === 'loot').length / 2);
 
-  // Ce que la feuille rapporte à ce joueur, ajustement manuel compris. Les
-  // bonus d'une mise ratée restent affichés, mais ne comptent pas (§4.2).
-  const captured =
-    counted.reduce((sum, type) => {
-      const value = scale[type];
-      return value === null ? sum : sum + value * countOf(numericPlayerId, type);
-    }, 0) +
-    myAllies.length * scale.loot;
-  const sheetTotal = (exact ? captured : 0) + entry.customBonus;
+  // Ce que la feuille rapporte à ce joueur, ajustement manuel compris — tel que
+  // le moteur le décompte, jamais recalculé ici.
+  const sheetTotal = score.bonus + score.custom;
 
   return (
     <View className="flex-1 bg-surface">
@@ -123,10 +126,12 @@ export default function BonusScreen() {
           </Text>
         </View>
 
-        {!exact && (
+        {!score.exact && (
           <View className="flex-row items-center gap-2 rounded-field border border-negative bg-negative/10 px-3 py-2.5">
             <Text className="text-caption">⚠️</Text>
-            <Text className="flex-1 font-semi text-caption text-negative">{t('bonus.missed')}</Text>
+            <Text className="flex-1 font-semi text-caption text-negative">
+              {t(captureShare > 0 ? 'bonus.glancingBlow' : 'bonus.missed')}
+            </Text>
           </View>
         )}
 
@@ -155,7 +160,7 @@ export default function BonusScreen() {
                 <Text className="text-caption">{CAPTURE_LABELS[type].emoji}</Text>
                 <Text
                   className={`font-semi text-caption ${mine ? 'text-accent-fg' : 'text-content'} ${
-                    mine && !exact ? 'line-through' : ''
+                    mine && captureShare === 0 ? 'line-through' : ''
                   }`}>
                   {t(CAPTURE_LABELS[type].key)} {t(label.key, { value: label.value })}
                 </Text>
@@ -405,9 +410,9 @@ export default function BonusScreen() {
               }`}
             />
           </View>
-          {!exact && captured > 0 && (
+          {!score.exact && score.lostBonus > 0 && (
             <Text className="font-body text-micro text-content-muted">
-              {t('bonus.lostToMiss', { points: captured })}
+              {t('bonus.lostToMiss', { points: score.lostBonus })}
             </Text>
           )}
         </View>

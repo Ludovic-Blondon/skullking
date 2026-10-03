@@ -69,6 +69,31 @@ function rascalBase(bid: number, tricks: number, cardsDealt: number, cannonball:
   return 0;
 }
 
+/** Boulet de canon réellement joué : l'option doit être ouverte dans la partie. */
+function playsCannonball(player: PlayerRoundInput, ruleset: Ruleset): boolean {
+  return ruleset.scoring === 'rascal' && ruleset.rascalCannonball && (player.cannonball ?? false);
+}
+
+/**
+ * Part des bonus de capture qui compte : tout si la mise est exacte, rien
+ * sinon. Le décompte Rascal leur applique la même règle qu'au potentiel — la
+ * moitié à un pli près (fiche « Rascal's Scoring », « Bonus Points ») — sauf au
+ * Boulet de canon, qui reste tout ou rien.
+ *
+ * Le Butin n'en dépend pas : son alliance exige deux mises exactes.
+ */
+export function captureShareOf(
+  player: PlayerRoundInput,
+  cardsDealt: number,
+  ruleset: Ruleset,
+): number {
+  const gap = Math.abs(player.tricks - effectiveBidOf(player, cardsDealt, ruleset));
+  if (gap === 0) return 1;
+  const glancingBlow =
+    gap === 1 && ruleset.scoring === 'rascal' && !playsCannonball(player, ruleset);
+  return glancingBlow ? RASCAL_POINTS.nearMissRatio : 0;
+}
+
 /**
  * Somme des bonus de capture saisis, aux valeurs de l'édition.
  *
@@ -165,19 +190,19 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
       };
     }
 
-    const useCannonball =
-      ruleset.scoring === 'rascal' && ruleset.rascalCannonball && (player.cannonball ?? false);
     const base =
       ruleset.scoring === 'rascal'
-        ? rascalBase(effectiveBid, player.tricks, cardsDealt, useCannonball)
+        ? rascalBase(effectiveBid, player.tricks, cardsDealt, playsCannonball(player, ruleset))
         : classicBase(effectiveBid, player.tricks, cardsDealt);
 
-    // Les bonus ne comptent que si la mise est exacte. Ceux d'une mise ratée
-    // sont conservés à part : l'UI les barre, les statistiques les comptent.
+    // Les bonus ne comptent entiers que si la mise est exacte. La part perdue
+    // est conservée à part : l'UI la barre, les statistiques la comptent. Le
+    // demi-point des 7 et 8 de l'extension se règle en faveur du joueur.
     const captures = captureBonusPoints(player, scale, ruleset);
+    const keptCaptures = Math.round(captures * captureShareOf(player, cardsDealt, ruleset));
     const loot = lootPointsFor(player.playerId, input, exactByPlayer, scale, ruleset);
-    const bonus = (exact ? captures : 0) + loot.earned;
-    const lostBonus = (exact ? 0 : captures) + loot.lost;
+    const bonus = keptCaptures + loot.earned;
+    const lostBonus = captures - keptCaptures + loot.lost;
 
     const bet = rascalBetDelta(player, exact, ruleset);
     const custom = player.customBonus ?? 0;

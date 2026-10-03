@@ -173,6 +173,7 @@ interface Ruleset {
   // SK ne prime que les pirates joués AVANT lui, Butin old-rule
   advancedCards: boolean; // Kraken + Baleine + Butin en jeu (défaut : true)
   scoring: "classic" | "rascal"; // Rascal : potentiel 10×cartes ; exact = 100 %, ±1 = 50 %, sinon 0 ; jamais négatif
+  // — bonus de capture au même régime (±1 = moitié, arrondie en faveur du joueur) ; Butin inchangé
   rascalCannonball: boolean; // option Boulet de canon : 15×cartes si exact, 0 sinon (choix par joueur/manche)
   pirateAbilities: boolean; // v1 — pari de Rascal le Flambeur (±10/±20), Harry le Géant (mise ±1)
   expansion: boolean; // v1.1 — extension officielle : cartes 7/8, Second, Raie, Casier (§4.6)
