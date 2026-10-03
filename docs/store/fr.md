@@ -61,10 +61,7 @@ skull,king,score,points,compteur,cartes,pirate,plis,manche,barème,soirée,jeu,s
 
 ## Nouveautés de cette version
 
-EXTENSION OFFICIELLE
-Activez-la à la création de la partie et l'app compte tout son barème : les 7 et les 8 de couleur, le Second capturé par le Skull King ou une sirène, le Casier de Davy Jones, et la Raie tachetée à côté du Kraken et de la Baleine blanche. La table peut alors monter à neuf joueurs.
+DÉCOMPTE RASCAL CORRIGÉ
+À un pli près de sa mise, un joueur garde désormais la moitié de ses bonus de capture, comme le prévoit la règle officielle de Rascal — l'app les lui retirait jusqu'ici. La feuille de bonus l'indique d'un coup d'œil.
 
-LA TABLE CHANGE EN COURS DE PARTIE
-Quelqu'un doit partir, un retardataire s'assoit, la soirée s'arrête plus tôt : un écran de réglages permet désormais de changer le nombre de manches et de composer la table entre deux manches. Celui qui s'en va garde ses points, ses manches jouées et sa place au classement final.
-
-L'ajustement manuel de la feuille de bonus avance maintenant de 5 en 5.
+Et quelques mises à jour techniques, sans effet sur vos parties.

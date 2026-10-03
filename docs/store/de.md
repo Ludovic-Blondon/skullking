@@ -61,10 +61,7 @@ skull,king,punkte,zaehler,zettel,karten,pirat,stiche,ansage,runde,spieleabend,br
 
 ## Neu in dieser Version
 
-OFFIZIELLE ERWEITERUNG
-Beim Erstellen der Partie einschalten, und die App zählt alles mit: die farbigen 7er und 8er, den vom Skull King oder einer Meerjungfrau gefangenen Ersten Maat, Davy Jones' Kiste und den Gefleckten Rochen neben Kraken und Weißem Wal. Tische mit bis zu neun Spielern sind möglich.
+RASCAL-WERTUNG KORRIGIERT
+Wer seine Ansage um genau einen Stich verfehlt, behält jetzt die Hälfte seiner Fang-Boni, wie es die offiziellen Rascal-Regeln vorsehen – bisher strich die App sie ganz. Das Bonusblatt zeigt es auf einen Blick.
 
-DER TISCH ÄNDERT SICH MITTEN IN DER PARTIE
-Jemand muss gehen, ein Nachzügler setzt sich dazu, der Abend endet früher: Ein Einstellungsbildschirm ändert jetzt die Rundenzahl und den Tisch zwischen zwei Runden. Wer geht, behält seine Punkte, seine gespielten Runden und seinen Platz in der Endwertung.
-
-Die manuelle Korrektur im Bonusblatt geht jetzt in 5er-Schritten.
+Dazu ein paar technische Aktualisierungen, ohne Auswirkung auf eure Partien.
