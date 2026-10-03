@@ -148,12 +148,36 @@ python3 docs/store/publish-play-listing.py             # écrit la fiche
 Le pendant Google du script ci-dessus : mêmes sources (`docs/store/*.md`, `screenshots/`,
 `feature-graphic/`), recopiées dans les quatre fiches de langue. Il efface les images d'un type
 avant de les renvoyer, donc il se relance sans empiler de doublons. L'icône du dépôt fait
-1024 px, Play en veut 512 : le script la redimensionne à la volée (`sips`).
+1024 px, Play en veut 512 : le script la redimensionne à la volée (`sips`). Le client de l'API,
+jeton RS256 compris, est dans `play.py` — le pendant Google d'`asc.py`, partagé avec
+`promote-play-track.py`.
 
 Ce qu'il ne fait pas, et qui n'est pas un oubli : **créer l'application** — l'API Play n'a aucun
-appel pour ça, c'est la console qui la crée —, les déclarations **Data Safety**, **classification
-d'âge IARC**, **public cible** et **statut de commerçant DSA**, et la **liste des testeurs** d'une
-piste.
+appel pour ça, c'est la console qui la crée —, et les déclarations **Data Safety**,
+**classification d'âge IARC**, **public cible** et **statut de commerçant DSA**.
+
+### Promouvoir en test fermé
+
+```bash
+python3 docs/store/promote-play-track.py --vers alpha --dry-run
+python3 docs/store/promote-play-track.py --vers alpha
+python3 docs/store/promote-play-track.py --vers alpha --groupe <groupe>@googlegroups.com
+```
+
+`alpha` est le nom d'API du **test fermé**. Le script reprend la build la plus récente de la
+piste interne et la sert en test fermé, sans rebuild ni nouvel `eas submit`, puis relit la piste
+hors de l'édition — un commit qui n'a pas pris ne se voit pas autrement.
+
+Sur les testeurs, la console et l'API ne couvrent pas la même chose : les adresses saisies **une à
+une** sont réservées à la console, mais un **groupe Google** s'attache par l'API
+(`edits.testers` ne connaît que `googleGroups`). Le groupe est de toute façon plus maniable —
+on ajoute et retire les gens dans le groupe, sans repasser par Play. Une fois la piste servie et
+la liste en place, le lien d'inscription est
+`https://play.google.com/apps/testing/com.lblondon.skullscores`.
+
+Ce que l'API ne dit pas : **combien** de testeurs sont inscrits, et **depuis quand**. Ce compteur
+— celui des 12 × 14 jours — ne se lit que dans la console, page _Test fermé_. Le recrutement et
+le message à leur envoyer sont dans [`testeurs.md`](./testeurs.md).
 
 Trois choses restent à la main dans la console, et c'est volontaire — ce sont des déclarations
 dont on répond devant Apple : **confidentialité** (penser au bouton _Publier_, séparé des
@@ -184,8 +208,10 @@ mkdir -p private_keys && cp credentials/asc-api-key.p8 "private_keys/AuthKey_${A
 xcrun altool --upload-app -f build.ipa -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
 ```
 
-La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
-ce passage qui démarre les 14 jours.
+La release interne se promeut ensuite en test fermé — `promote-play-track.py`, ou la Play
+Console —, sans rebuild. Attention à ce qui démarre vraiment les 14 jours : ce n'est pas la
+promotion, c'est l'inscription des testeurs. Une piste fermée servie mais sans liste ne compte
+rien.
 
 Deux profils de soumission, et la différence tient en un mot :
 
