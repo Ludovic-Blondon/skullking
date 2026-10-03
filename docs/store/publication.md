@@ -35,10 +35,23 @@ deux conteneurs, deux historiques.
 APP_VARIANT=dev npx expo prebuild -p ios --clean
 xcodebuild -workspace ios/SkullScoresdev.xcworkspace -scheme SkullScoresdev \
   -configuration Release -destination "id=<UDID de l'iPhone>" \
-  -allowProvisioningUpdates CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
-xcrun devicectl device install app --device <identifiant devicectl> \
+  -allowProvisioningUpdates -authenticationKeyPath "$PWD/credentials/asc-api-key.p8" \
+  -authenticationKeyID <Key ID> -authenticationKeyIssuerID <Issuer ID> \
+  CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
+xcrun devicectl device install app --device <UDID de l'iPhone> \
   ~/Library/Developer/Xcode/DerivedData/SkullScoresdev-*/Build/Products/Release-iphoneos/SkullScoresdev.app
 ```
+
+La signature passe par la clé API App Store Connect (identifiants dans `credentials/asc.env`) plutôt
+que par le compte ouvert dans Xcode : elle crée elle-même le certificat de développement et le
+profil quand ils manquent ou ont expiré, sans mot de passe ni double authentification — et elle
+survit aux mises à jour d'Xcode, qui peuvent déconnecter le compte.
+
+**Xcode 27 impose le cycle de vie UIScene.** Une app compilée avec le SDK iOS 27 sans scène est
+tuée au lancement par iOS 27, avant même le JavaScript. D'où `enableSceneSupport` dans la
+configuration d'`expo-build-properties` (`app.json`) : le SDK 57 ne l'adopte que sur demande. À
+retirer au passage au SDK 58, qui l'adopte d'office. Les simulateurs en iOS 26 ne reproduisent pas
+le plantage : seul un appareil en iOS 27 le montre.
 
 Sans `APP_VARIANT`, `app.config.js` renvoie `app.json` mot pour mot : les builds de production ne
 le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `prebuild` — repasser un
@@ -47,7 +60,7 @@ le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `preb
 La base de la variante est vide au départ : pour tester sur de vraies parties, exporter la
 sauvegarde JSON depuis les Réglages de l'app publiée et l'importer dans la variante.
 
-`production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
+`production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) — au 02/10/2026, cet alias désigne encore Xcode 26.6 — et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
 lisible, elle, reste tenue à la main dans `app.json`.
 
 ## Credentials
