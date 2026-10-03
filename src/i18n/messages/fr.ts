@@ -229,7 +229,7 @@ export const fr = {
   'bonus.penaltyPer': '−{value}/{unit}',
   'bonus.title': 'Bonus — {name}',
   'bonus.missed': 'Mise ratée — bonus sans effet',
-  'bonus.glancingBlow': 'Un pli d’écart — bonus comptés à moitié',
+  'bonus.glancingBlow': 'Un pli d’écart — captures comptées à moitié',
   'bonus.takenBy': '· {name}',
   'bonus.lootHint': '+{value} chacun',
   'bonus.cannonball': '💣 Boulet de canon',
@@ -399,7 +399,8 @@ export const fr = {
   'cheat.zeroLostValue': '−{value} × cartes distribuées',
   'cheat.zeroHint': 'Sur les cartes distribuées, jamais sur le numéro de manche',
   'cheat.bonuses': 'Bonus de capture',
-  'cheat.bonusCondition': 'Tous exigent une mise exacte : une mise ratée les annule.',
+  'cheat.bonusCondition':
+    'Tous exigent une mise exacte : une mise ratée les annule. En Rascal, à un pli près, les captures comptent à moitié.',
   'cheat.eachAlly': '+{value} par allié',
   'cheat.bothExact': 'Les deux mises doivent être exactes',
   'cheat.notInEdition': 'N’existe pas dans cette édition',

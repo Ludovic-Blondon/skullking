@@ -43,6 +43,7 @@ describe('décompte Rascal', () => {
     it('comptent entiers si la mise est exacte', () => {
       const score = withBlack14(2, 2);
       expect(score.bonus).toBe(20);
+      expect(score.captureShare).toBe(1);
       expect(score.total).toBe(40 + 20);
     });
 
@@ -51,6 +52,7 @@ describe('décompte Rascal', () => {
       expect(score.base).toBe(20);
       expect(score.bonus).toBe(10);
       expect(score.lostBonus).toBe(10);
+      expect(score.captureShare).toBe(0.5);
       expect(score.total).toBe(20 + 10);
     });
 
@@ -58,6 +60,7 @@ describe('décompte Rascal', () => {
       const score = withBlack14(2, 4);
       expect(score.bonus).toBe(0);
       expect(score.lostBonus).toBe(20);
+      expect(score.captureShare).toBe(0);
     });
 
     it('règlent le demi-point de l’extension en faveur du joueur', () => {
@@ -73,6 +76,18 @@ describe('décompte Rascal', () => {
       expect(eight.lostBonus).toBe(2);
       expect(seven.bonus).toBe(-2);
       expect(seven.lostBonus).toBe(-3);
+    });
+
+    /** Décision du 03/10/2026 : la pénalité suit la règle des bonus, même sous zéro. */
+    it('appliquent la moitié de la pénalité des 7, quitte à passer sous zéro', () => {
+      const [score] = scoreRound(
+        round([player('a', 0, 1, bonuses({ expansionSeven: 3 }))]),
+        rules({ scoring: 'rascal', expansion: true }),
+      );
+      // Potentiel de 10, revers : 5. Trois 7 : −15, dont la moitié arrondie à −7.
+      expect(score.base).toBe(5);
+      expect(score.bonus).toBe(-7);
+      expect(score.total).toBe(-2);
     });
 
     it('laissent le Butin exiger deux mises exactes', () => {

@@ -224,7 +224,7 @@ export const de: Record<MessageKey, string> = {
   'bonus.penaltyPer': '−{value}/{unit}',
   'bonus.title': 'Boni — {name}',
   'bonus.missed': 'Ansage verfehlt — Boni zählen nicht',
-  'bonus.glancingBlow': 'Einen Stich daneben — Boni zählen zur Hälfte',
+  'bonus.glancingBlow': 'Einen Stich daneben — Fang-Boni zählen zur Hälfte',
   'bonus.takenBy': '· {name}',
   'bonus.lootHint': '+{value} je Spieler',
   'bonus.cannonball': '💣 Kanonenkugel',
@@ -393,7 +393,8 @@ export const de: Record<MessageKey, string> = {
   'cheat.zeroLostValue': '−{value} × ausgeteilte Karten',
   'cheat.zeroHint': 'Auf die ausgeteilten Karten, nie auf die Rundennummer',
   'cheat.bonuses': 'Fang-Boni',
-  'cheat.bonusCondition': 'Alle verlangen eine genaue Ansage: eine verfehlte Ansage streicht sie.',
+  'cheat.bonusCondition':
+    'Alle verlangen eine genaue Ansage: eine verfehlte Ansage streicht sie. Bei Rascal zählen Fang-Boni einen Stich daneben zur Hälfte.',
   'cheat.eachAlly': '+{value} pro Verbündetem',
   'cheat.bothExact': 'Beide Ansagen müssen genau sein',
   'cheat.notInEdition': 'Gibt es in dieser Ausgabe nicht',

@@ -145,6 +145,11 @@ export interface PlayerRoundScore {
    * de l'extension — une pénalité échappée n'est pas un bonus perdu.
    */
   lostBonus: number;
+  /**
+   * Part des captures conservée : 1 si la mise est exacte, ½ sur un revers en
+   * décompte Rascal, 0 sinon. L'UI barre ce qui ne compte plus du tout.
+   */
+  captureShare: number;
   /** Gain ou perte du pari de Rascal (négatif si perdu). */
   rascalBet: number;
   /** Ajustement manuel repris tel quel. */

@@ -75,23 +75,28 @@ function playsCannonball(player: PlayerRoundInput, ruleset: Ruleset): boolean {
 }
 
 /**
- * Part des bonus de capture qui compte : tout si la mise est exacte, rien
- * sinon. Le décompte Rascal leur applique la même règle qu'au potentiel — la
- * moitié à un pli près (fiche « Rascal's Scoring », « Bonus Points ») — sauf au
- * Boulet de canon, qui reste tout ou rien.
+ * Part des bonus de capture qui compte, selon l'écart entre plis et mise
+ * effective : tout si la mise est exacte, rien sinon. Le décompte Rascal leur
+ * applique la même règle qu'au potentiel — la moitié à un pli près (fiche
+ * « Rascal's Scoring », « Bonus Points »), pénalité des 7 de l'extension
+ * comprise — sauf au Boulet de canon, qui reste tout ou rien.
  *
  * Le Butin n'en dépend pas : son alliance exige deux mises exactes.
  */
+function captureShare(gap: number, ruleset: Ruleset, cannonball: boolean): number {
+  if (gap === 0) return 1;
+  const glancingBlow = gap === 1 && ruleset.scoring === 'rascal' && !cannonball;
+  return glancingBlow ? RASCAL_POINTS.nearMissRatio : 0;
+}
+
+/** La même part, lue sur la saisie brute — pour la validation, qui n'a pas de score. */
 export function captureShareOf(
   player: PlayerRoundInput,
   cardsDealt: number,
   ruleset: Ruleset,
 ): number {
   const gap = Math.abs(player.tricks - effectiveBidOf(player, cardsDealt, ruleset));
-  if (gap === 0) return 1;
-  const glancingBlow =
-    gap === 1 && ruleset.scoring === 'rascal' && !playsCannonball(player, ruleset);
-  return glancingBlow ? RASCAL_POINTS.nearMissRatio : 0;
+  return captureShare(gap, ruleset, playsCannonball(player, ruleset));
 }
 
 /**
@@ -183,6 +188,7 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
         base: 0,
         bonus: 0,
         lostBonus: 0,
+        captureShare: 0,
         rascalBet: 0,
         custom: 0,
         total: 0,
@@ -190,16 +196,18 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
       };
     }
 
+    const cannonball = playsCannonball(player, ruleset);
     const base =
       ruleset.scoring === 'rascal'
-        ? rascalBase(effectiveBid, player.tricks, cardsDealt, playsCannonball(player, ruleset))
+        ? rascalBase(effectiveBid, player.tricks, cardsDealt, cannonball)
         : classicBase(effectiveBid, player.tricks, cardsDealt);
 
     // Les bonus ne comptent entiers que si la mise est exacte. La part perdue
     // est conservée à part : l'UI la barre, les statistiques la comptent. Le
     // demi-point des 7 et 8 de l'extension se règle en faveur du joueur.
     const captures = captureBonusPoints(player, scale, ruleset);
-    const keptCaptures = Math.round(captures * captureShareOf(player, cardsDealt, ruleset));
+    const share = captureShare(Math.abs(player.tricks - effectiveBid), ruleset, cannonball);
+    const keptCaptures = Math.round(captures * share);
     const loot = lootPointsFor(player.playerId, input, exactByPlayer, scale, ruleset);
     const bonus = keptCaptures + loot.earned;
     const lostBonus = captures - keptCaptures + loot.lost;
@@ -214,6 +222,7 @@ export function scoreRound(input: RoundInput, ruleset: Ruleset): PlayerRoundScor
       base,
       bonus,
       lostBonus,
+      captureShare: share,
       rascalBet: bet,
       custom,
       total: base + bonus + bet + custom,
