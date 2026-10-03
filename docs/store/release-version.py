@@ -17,7 +17,8 @@ En API, c'est un seul appel :
 vente. Le script demande donc confirmation, sauf `--oui`.
 
 Comme `submit-for-review.py`, il relit l'état après coup : `READY_FOR_SALE` est la seule preuve
-que la version est partie.
+que la version est partie. Entre les deux, Apple traite la version (`PROCESSING_FOR_APP_STORE`) :
+le script attend quelques minutes, et le relancer pendant ce traitement ne republie rien.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ from __future__ import annotations
 import argparse
 import pathlib
 import sys
+import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import asc  # noqa: E402
@@ -34,6 +36,10 @@ APP_ID = "6806288500"
 PUBLIABLE = "PENDING_DEVELOPER_RELEASE"
 # États d'une version déjà en ligne : rien à faire, ce n'est pas une erreur.
 EN_LIGNE = ("READY_FOR_SALE", "READY_FOR_DISTRIBUTION")
+# Passage obligé entre la demande et la mise en ligne : la publication a pris, Apple la traite.
+EN_COURS = ("PROCESSING_FOR_APP_STORE", "PROCESSING_FOR_DISTRIBUTION")
+# Relecture après la demande : toutes les 10 s, pendant 3 min au plus.
+PAS, ATTENTE_MAX = 10, 180
 
 
 def version(numero: str) -> tuple[str, str]:
@@ -58,6 +64,9 @@ def main() -> None:
     if etat in EN_LIGNE:
         print("déjà en ligne — rien à faire.")
         return
+    if etat in EN_COURS:
+        print("publication déjà demandée, Apple la traite — rien à faire.")
+        return
     if etat != PUBLIABLE:
         raise SystemExit(
             f"état {etat} : la publication n'est possible qu'en {PUBLIABLE}. "
@@ -76,14 +85,25 @@ def main() -> None:
     if "erreur" in publication:
         raise SystemExit(f"publication refusée : {publication['corps'][:600]}")
 
-    _, apres = version(arguments.version)
-    print(f"état : {apres}")
-    if apres not in EN_LIGNE:
-        raise SystemExit(
-            f"la version est restée en {apres} — la publication n'a pas pris, "
-            "quoi qu'affiche la console."
-        )
-    print("en ligne. Le référencement met quelques heures à se propager sur les vitrines.")
+    # La version passe d'abord par un état de traitement : le lire juste après la demande et
+    # conclure à l'échec, c'est annoncer raté un geste définitif qui a réussi.
+    debut = time.monotonic()
+    while True:
+        _, apres = version(arguments.version)
+        print(f"état : {apres}")
+        if apres in EN_LIGNE:
+            print("en ligne. Le référencement met quelques heures à se propager sur les vitrines.")
+            return
+        if apres not in EN_COURS:
+            raise SystemExit(
+                f"la version est restée en {apres} — la publication n'a pas pris, "
+                "quoi qu'affiche la console."
+            )
+        if time.monotonic() - debut > ATTENTE_MAX:
+            print("publication acceptée, toujours en traitement chez Apple : relancer le script "
+                  "plus tard pour confirmer la mise en ligne.")
+            return
+        time.sleep(PAS)
 
 
 if __name__ == "__main__":

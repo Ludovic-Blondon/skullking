@@ -142,8 +142,17 @@ def identite() -> None:
     jour où l'on change un sous-titre.
     """
     fiches = asc.get(f"/v1/apps/{APP_ID}/appInfos?limit=5")["data"]
-    ouvertes = [f for f in fiches if f["attributes"].get("appStoreState") in MODIFIABLES]
-    info = (ouvertes or fiches)[0]["id"]
+    # `state` remplace `appStoreState`, déprécié sur les fiches. Les deux coexistent encore
+    # (03/10/2026) avec des noms différents pour les états publiés, mais les mêmes pour les
+    # états modifiables.
+    ouvertes = [
+        f for f in fiches
+        if (f["attributes"].get("state") or f["attributes"].get("appStoreState")) in MODIFIABLES
+    ]
+    if not ouvertes:
+        # Se rabattre sur la fiche verrouillée, c'est retrouver les 409 silencieux.
+        raise SystemExit("aucune fiche d'app modifiable : la version est-elle déjà en validation ?")
+    info = ouvertes[0]["id"]
     existantes = {
         d["attributes"]["locale"]: d["id"]
         for d in asc.get(f"/v1/appInfos/{info}/appInfoLocalizations?limit=20").get("data", [])
@@ -235,12 +244,15 @@ def build_et_conformite(version: str, contact: dict[str, str] | None) -> None:
     print("  droits contenu :", "ERREUR " + reponse["corps"][:160]
           if "erreur" in reponse else "aucun contenu tiers")
 
-    # Trié explicitement : sans `sort`, l'ordre des builds n'est pas garanti, et attacher
-    # celui de la version précédente à une mise à jour ne se verrait qu'au rejet.
-    builds = asc.get(
-        f"/v1/builds?filter%5Bapp%5D={APP_ID}&limit=1&sort=-uploadedDate"
+    # Le build de **cette** version, déjà traité, le plus récent d'abord. Le dernier envoyé tout
+    # court peut être celui d'une version suivante, ou un build encore en traitement qui masque
+    # le bon ; et sans `sort`, l'ordre n'est pas garanti.
+    numero = asc.get(f"/v1/appStoreVersions/{version}")["data"]["attributes"]["versionString"]
+    valides = asc.get(
+        f"/v1/builds?filter%5Bapp%5D={APP_ID}"
+        f"&filter%5BpreReleaseVersion.version%5D={numero}"
+        "&filter%5BprocessingState%5D=VALID&sort=-uploadedDate&limit=1"
     ).get("data", [])
-    valides = [b for b in builds if b["attributes"].get("processingState") == "VALID"]
     if valides:
         reponse = asc.patch(f"/v1/appStoreVersions/{version}", {"data": {
             "type": "appStoreVersions", "id": version,
@@ -248,7 +260,7 @@ def build_et_conformite(version: str, contact: dict[str, str] | None) -> None:
         print(f"  build {valides[0]['attributes']['version']} :",
               "ERREUR " + reponse["corps"][:160] if "erreur" in reponse else "attaché")
     else:
-        print("  build : aucun build VALID à attacher")
+        print(f"  build : aucun build VALID de la version {numero} à attacher")
 
     verification(version, contact)
 

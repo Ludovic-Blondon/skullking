@@ -18,6 +18,10 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+# Envoi manuel d'une build (docs/store/publication.md) : l'IPA téléchargée et la copie de
+# la clé pour altool restent hors du dépôt, qui est public.
+*.ipa
+/private_keys/
 
 # Metro
 .metro-health-check*

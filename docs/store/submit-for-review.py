@@ -27,8 +27,13 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import asc  # noqa: E402
 
 APP_ID = "6806288500"
-# États d'une soumission qu'on peut encore compléter ; le reste est parti ou clos.
-OUVERTES = ("READY_FOR_REVIEW", "UNRESOLVED_ISSUES", "COMPLETING")
+# Soumission en préparation : on peut la compléter, elle n'est encore jamais partie.
+EN_PREPARATION = "READY_FOR_REVIEW"
+# Soumission rejetée : elle porte déjà la `submittedDate` de son premier envoi, et c'est elle
+# qu'Apple attend qu'on renvoie — en ouvrir une autre est refusé tant qu'elle reste ouverte.
+REJETEE = "UNRESOLVED_ISSUES"
+# Seuls états qui prouvent que la soumission est bien chez Apple.
+PARTIES = ("WAITING_FOR_REVIEW", "IN_REVIEW")
 
 
 def version_id(numero: str) -> str:
@@ -45,7 +50,8 @@ def soumission_ouverte() -> str | None:
     ).get("data", [])
     for entree in reponse:
         attributs = entree["attributes"]
-        if attributs.get("state") in OUVERTES and not attributs.get("submittedDate"):
+        etat = attributs.get("state")
+        if etat == REJETEE or (etat == EN_PREPARATION and not attributs.get("submittedDate")):
             print(f"soumission déjà ouverte : {attributs.get('state')}")
             return entree["id"]
     return None
@@ -69,7 +75,11 @@ def main() -> None:
         soumission = creee["data"]["id"]
         print(f"soumission créée : {soumission}")
 
-    elements = asc.get(f"/v1/reviewSubmissions/{soumission}/items?limit=20").get("data", [])
+    # Sans `include`, l'API ne renvoie pas la relation vers la version (vérifié le 03/10/2026) :
+    # la version semblerait absente, et l'ajouter une seconde fois prendrait un 409.
+    elements = asc.get(
+        f"/v1/reviewSubmissions/{soumission}/items?include=appStoreVersion&limit=20"
+    ).get("data", [])
     deja = any(
         (e.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id")
         == version
@@ -94,9 +104,9 @@ def main() -> None:
         raise SystemExit(f"envoi refusé : {envoi['corps'][:600]}")
 
     etat = asc.get(f"/v1/reviewSubmissions/{soumission}")["data"]["attributes"]
-    envoyee = etat.get("submittedDate")
-    print(f"état : {etat.get('state')} | envoyée le : {envoyee or 'PAS ENVOYÉE'}")
-    if not envoyee:
+    print(f"état : {etat.get('state')} | envoyée le : {etat.get('submittedDate') or 'jamais'}")
+    # La date seule ne prouve rien : une soumission rejetée garde celle de son premier envoi.
+    if etat.get("state") not in PARTIES:
         raise SystemExit("la soumission n'est pas partie — c'est exactement le piège de la 1.0.")
 
 

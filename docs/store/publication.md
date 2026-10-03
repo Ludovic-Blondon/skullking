@@ -140,7 +140,9 @@ python3 docs/store/publish-listing.py --version 1.1
 Il écrit les descriptions, mots-clés et textes promotionnels des quatre langues, le nom, le
 sous-titre, la politique de confidentialité, les catégories, les **72 captures** des trois formats
 d'appareil, le copyright, la publication en manuel, la déclaration de contenu tiers, et attache le
-dernier build `VALID`. Il est **idempotent** : relançable après un échec réseau, il ne renvoie pas
+dernier build `VALID` **de cette version** — jamais celui d'une version suivante, ni un build encore
+en traitement. Il s'arrête si aucune fiche d'app n'est modifiable plutôt que d'écrire dans celle
+en ligne. Il est **idempotent** : relançable après un échec réseau, il ne renvoie pas
 ce qui est déjà en place et refait toute capture restée incomplète — une capture en
 `AWAITING_UPLOAD` bloque la soumission sans le dire.
 
@@ -223,8 +225,10 @@ python3 docs/store/submit-for-review.py --version 1.1.0
 Dans la console, _Add for Review_ fait passer l'élément en `READY_FOR_REVIEW` et **n'envoie
 rien** : il faut ensuite « Submit to App Review » sur la page de **soumission**, pas sur celle de
 la version. Trois jours perdus sur la 1.0 à cause de ces deux boutons. Le script fait les trois
-appels — soumission, élément, `submitted: true` — et **relit l'état** : une soumission sans
-`submittedDate` n'est pas partie, quoi qu'affiche la console.
+appels — soumission, élément, `submitted: true` — et **relit l'état** : tant qu'elle n'est pas en
+`WAITING_FOR_REVIEW`, la soumission n'est pas partie, quoi qu'affiche la console. Après un rejet,
+il renvoie la soumission rejetée (`UNRESOLVED_ISSUES`) au lieu d'en ouvrir une autre, qu'Apple
+refuserait.
 
 Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
 TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;
@@ -246,13 +250,14 @@ Version ». Ni sur la vue d'ensemble de l'app, ni sur TestFlight.
 
 C'est le troisième bouton caché de la chaîne, après les deux de la soumission. Le script fait
 l'unique appel qui publie (`POST /v1/appStoreVersionReleaseRequests`) et **relit l'état** :
-`READY_FOR_SALE` est la seule preuve que la version est partie. Il demande confirmation avant —
+`READY_FOR_SALE` est la seule preuve que la version est partie ; entre les deux, la version passe
+quelques minutes en `PROCESSING_FOR_APP_STORE`, que le script attend. Il demande confirmation avant —
 `--oui` la saute — parce qu'une publication **ne s'annule pas** : une version en ligne ne se
 retire qu'en sortant l'app de la vente.
 
 Les états qu'on croise, dans l'ordre : `PREPARE_FOR_SUBMISSION` → `WAITING_FOR_REVIEW` →
-`IN_REVIEW` → `PENDING_DEVELOPER_RELEASE` → `READY_FOR_SALE`. Le seul qui demande une action est
-l'avant-dernier ; c'est aussi celui qui ressemble le plus à « c'est bon, c'est fait ».
+`IN_REVIEW` → `PENDING_DEVELOPER_RELEASE` → `PROCESSING_FOR_APP_STORE` → `READY_FOR_SALE`. Le seul qui demande une action est
+`PENDING_DEVELOPER_RELEASE` ; c'est aussi celui qui ressemble le plus à « c'est bon, c'est fait ».
 
 ## Conformité
 
