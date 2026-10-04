@@ -62,6 +62,7 @@ skull,king,score,scorepad,points,card,game,pirate,tricks,bidding,tabletop,boardg
 ## What's new in this version
 
 RASCAL SCORING FIXED
-A player who misses their bid by a single trick now keeps half of their capture bonuses, as the official Rascal rules say — the app used to take them all away. The bonus sheet shows it at a glance.
+A player who misses their bid by a single trick now keeps half of their capture bonuses, as the official Rascal rules say.
 
-Plus a few technical updates, with no effect on your games.
+EXPANSION BONUSES FIXED
+The suited 7s and 8s, Davy Jones's Locker and the captured First Mate finally count their points: the app recorded them without adding them to the score.
