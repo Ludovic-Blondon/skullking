@@ -35,10 +35,23 @@ deux conteneurs, deux historiques.
 APP_VARIANT=dev npx expo prebuild -p ios --clean
 xcodebuild -workspace ios/SkullScoresdev.xcworkspace -scheme SkullScoresdev \
   -configuration Release -destination "id=<UDID de l'iPhone>" \
-  -allowProvisioningUpdates CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
-xcrun devicectl device install app --device <identifiant devicectl> \
+  -allowProvisioningUpdates -authenticationKeyPath "$PWD/credentials/asc-api-key.p8" \
+  -authenticationKeyID <Key ID> -authenticationKeyIssuerID <Issuer ID> \
+  CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=5TGLY9NLV5 build
+xcrun devicectl device install app --device <UDID de l'iPhone> \
   ~/Library/Developer/Xcode/DerivedData/SkullScoresdev-*/Build/Products/Release-iphoneos/SkullScoresdev.app
 ```
+
+La signature passe par la clé API App Store Connect (identifiants dans `credentials/asc.env`) plutôt
+que par le compte ouvert dans Xcode : elle crée elle-même le certificat de développement et le
+profil quand ils manquent ou ont expiré, sans mot de passe ni double authentification — et elle
+survit aux mises à jour d'Xcode, qui peuvent déconnecter le compte.
+
+**Xcode 27 impose le cycle de vie UIScene.** Une app compilée avec le SDK iOS 27 sans scène est
+tuée au lancement par iOS 27, avant même le JavaScript. D'où `enableSceneSupport` dans la
+configuration d'`expo-build-properties` (`app.json`) : le SDK 57 ne l'adopte que sur demande. À
+retirer au passage au SDK 58, qui l'adopte d'office. Les simulateurs en iOS 26 ne reproduisent pas
+le plantage : seul un appareil en iOS 27 le montre.
 
 Sans `APP_VARIANT`, `app.config.js` renvoie `app.json` mot pour mot : les builds de production ne
 le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `prebuild` — repasser un
@@ -47,7 +60,7 @@ le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `preb
 La base de la variante est vide au départ : pour tester sur de vraies parties, exporter la
 sauvegarde JSON depuis les Réglages de l'app publiée et l'importer dans la variante.
 
-`production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
+`production` fixe `ios.image: "latest"` pour builder avec Xcode 26 (exigence Apple depuis avril 2026) — au 02/10/2026, cet alias désigne encore Xcode 26.6 — et `autoIncrement` pour que le `buildNumber` / `versionCode` monte tout seul — la `version`
 lisible, elle, reste tenue à la main dans `app.json`.
 
 ## Credentials
@@ -127,7 +140,9 @@ python3 docs/store/publish-listing.py --version 1.1
 Il écrit les descriptions, mots-clés et textes promotionnels des quatre langues, le nom, le
 sous-titre, la politique de confidentialité, les catégories, les **72 captures** des trois formats
 d'appareil, le copyright, la publication en manuel, la déclaration de contenu tiers, et attache le
-dernier build `VALID`. Il est **idempotent** : relançable après un échec réseau, il ne renvoie pas
+dernier build `VALID` **de cette version** — jamais celui d'une version suivante, ni un build encore
+en traitement. Il s'arrête si aucune fiche d'app n'est modifiable plutôt que d'écrire dans celle
+en ligne. Il est **idempotent** : relançable après un échec réseau, il ne renvoie pas
 ce qui est déjà en place et refait toute capture restée incomplète — une capture en
 `AWAITING_UPLOAD` bloque la soumission sans le dire.
 
@@ -173,6 +188,17 @@ eas submit --platform android          # piste interne, release en brouillon
 eas submit --platform ios              # → TestFlight
 ```
 
+`eas submit -p ios` veut enregistrer la clé App Store Connect **sur les serveurs EAS**, ce qu'il
+ne sait pas faire en `--non-interactive` (« App Store Connect API Keys cannot be set up in
+--non-interactive mode »). Pour envoyer une build depuis le poste avec la clé locale :
+
+```bash
+set -a && . credentials/asc.env && set +a
+curl -sL -o build.ipa "<Application Archive URL du build EAS>"
+mkdir -p private_keys && cp credentials/asc-api-key.p8 "private_keys/AuthKey_${ASC_KEY_ID}.p8"
+xcrun altool --upload-app -f build.ipa -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+```
+
 La release interne se promeut ensuite en test fermé depuis la Play Console, sans rebuild : c'est
 ce passage qui démarre les 14 jours.
 
@@ -190,11 +216,48 @@ eas submit --platform android --profile internal --id <build>
 Le défaut reste le brouillon : rien ne s'ouvre à des testeurs sans qu'on l'ait demandé. Le profil
 `internal` est là pour les allers-retours de test, où le clic dans la console n'apporte rien.
 
+### Envoyer en validation
+
+```bash
+python3 docs/store/submit-for-review.py --version 1.1.0
+```
+
+Dans la console, _Add for Review_ fait passer l'élément en `READY_FOR_REVIEW` et **n'envoie
+rien** : il faut ensuite « Submit to App Review » sur la page de **soumission**, pas sur celle de
+la version. Trois jours perdus sur la 1.0 à cause de ces deux boutons. Le script fait les trois
+appels — soumission, élément, `submitted: true` — et **relit l'état** : tant qu'elle n'est pas en
+`WAITING_FOR_REVIEW`, la soumission n'est pas partie, quoi qu'affiche la console. Après un rejet,
+il renvoie la soumission rejetée (`UNRESOLVED_ISSUES`) au lieu d'en ouvrir une autre, qu'Apple
+refuserait.
+
 Deux pièges d'`eas submit` rencontrés au premier envoi : `--what-to-test` (le changelog
 TestFlight) est **réservé au plan Enterprise** et fait échouer la commande sur le plan gratuit ;
 et `--auto-testflight-setup` ne fait rien tant que la clé App Store Connect n'est lue qu'en local
 (« No complete App Store Connect credentials »), il faut alors créer le groupe de test interne à
 la main dans App Store Connect.
+
+### Publier la version approuvée
+
+```bash
+python3 docs/store/release-version.py --version 1.1.0
+```
+
+L'approbation d'Apple ne met rien en ligne : avec `releaseType: MANUAL`, la version s'arrête en
+`PENDING_DEVELOPER_RELEASE` et attend un geste de plus. Le mail « Ready for Distribution » ne le
+dit pas, et le bouton est facile à ne pas trouver — il est dans le **bandeau d'état de la page
+Distribution**, une fois la version sélectionnée dans la colonne de gauche : « Release This
+Version ». Ni sur la vue d'ensemble de l'app, ni sur TestFlight.
+
+C'est le troisième bouton caché de la chaîne, après les deux de la soumission. Le script fait
+l'unique appel qui publie (`POST /v1/appStoreVersionReleaseRequests`) et **relit l'état** :
+`READY_FOR_SALE` est la seule preuve que la version est partie ; entre les deux, la version passe
+quelques minutes en `PROCESSING_FOR_APP_STORE`, que le script attend. Il demande confirmation avant —
+`--oui` la saute — parce qu'une publication **ne s'annule pas** : une version en ligne ne se
+retire qu'en sortant l'app de la vente.
+
+Les états qu'on croise, dans l'ordre : `PREPARE_FOR_SUBMISSION` → `WAITING_FOR_REVIEW` →
+`IN_REVIEW` → `PENDING_DEVELOPER_RELEASE` → `PROCESSING_FOR_APP_STORE` → `READY_FOR_SALE`. Le seul qui demande une action est
+`PENDING_DEVELOPER_RELEASE` ; c'est aussi celui qui ressemble le plus à « c'est bon, c'est fait ».
 
 ## Conformité
 

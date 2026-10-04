@@ -26,6 +26,6 @@ export {
   RASCAL_POINTS,
   ROUND_BONUS_LIMITS,
 } from './rules/editions';
-export { effectiveBidOf, scoreRound } from './scoring';
+export { captureShareOf, effectiveBidOf, scoreRound } from './scoring';
 export { hasBlockingIssues, validateRound } from './validation';
 export { cardsDealtFor, computeGame, leadersOf, standingsOf } from './game';

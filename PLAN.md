@@ -46,7 +46,7 @@ Découpage en 8 phases (P0 → P7), moteur de score isolé et testé à 100 % d�
 Vérifiés sur les livrets officiels (EN ©2024, FR ©2022 Blackrock Games) — spécification complète en §4 :
 
 - La mise 0 vaut **±10 × cartes distribuées** (pas « × numéro de manche » : différent aux manches 9-10 à 8 joueurs, où l'on ne distribue que 8 cartes). Une app concurrente s'est fait démolir dans les avis pour un bug exactement là.
-- Les **bonus ne comptent que si l'annonce est exacte** — invariant du moteur, pas de la saisie.
+- Les **bonus ne comptent que si l'annonce est exacte** — invariant du moteur, pas de la saisie. Seule exception : le décompte Rascal, où un pli d'écart garde la moitié des captures (§4.3).
 - Les valeurs de bonus **ont changé entre éditions** (Sirène capture Skull King : +50 avant, **+40 depuis 2021** ; « Pirate capture Sirène +20 » n'existe que depuis 2021) → le barème doit être **paramétré par édition**.
 - **Kraken / Baleine blanche** peuvent détruire un pli → la somme des plis d'une manche peut être **inférieure** au nombre de cartes distribuées. Une validation stricte « Σ plis = N » est un bug.
 - **2 joueurs** : mode officiel avec un fantôme (« Barbe Grise ») qui prend des plis mais ne mise ni ne marque → à 2 joueurs, Σ plis des joueurs ≤ N.
@@ -139,7 +139,7 @@ ESLint + Prettier, TS `strict`, conventional commits (commitlint), versioning se
 | Mise 0 réussie  | **+10 × cartes distribuées**                        |
 | Mise 0 ratée    | **−10 × cartes distribuées**                        |
 
-**Bonus — uniquement si la mise est exacte** (sinon 0, quelles que soient les captures) :
+**Bonus — uniquement si la mise est exacte** (sinon 0, quelles que soient les captures ; en décompte Rascal, la moitié des captures à un pli près, Butin excepté — §4.3) :
 
 | Bonus                                      | Points           | Contrainte de cohérence (par manche, tous joueurs confondus)                                                                                       |
 | ------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -172,7 +172,9 @@ interface Ruleset {
   edition: "current" | "legacy"; // legacy : Sirène→SK +50, pas de « Pirate capture Sirène »,
   // SK ne prime que les pirates joués AVANT lui, Butin old-rule
   advancedCards: boolean; // Kraken + Baleine + Butin en jeu (défaut : true)
-  scoring: "classic" | "rascal"; // Rascal : potentiel 10×cartes ; exact = 100 %, ±1 = 50 %, sinon 0 ; jamais négatif
+  scoring: "classic" | "rascal"; // Rascal : potentiel 10×cartes ; exact = 100 %, ±1 = 50 %, sinon 0 ; base jamais négative
+  // — captures au même régime (±1 = moitié arrondie en faveur du joueur, pénalité des 7 comprise,
+  // total de manche négatif possible) ; Butin : deux mises exactes, revers compris
   rascalCannonball: boolean; // option Boulet de canon : 15×cartes si exact, 0 sinon (choix par joueur/manche)
   pirateAbilities: boolean; // v1 — pari de Rascal le Flambeur (±10/±20), Harry le Géant (mise ±1)
   expansion: boolean; // v1.1 — extension officielle : cartes 7/8, Second, Raie, Casier (§4.6)
@@ -190,7 +192,7 @@ interface Ruleset {
 - Σ plis + plis détruits ≠ cartes distribuées — _error_ (≤ à 2 joueurs, le solde allant au fantôme) ; l'UI peut « forcer » (cas table réelle : on ne sait plus qui a pris quoi) → la manche est marquée `forced` ;
 - plis détruits > 0 sans `advancedCards` — _error_ ;
 - contraintes de cohérence des bonus (tableau §4.2, unicité inter-joueurs) — _error_ ;
-- bonus saisis sur une mise ratée — _toléré_ : le moteur les neutralise (l'UI les affiche barrés « sans effet » ; conservés pour la stat « bonus perdus ») ;
+- bonus saisis sur une mise ratée — _toléré_ : le moteur les neutralise (l'UI les affiche barrés « sans effet » ; conservés pour la stat « bonus perdus ») ; en décompte Rascal à un pli près, les captures comptent à moitié : pas d'avertissement ;
 - Butin à 2 joueurs, alliance avec soi-même — _error_ ;
 - bonus d'extension saisi alors que l'extension est éteinte — _error_ (comme le Butin sans cartes avancées) ;
 - `bid_modifier` ou `rascal_bet` non nuls alors que les pouvoirs des pirates sont désactivés — _error_ ; plus d'un Harry ou d'un pari de Rascal dans la même manche — _error_ ; mise effective hors `[0, cartes distribuées]` — _error_.
@@ -227,7 +229,7 @@ Le **0/14** ne rapporte aucun bonus, même joué en 14 : rien à saisir. Les car
 - **Raie tachetée** : troisième léviathan (la carte la plus basse remporte le pli ; le dernier léviathan joué décide). `plis détruits ∈ {0, 1, 2, 3}` avec l'extension.
 - **Paquet de 89 cartes** (70 + 19) → **jusqu'à 9 joueurs**, et `cardsDealtFor()` borne les dernières manches à `⌊89 / joueurs⌋` comme il le fait déjà à 8 joueurs.
 - Le Second capturé n'est **pas** une capture de pirate (le livret le distingue) : compteur à part, aucune interaction avec la limite des pirates du Skull King.
-- Les −5 sont des points de pénalité soumis à la même condition que les bonus : **une mise ratée les annule aussi**.
+- Les −5 sont des points de pénalité soumis à la même condition que les bonus : **une mise ratée les annule aussi**. En décompte Rascal, un revers en applique la moitié, comme aux bonus — le total de la manche peut alors passer sous zéro.
 
 ---
 
@@ -464,6 +466,7 @@ La CI GitHub Actions exécute typecheck + lint + Jest sur chaque PR. Maestro en 
 5. **Direction design** : sobre et moderne, touches pirates discrètes (emojis de bonus, awards) — pas d'habillage pirate appuyé. **Design system arrêté le 19/08/2026** (maquette Claude Design « Skull King Score », implémentée en fin de P2) : le **mode sombre est le mode réel d'usage** — une table, le soir — et sert de référence, le clair est produit au même niveau de finition ; accent **corail** `#E8785A` (clair `#B34A27`, assombri après l'audit de contraste de P6 : le `#D5643F` de la maquette ne passait pas le seuil AA sous du texte blanc), fonds `#0E1420` / `#1C2436`, or pour les bonus, vert et rouge pour le résultat d'une mise ; typographie **Outfit** en quatre graisses ; huit couleurs d'identité de joueur, en pastille et en liseré, jamais derrière du texte. Les jetons vivent dans `src/global.css` et `src/ui/tokens.ts`, tenus alignés par un test — l'UI ne code jamais une couleur en dur. Le décor reste des emojis génériques : aucun artwork officiel (§12.1).
 6. **Monétisation** : gratuit, sans pub, sans compte, sans tracking.
 7. **Hébergement du code** : **GitHub** (et non GitLab comme envisagé initialement) ; CI par GitHub Actions sur chaque pull request.
+8. **Bonus d'un revers en décompte Rascal** — décision du 03/10/2026, version 1.1.1 : à un pli près, les captures comptent à moitié comme le potentiel (fiche officielle « Rascal's Scoring »), pénalité des 7 comprise et même si le total de la manche passe sous zéro ; le Butin reste perdu. **Pas de recalcul** des parties jouées avant la 1.1.1 : des tables compensaient déjà la moitié des bonus à la main, un rattrapage les pénaliserait.
 
 ---
 
@@ -489,6 +492,8 @@ La CI GitHub Actions exécute typecheck + lint + Jest sur chaque PR. Maestro en 
 | 8 de couleur capturé _(extension)_ | +5 chacun          | mise exacte ; max 4                              |
 | Casier de Davy Jones _(extension)_ | +20 / léviathan détruit | mise exacte ; max 3                         |
 | Second capturé (SK ou Sirène) _(extension)_ | +30       | mise exacte ; max 1                              |
+
+_Décompte Rascal : à un pli près, les bonus de capture — 7 de l'extension compris — comptent à moitié ; le Butin exige toujours deux mises exactes._
 
 ## Annexe B — Sources principales
 
