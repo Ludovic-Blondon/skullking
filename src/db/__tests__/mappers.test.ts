@@ -182,6 +182,50 @@ describe('toRoundInput', () => {
     expect(first.total).toBe(40 + 20);
     expect(second.total).toBe(-40);
   });
+
+  /** Ils étaient filtrés à la lecture depuis l'arrivée de l'extension (1.1.0). */
+  it('transmet les compteurs de l’extension au moteur', () => {
+    const stored: StoredRound = {
+      round: round(),
+      entries: [entry(1, { bid: 2, tricks: 2 })],
+      bonusEvents: [
+        bonus(1, 'expansionSeven', { count: 2 }),
+        bonus(1, 'expansionEight', { id: 2 }),
+        bonus(1, 'davyJonesLeviathan', { id: 3 }),
+        bonus(1, 'firstMateCaptured', { id: 4 }),
+      ],
+    };
+    expect(toRoundInput(stored).players[0].bonuses).toEqual({
+      expansionSeven: 2,
+      expansionEight: 1,
+      davyJonesLeviathan: 1,
+      firstMateCaptured: 1,
+    });
+  });
+
+  it('fait compter les bonus de l’extension quand elle est en jeu', () => {
+    const stored: StoredRound = {
+      round: round({ cardsDealt: 2 }),
+      entries: [entry(1, { bid: 2, tricks: 2 })],
+      bonusEvents: [
+        bonus(1, 'expansionSeven'),
+        bonus(1, 'expansionEight', { id: 2, count: 2 }),
+        bonus(1, 'davyJonesLeviathan', { id: 3 }),
+      ],
+    };
+    const [score] = scoreRound(toRoundInput(stored), {
+      edition: 'current',
+      advancedCards: true,
+      scoring: 'classic',
+      rascalCannonball: false,
+      pirateAbilities: false,
+      expansion: true,
+      roundsPlan: [],
+    });
+    // −5 + 2 × 5 + 20 sur une mise de 2 tenue.
+    expect(score.bonus).toBe(25);
+    expect(score.total).toBe(40 + 25);
+  });
 });
 
 describe('lootAlliancesOf', () => {

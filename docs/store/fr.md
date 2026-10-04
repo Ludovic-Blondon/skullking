@@ -62,6 +62,7 @@ skull,king,score,points,compteur,cartes,pirate,plis,manche,barème,soirée,jeu,s
 ## Nouveautés de cette version
 
 DÉCOMPTE RASCAL CORRIGÉ
-À un pli près de sa mise, un joueur garde désormais la moitié de ses bonus de capture, comme le prévoit la règle officielle de Rascal — l'app les lui retirait jusqu'ici. La feuille de bonus l'indique d'un coup d'œil.
+À un pli près de sa mise, un joueur garde désormais la moitié de ses bonus de capture, comme le prévoit la règle officielle de Rascal.
 
-Et quelques mises à jour techniques, sans effet sur vos parties.
+BONUS DE L'EXTENSION CORRIGÉS
+Les 7 et les 8 de couleur, le Casier de Davy Jones et le Second capturé comptent enfin leurs points : l'app les enregistrait sans les ajouter au score.
