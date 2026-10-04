@@ -62,6 +62,7 @@ skull,king,puntos,puntuacion,contador,cartas,pirata,bazas,ronda,mesa,juego,parti
 ## Novedades de esta versión
 
 PUNTUACIÓN RASCAL CORREGIDA
-Quien falla su apuesta por una sola baza conserva ahora la mitad de sus bonus de captura, como dicen las reglas oficiales de Rascal; hasta ahora la app se los quitaba todos. La hoja de bonus lo indica de un vistazo.
+Quien falla su apuesta por una sola baza conserva ahora la mitad de sus bonus de captura, como dicen las reglas oficiales de Rascal.
 
-Y algunas actualizaciones técnicas, sin efecto en tus partidas.
+BONUS DE LA EXPANSIÓN CORREGIDOS
+Los 7 y los 8 de color, el Cofre de Davy Jones y el Segundo capturado por fin suman sus puntos: la app los registraba sin añadirlos a la puntuación.

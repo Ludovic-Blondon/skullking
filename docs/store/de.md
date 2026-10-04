@@ -62,6 +62,7 @@ skull,king,punkte,zaehler,zettel,karten,pirat,stiche,ansage,runde,spieleabend,br
 ## Neu in dieser Version
 
 RASCAL-WERTUNG KORRIGIERT
-Wer seine Ansage um genau einen Stich verfehlt, behält jetzt die Hälfte seiner Fang-Boni, wie es die offiziellen Rascal-Regeln vorsehen – bisher strich die App sie ganz. Das Bonusblatt zeigt es auf einen Blick.
+Wer seine Ansage um genau einen Stich verfehlt, behält jetzt die Hälfte seiner Fang-Boni, wie es die offiziellen Rascal-Regeln vorsehen.
 
-Dazu ein paar technische Aktualisierungen, ohne Auswirkung auf eure Partien.
+ERWEITERUNGS-BONI KORRIGIERT
+Die farbigen 7er und 8er, Davy Jones' Kiste und der gefangene Erste Maat zählen endlich ihre Punkte: Die App hat sie erfasst, aber nicht zur Wertung addiert.

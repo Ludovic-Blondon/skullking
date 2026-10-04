@@ -82,8 +82,7 @@ scores from numbers the user types in.
 
 WHAT IS NEW IN THIS VERSION
 
-Version 1.1.1 is a maintenance release with no new feature. It aligns the optional Rascal scoring
-variant with the official Rascal scoring sheet: a player who misses their bid by exactly one trick
-now keeps half of their capture bonuses instead of none. To check it, set "Scoring variant" to
-"Rascal" in "Rule options", then give a player one trick off their bid and a capture bonus. The
-app also adopts the scene lifecycle required by the iOS 27 SDK.
+Version 1.1.2 fixes two scoring bugs, with no new feature. In the optional Rascal variant, a
+player one trick off their bid now keeps half of their capture bonuses, per the official Rascal
+scoring sheet. The optional expansion's bonuses (suited 7s and 8s, Davy Jones's Locker, First
+Mate) were recorded but never added to the score. The app also adopts the iOS scene lifecycle.

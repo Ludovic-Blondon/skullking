@@ -7,7 +7,7 @@
  */
 
 import {
-  BONUS_TYPES,
+  ALL_BONUS_TYPES,
   type BidModifier,
   type BonusCounts,
   type LootAlliance,
@@ -37,7 +37,12 @@ export function isEntryPlayed(entry: RoundEntry): boolean {
   return entry.bid !== null && entry.tricks !== null;
 }
 
-const CAPTURE_TYPES = new Set<string>(BONUS_TYPES);
+/**
+ * Tous les compteurs de capture, extension comprise : c'est au moteur, qui connaît les règles
+ * de la partie, d'ignorer ceux d'une extension éteinte. Filtrer ici sur le seul jeu de base
+ * effaçait les 7, les 8, le Casier et le Second de tout décompte depuis la 1.1.0.
+ */
+const CAPTURE_TYPES = new Set<string>(ALL_BONUS_TYPES);
 
 /** Compteurs de capture d'un joueur, indexés par type. */
 function bonusCountsOf(events: BonusEvent[], playerId: number): BonusCounts {
