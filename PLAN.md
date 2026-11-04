@@ -256,6 +256,7 @@ Décisions :
 - **Snapshots de score sur `round_entries`** : rendu instantané de la feuille de score et de l'historique ; le moteur reste la seule source de vérité, les snapshots sont recalculés à chaque édition.
 - **Saisie = données brutes** (mises, plis, événements), jamais des points : on peut corriger un barème par mise à jour d'app et recalculer tout l'historique.
 - `bid`/`tricks` nullables : la partie est sauvegardée **à chaque interaction** (annonces posées mais manche non jouée = état légitime après un kill de l'app).
+- **Écritures composées atomiques** : création d'une partie ou d'une manche, validation et recalcul, changement de table, départage et import s'effectuent dans une transaction synchrone Drizzle/Expo sur la connexion où les clés étrangères sont activées. Une erreur annule toute l'opération. Seule porte d'entrée, imposée par ESLint : `atomically` (`src/db/transaction.ts`), qui refuse un callback `async` — le pilote commiterait au premier `await` — et fait rejoindre une transaction imbriquée à celle en cours. Une manche vide laissée par une ancienne interruption est réparée par `ensureRound`, sans modifier la table d'une manche déjà peuplée.
 - Joueurs **archivables**, jamais supprimés s'ils ont des parties (intégrité de l'historique) ; fusion de doublons en backlog.
 - Préférences (langue, thème, ruleset par défaut, keep-awake) dans le kv-store, hors schéma relationnel.
 - **Export / import JSON** de toute la base (partage, sauvegarde, migration de téléphone) — filet de sécurité d'une app 100 % locale.

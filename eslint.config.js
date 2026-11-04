@@ -44,4 +44,21 @@ module.exports = defineConfig([
       ],
     },
   },
+  {
+    // Le pilote Drizzle/Expo commite dès que le callback rend la main : un
+    // callback async sortirait de la transaction, une transaction imbriquée
+    // serait refusée par SQLite. `atomically` ferme ces deux pièges (PLAN.md §5).
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.property.name=/^(transaction|with(Exclusive)?Transaction(Async|Sync)?)$/]',
+          message:
+            'Passer par atomically() de src/db/transaction.ts : il refuse les callbacks async et fait rejoindre les transactions imbriquées.',
+        },
+      ],
+    },
+  },
 ]);

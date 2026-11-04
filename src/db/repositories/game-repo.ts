@@ -3,11 +3,24 @@
  *
  * Chaque interaction de saisie écrit immédiatement en base : c'est ce qui rend
  * la reprise après un kill de l'app exacte, sans état à restaurer.
+ *
+ * Les opérations composées passent par `atomically` (PLAN.md §5) : tout ou
+ * rien, dans une transaction synchrone. Les helpers y écrivent avec `.all()`,
+ * `.get()` et `.run()`, sans `await` qui rendrait la main avant le commit. Les
+ * actions publiques restent des promesses pour que leurs appelants puissent
+ * attendre le résultat et traiter les erreurs.
  */
 
 import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
 
-import { cardsDealtFor, computeGame, DEFAULT_ROUNDS_PLAN, type Ruleset } from '@/core';
+import {
+  cardsDealtFor,
+  computeGame,
+  DEFAULT_ROUNDS_PLAN,
+  maxPlayersFor,
+  MIN_PLAYERS,
+  type Ruleset,
+} from '@/core';
 
 import { db } from '../client';
 import { isEntryPlayed, toRoundInput, type StoredRound } from '../mappers';
@@ -21,15 +34,17 @@ import {
   type BonusEventType,
   type Game,
 } from '../schema';
+import { atomically } from '../transaction';
 
 /** Partie en cours, s'il y en a une — sert la carte « Reprendre » de l'accueil. */
-export async function getActiveGame(): Promise<Game | undefined> {
-  const [game] = await db
+export function getActiveGame(): Game | undefined {
+  const [game] = db
     .select()
     .from(games)
     .where(eq(games.status, 'in_progress'))
     .orderBy(desc(games.createdAt))
-    .limit(1);
+    .limit(1)
+    .all();
   return game;
 }
 
@@ -61,8 +76,8 @@ export function gameTotalsQuery() {
     .groupBy(rounds.gameId, roundEntries.playerId);
 }
 
-export async function getGame(gameId: number): Promise<Game | undefined> {
-  const [game] = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
+export function getGame(gameId: number): Game | undefined {
+  const [game] = db.select().from(games).where(eq(games.id, gameId)).limit(1).all();
   return game;
 }
 
@@ -73,30 +88,44 @@ export async function getGame(gameId: number): Promise<Game | undefined> {
  * partiel reste consultable.
  */
 export async function createGame(playerIds: number[], ruleset: Ruleset): Promise<number> {
-  const active = await getActiveGame();
-  if (active) {
-    await abandonGame(active.id);
-  }
+  return atomically(() => {
+    // Vérifier avant d'abandonner la partie active (PLAN.md §4.1 et §4.6).
+    if (playerIds.length < MIN_PLAYERS || playerIds.length > maxPlayersFor(ruleset)) {
+      throw new Error('Nombre de joueurs incompatible avec les règles de la partie');
+    }
+    if (new Set(playerIds).size !== playerIds.length) {
+      throw new Error('Un joueur ne peut pas occuper deux places');
+    }
+    const active = getActiveGame();
+    if (active) {
+      db.update(games)
+        .set({ status: 'abandoned', finishedAt: Date.now() })
+        .where(eq(games.id, active.id))
+        .run();
+    }
 
-  const [game] = await db
-    .insert(games)
-    .values({ createdAt: Date.now(), ruleset, currentRound: 1, currentPhase: 'bidding' })
-    .returning();
+    const [game] = db
+      .insert(games)
+      .values({ createdAt: Date.now(), ruleset, currentRound: 1, currentPhase: 'bidding' })
+      .returning()
+      .all();
 
-  await db
-    .insert(gamePlayers)
-    .values(playerIds.map((playerId, seatIndex) => ({ gameId: game.id, playerId, seatIndex })));
+    db.insert(gamePlayers)
+      .values(playerIds.map((playerId, seatIndex) => ({ gameId: game.id, playerId, seatIndex })))
+      .run();
 
-  await ensureRound(game.id, 1);
-  return game.id;
+    ensureRoundRows(game.id, 1);
+    return game.id;
+  });
 }
 
 /** Joueurs d'une partie, dans l'ordre de la table. */
-export async function playerIdsOf(gameId: number): Promise<number[]> {
-  const seats = await db
+export function playerIdsOf(gameId: number): number[] {
+  const seats = db
     .select({ playerId: gamePlayers.playerId, seatIndex: gamePlayers.seatIndex })
     .from(gamePlayers)
-    .where(eq(gamePlayers.gameId, gameId));
+    .where(eq(gamePlayers.gameId, gameId))
+    .all();
   return seats.sort((a, b) => a.seatIndex - b.seatIndex).map((seat) => seat.playerId);
 }
 
@@ -107,8 +136,8 @@ export async function playerIdsOf(gameId: number): Promise<number[]> {
  * la manche 5 n'a plus de ligne à partir de la 6, un arrivant en a une à partir
  * de son arrivée. `game_players` garde, lui, le roster complet de la partie.
  */
-export async function seatedAtRound(gameId: number, roundNumber: number): Promise<number[]> {
-  const seats = await db
+export function seatedAtRound(gameId: number, roundNumber: number): number[] {
+  const seats = db
     .select({ playerId: roundEntries.playerId, seatIndex: gamePlayers.seatIndex })
     .from(roundEntries)
     .innerJoin(rounds, eq(roundEntries.roundId, rounds.id))
@@ -116,7 +145,8 @@ export async function seatedAtRound(gameId: number, roundNumber: number): Promis
       gamePlayers,
       and(eq(gamePlayers.gameId, rounds.gameId), eq(gamePlayers.playerId, roundEntries.playerId)),
     )
-    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
+    .all();
   return seats.sort((a, b) => a.seatIndex - b.seatIndex).map((seat) => seat.playerId);
 }
 
@@ -130,54 +160,70 @@ export async function seatedAtRound(gameId: number, roundNumber: number): Promis
  * manches se propage tout seul aux manches suivantes (§7.5).
  */
 export async function ensureRound(gameId: number, roundNumber: number): Promise<number> {
-  const existing = await db
+  return atomically(() => ensureRoundRows(gameId, roundNumber));
+}
+
+/** Appelé dans la transaction de création, de validation ou de départage. */
+function ensureRoundRows(gameId: number, roundNumber: number): number {
+  const existing = db
     .select({ id: rounds.id })
     .from(rounds)
     .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
-    .limit(1);
-  if (existing.length > 0) return existing[0].id;
+    .limit(1)
+    .all();
+  if (existing.length > 0) {
+    const entry = db
+      .select({ id: roundEntries.id })
+      .from(roundEntries)
+      .where(eq(roundEntries.roundId, existing[0].id))
+      .limit(1)
+      .get();
+    // Réparer une création interrompue par une ancienne version. Une manche
+    // non vide garde sa table, même si elle diffère de la manche précédente.
+    if (entry) return existing[0].id;
+  }
 
-  const game = await getGame(gameId);
+  const game = getGame(gameId);
   if (!game) throw new Error(`Partie ${gameId} introuvable`);
 
-  const previous = roundNumber > 1 ? await seatedAtRound(gameId, roundNumber - 1) : [];
-  const seats = previous.length > 0 ? previous : await playerIdsOf(gameId);
+  const previous = roundNumber > 1 ? seatedAtRound(gameId, roundNumber - 1) : [];
+  const seats = previous.length > 0 ? previous : playerIdsOf(gameId);
   const planned = game.ruleset.roundsPlan[roundNumber - 1] ?? roundNumber;
   // Le paquet dépend des règles : l'extension en ajoute 19 cartes (§4.6).
   const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length, game.ruleset));
 
-  const [round] = await db.insert(rounds).values({ gameId, roundNumber, cardsDealt }).returning();
+  const round =
+    existing[0] ?? db.insert(rounds).values({ gameId, roundNumber, cardsDealt }).returning().get();
 
-  await db.insert(roundEntries).values(seats.map((playerId) => ({ roundId: round.id, playerId })));
+  db.insert(roundEntries)
+    .values(seats.map((playerId) => ({ roundId: round.id, playerId })))
+    .run();
 
   return round.id;
 }
 
 /** Manche stockée, prête à être traduite pour le moteur. */
-export async function getStoredRound(roundId: number): Promise<StoredRound | undefined> {
-  const [round] = await db.select().from(rounds).where(eq(rounds.id, roundId)).limit(1);
+export function getStoredRound(roundId: number): StoredRound | undefined {
+  const [round] = db.select().from(rounds).where(eq(rounds.id, roundId)).limit(1).all();
   if (!round) return undefined;
 
-  const [entries, events] = await Promise.all([
-    db.select().from(roundEntries).where(eq(roundEntries.roundId, roundId)),
-    db.select().from(bonusEvents).where(eq(bonusEvents.roundId, roundId)),
-  ]);
+  const entries = db.select().from(roundEntries).where(eq(roundEntries.roundId, roundId)).all();
+  const events = db.select().from(bonusEvents).where(eq(bonusEvents.roundId, roundId)).all();
   return { round, entries, bonusEvents: events };
 }
 
-export async function getStoredRounds(gameId: number): Promise<StoredRound[]> {
-  const gameRounds = await db
+export function getStoredRounds(gameId: number): StoredRound[] {
+  const gameRounds = db
     .select()
     .from(rounds)
     .where(eq(rounds.gameId, gameId))
-    .orderBy(rounds.roundNumber);
+    .orderBy(rounds.roundNumber)
+    .all();
   if (gameRounds.length === 0) return [];
 
   const ids = gameRounds.map((round) => round.id);
-  const [entries, events] = await Promise.all([
-    db.select().from(roundEntries).where(inArray(roundEntries.roundId, ids)),
-    db.select().from(bonusEvents).where(inArray(bonusEvents.roundId, ids)),
-  ]);
+  const entries = db.select().from(roundEntries).where(inArray(roundEntries.roundId, ids)).all();
+  const events = db.select().from(bonusEvents).where(inArray(bonusEvents.roundId, ids)).all();
 
   return gameRounds.map((round) => ({
     round,
@@ -202,14 +248,14 @@ export async function updateEntry(
   playerId: number,
   patch: EntryPatch,
 ): Promise<void> {
-  await db
-    .update(roundEntries)
+  db.update(roundEntries)
     .set(patch)
-    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)));
+    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
+    .run();
 }
 
 export async function setDestroyedTricks(roundId: number, count: number): Promise<void> {
-  await db.update(rounds).set({ destroyedTricks: count }).where(eq(rounds.id, roundId));
+  db.update(rounds).set({ destroyedTricks: count }).where(eq(rounds.id, roundId)).run();
 }
 
 /**
@@ -222,18 +268,20 @@ export async function setCaptureBonus(
   type: BonusEventType,
   count: number,
 ): Promise<void> {
-  await db
-    .delete(bonusEvents)
-    .where(
-      and(
-        eq(bonusEvents.roundId, roundId),
-        eq(bonusEvents.playerId, playerId),
-        eq(bonusEvents.type, type),
-      ),
-    );
-  if (count > 0) {
-    await db.insert(bonusEvents).values({ roundId, playerId, type, count });
-  }
+  return atomically(() => {
+    db.delete(bonusEvents)
+      .where(
+        and(
+          eq(bonusEvents.roundId, roundId),
+          eq(bonusEvents.playerId, playerId),
+          eq(bonusEvents.type, type),
+        ),
+      )
+      .run();
+    if (count > 0) {
+      db.insert(bonusEvents).values({ roundId, playerId, type, count }).run();
+    }
+  });
 }
 
 /** Ajoute une alliance de Butin — deux lignes miroir (PLAN.md §5). */
@@ -242,10 +290,12 @@ export async function addLootAlliance(
   playerId: number,
   allyId: number,
 ): Promise<void> {
-  await db.insert(bonusEvents).values([
-    { roundId, playerId, type: 'loot', count: 1, allyPlayerId: allyId },
-    { roundId, playerId: allyId, type: 'loot', count: 1, allyPlayerId: playerId },
-  ]);
+  db.insert(bonusEvents)
+    .values([
+      { roundId, playerId, type: 'loot', count: 1, allyPlayerId: allyId },
+      { roundId, playerId: allyId, type: 'loot', count: 1, allyPlayerId: playerId },
+    ])
+    .run();
 }
 
 export async function removeLootAlliance(
@@ -253,32 +303,36 @@ export async function removeLootAlliance(
   playerId: number,
   allyId: number,
 ): Promise<void> {
-  const events = await db
-    .select()
-    .from(bonusEvents)
-    .where(and(eq(bonusEvents.roundId, roundId), eq(bonusEvents.type, 'loot')));
+  return atomically(() => {
+    const events = db
+      .select()
+      .from(bonusEvents)
+      .where(and(eq(bonusEvents.roundId, roundId), eq(bonusEvents.type, 'loot')))
+      .all();
 
-  const toDelete = [
-    events.find((e) => e.playerId === playerId && e.allyPlayerId === allyId)?.id,
-    events.find((e) => e.playerId === allyId && e.allyPlayerId === playerId)?.id,
-  ].filter((id): id is number => id !== undefined);
+    const toDelete = [
+      events.find((e) => e.playerId === playerId && e.allyPlayerId === allyId)?.id,
+      events.find((e) => e.playerId === allyId && e.allyPlayerId === playerId)?.id,
+    ].filter((id): id is number => id !== undefined);
 
-  if (toDelete.length > 0) {
-    await db.delete(bonusEvents).where(inArray(bonusEvents.id, toDelete));
-  }
+    if (toDelete.length > 0) {
+      db.delete(bonusEvents).where(inArray(bonusEvents.id, toDelete)).run();
+    }
+  });
 }
 
 // — Progression ————————————————————————————————————————————————————————————
 
 /** Identifiant de la manche en cours de saisie. */
-async function currentRoundId(gameId: number): Promise<number | undefined> {
-  const game = await getGame(gameId);
+function currentRoundId(gameId: number): number | undefined {
+  const game = getGame(gameId);
   if (!game) return undefined;
-  const [round] = await db
+  const [round] = db
     .select({ id: rounds.id })
     .from(rounds)
     .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, game.currentRound)))
-    .limit(1);
+    .limit(1)
+    .all();
   return round?.id;
 }
 
@@ -290,28 +344,30 @@ async function currentRoundId(gameId: number): Promise<number | undefined> {
  * `null` garde son sens de « pas encore saisi », qui empêche le moteur de
  * décompter une manche que personne n'a jouée.
  */
-async function fillBlanks(roundId: number, fields: ('bid' | 'tricks')[]): Promise<void> {
+function fillBlanks(roundId: number, fields: ('bid' | 'tricks')[]): void {
   for (const field of fields) {
-    await db
-      .update(roundEntries)
+    db.update(roundEntries)
       .set({ [field]: 0 })
-      .where(and(eq(roundEntries.roundId, roundId), isNull(roundEntries[field])));
+      .where(and(eq(roundEntries.roundId, roundId), isNull(roundEntries[field])))
+      .run();
   }
 }
 
 export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Promise<void> {
-  if (phase === 'results') {
-    const roundId = await currentRoundId(gameId);
-    // Les annonces, et elles seules : la phase Annonces est close, le 0 affiché
-    // à l'écran devient la mise du joueur.
-    //
-    // Les plis, eux, restent `null` — c'est ce qui distingue « pas encore
-    // saisi » de « aucun pli pris », et donc ce qui empêche l'écran d'afficher
-    // le score d'une manche que personne n'a encore jouée (§7.2). Le moteur,
-    // lui, lit déjà ces plis vides comme des 0 : `toRoundInput({ forcePlayed })`.
-    if (roundId !== undefined) await fillBlanks(roundId, ['bid']);
-  }
-  await db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId));
+  return atomically(() => {
+    if (phase === 'results') {
+      const roundId = currentRoundId(gameId);
+      // Les annonces, et elles seules : la phase Annonces est close, le 0 affiché
+      // à l'écran devient la mise du joueur.
+      //
+      // Les plis, eux, restent `null` — c'est ce qui distingue « pas encore
+      // saisi » de « aucun pli pris », et donc ce qui empêche l'écran d'afficher
+      // le score d'une manche que personne n'a encore jouée (§7.2). Le moteur,
+      // lui, lit déjà ces plis vides comme des 0 : `toRoundInput({ forcePlayed })`.
+      if (roundId !== undefined) fillBlanks(roundId, ['bid']);
+    }
+    db.update(games).set({ currentPhase: phase }).where(eq(games.id, gameId)).run();
+  });
 }
 
 /**
@@ -323,42 +379,45 @@ export async function validateRound(
   roundNumber: number,
   options: { forced?: boolean } = {},
 ): Promise<{ finished: boolean }> {
-  const game = await getGame(gameId);
-  if (!game) throw new Error(`Partie ${gameId} introuvable`);
+  return atomically(() => {
+    const game = getGame(gameId);
+    if (!game) throw new Error(`Partie ${gameId} introuvable`);
 
-  if (options.forced) {
-    await db
-      .update(rounds)
-      .set({ forced: true })
-      .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
-  }
+    if (options.forced) {
+      db.update(rounds)
+        .set({ forced: true })
+        .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
+        .run();
+    }
 
-  // Ce qui reste vide vaut 0 : la manche est jouée, elle doit être décomptée
-  // en entier — y compris les joueurs qui n'ont pris aucun pli.
-  const [round] = await db
-    .select({ id: rounds.id })
-    .from(rounds)
-    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
-    .limit(1);
-  if (round) await fillBlanks(round.id, ['bid', 'tricks']);
+    // Ce qui reste vide vaut 0 : la manche est jouée, elle doit être décomptée
+    // en entier — y compris les joueurs qui n'ont pris aucun pli.
+    const [round] = db
+      .select({ id: rounds.id })
+      .from(rounds)
+      .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
+      .limit(1)
+      .all();
+    if (round) fillBlanks(round.id, ['bid', 'tricks']);
 
-  await persistScores(gameId);
+    persistScores(gameId);
 
-  const isLastRound = roundNumber >= game.ruleset.roundsPlan.length;
-  if (isLastRound) {
-    await db
-      .update(games)
-      .set({ status: 'finished', finishedAt: Date.now() })
-      .where(eq(games.id, gameId));
-    return { finished: true };
-  }
+    const isLastRound = roundNumber >= game.ruleset.roundsPlan.length;
+    if (isLastRound) {
+      db.update(games)
+        .set({ status: 'finished', finishedAt: Date.now() })
+        .where(eq(games.id, gameId))
+        .run();
+      return { finished: true };
+    }
 
-  await ensureRound(gameId, roundNumber + 1);
-  await db
-    .update(games)
-    .set({ currentRound: roundNumber + 1, currentPhase: 'bidding' })
-    .where(eq(games.id, gameId));
-  return { finished: false };
+    ensureRoundRows(gameId, roundNumber + 1);
+    db.update(games)
+      .set({ currentRound: roundNumber + 1, currentPhase: 'bidding' })
+      .where(eq(games.id, gameId))
+      .run();
+    return { finished: false };
+  });
 }
 
 /**
@@ -366,15 +425,15 @@ export async function validateRound(
  * par `persistScores`, qui repasse par `computeGame` (PLAN.md §12.5).
  */
 export async function reopenRound(gameId: number, roundNumber: number): Promise<void> {
-  await db
-    .update(games)
+  db.update(games)
     .set({
       currentRound: roundNumber,
       currentPhase: 'results',
       status: 'in_progress',
       finishedAt: null,
     })
-    .where(eq(games.id, gameId));
+    .where(eq(games.id, gameId))
+    .run();
 }
 
 /**
@@ -387,12 +446,19 @@ export async function reopenRound(gameId: number, roundNumber: number): Promise<
  * restent `null`. Sans cela, valider une correction figerait un 0 sur toutes
  * les manches encore à jouer — et ce 0 jamais joué ressortirait en
  * « meilleure manche » dans les stats d'une partie tout en négatif (§8).
+ *
+ * Appelée depuis une validation, un changement de table ou un import, elle
+ * rejoint leur transaction ; seule, elle ouvre la sienne.
  */
-export async function persistScores(gameId: number): Promise<void> {
-  const game = await getGame(gameId);
+export function persistScores(gameId: number): void {
+  atomically(() => rewriteScores(gameId));
+}
+
+function rewriteScores(gameId: number): void {
+  const game = getGame(gameId);
   if (!game) return;
 
-  const stored = await getStoredRounds(gameId);
+  const stored = getStoredRounds(gameId);
   const state = computeGame(
     stored.map((round) => toRoundInput(round)),
     game.ruleset,
@@ -404,14 +470,14 @@ export async function persistScores(gameId: number): Promise<void> {
       const playerId = Number(score.playerId);
       const entry = entries.find((row) => row.playerId === playerId);
       const played = entry !== undefined && isEntryPlayed(entry);
-      await db
-        .update(roundEntries)
+      db.update(roundEntries)
         .set(
           played
             ? { scoreBase: score.base, scoreBonus: score.bonus, scoreTotal: score.total }
             : { scoreBase: null, scoreBonus: null, scoreTotal: null },
         )
-        .where(and(eq(roundEntries.roundId, round.id), eq(roundEntries.playerId, playerId)));
+        .where(and(eq(roundEntries.roundId, round.id), eq(roundEntries.playerId, playerId)))
+        .run();
     }
   }
 }
@@ -421,26 +487,28 @@ export async function persistScores(gameId: number): Promise<void> {
  * livret la prévoit explicitement (PLAN.md §4.1).
  */
 export async function addTiebreakRound(gameId: number): Promise<void> {
-  const game = await getGame(gameId);
-  if (!game) return;
+  return atomically(() => {
+    const game = getGame(gameId);
+    if (!game) return;
 
-  const roundsPlan = [...game.ruleset.roundsPlan];
-  // La manche de départage reprend le format de la dernière manche jouée.
-  roundsPlan.push(roundsPlan[roundsPlan.length - 1] ?? 1);
-  const roundNumber = roundsPlan.length;
+    const roundsPlan = [...game.ruleset.roundsPlan];
+    // La manche de départage reprend le format de la dernière manche jouée.
+    roundsPlan.push(roundsPlan[roundsPlan.length - 1] ?? 1);
+    const roundNumber = roundsPlan.length;
 
-  await db
-    .update(games)
-    .set({
-      ruleset: { ...game.ruleset, roundsPlan },
-      status: 'in_progress',
-      finishedAt: null,
-      currentRound: roundNumber,
-      currentPhase: 'bidding',
-    })
-    .where(eq(games.id, gameId));
+    db.update(games)
+      .set({
+        ruleset: { ...game.ruleset, roundsPlan },
+        status: 'in_progress',
+        finishedAt: null,
+        currentRound: roundNumber,
+        currentPhase: 'bidding',
+      })
+      .where(eq(games.id, gameId))
+      .run();
 
-  await ensureRound(gameId, roundNumber);
+    ensureRoundRows(gameId, roundNumber);
+  });
 }
 
 // — Réglages d'une partie en cours (PLAN.md §7.5) ——————————————————————————
@@ -453,20 +521,22 @@ export async function addTiebreakRound(gameId: number): Promise<void> {
  * une manche de départage ajoutée par `addTiebreakRound()` garde le sien.
  */
 export async function setRoundsCount(gameId: number, count: number): Promise<void> {
-  const game = await getGame(gameId);
-  if (!game) return;
+  return atomically(() => {
+    const game = getGame(gameId);
+    if (!game) return;
 
-  const target = Math.max(count, game.currentRound);
-  const current = game.ruleset.roundsPlan;
-  const roundsPlan = Array.from(
-    { length: target },
-    (_, index) => current[index] ?? DEFAULT_ROUNDS_PLAN[index] ?? index + 1,
-  );
+    const target = Math.max(count, game.currentRound);
+    const current = game.ruleset.roundsPlan;
+    const roundsPlan = Array.from(
+      { length: target },
+      (_, index) => current[index] ?? DEFAULT_ROUNDS_PLAN[index] ?? index + 1,
+    );
 
-  await db
-    .update(games)
-    .set({ ruleset: { ...game.ruleset, roundsPlan } })
-    .where(eq(games.id, gameId));
+    db.update(games)
+      .set({ ruleset: { ...game.ruleset, roundsPlan } })
+      .where(eq(games.id, gameId))
+      .run();
+  });
 }
 
 /**
@@ -476,19 +546,19 @@ export async function setRoundsCount(gameId: number, count: number): Promise<voi
  * distribuer 10 (§4.1). Une arrivée ou un départ peut donc faire bouger la
  * donne de la manche en cours.
  */
-async function refreshCardsDealt(gameId: number, roundNumber: number): Promise<void> {
-  const game = await getGame(gameId);
+function refreshCardsDealt(gameId: number, roundNumber: number): void {
+  const game = getGame(gameId);
   if (!game) return;
 
-  const seats = await seatedAtRound(gameId, roundNumber);
+  const seats = seatedAtRound(gameId, roundNumber);
   if (seats.length === 0) return;
 
   const planned = game.ruleset.roundsPlan[roundNumber - 1] ?? roundNumber;
   const cardsDealt = Math.min(planned, cardsDealtFor(planned, seats.length, game.ruleset));
-  await db
-    .update(rounds)
+  db.update(rounds)
     .set({ cardsDealt })
-    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)));
+    .where(and(eq(rounds.gameId, gameId), eq(rounds.roundNumber, roundNumber)))
+    .run();
 }
 
 /**
@@ -499,27 +569,30 @@ async function refreshCardsDealt(gameId: number, roundNumber: number): Promise<v
  * est la dernière — la donne continuera de tourner dans le même ordre.
  */
 export async function addPlayerToGame(gameId: number, playerId: number): Promise<void> {
-  const game = await getGame(gameId);
-  const roundId = await currentRoundId(gameId);
-  if (!game || roundId === undefined) return;
+  return atomically(() => {
+    const game = getGame(gameId);
+    const roundId = currentRoundId(gameId);
+    if (!game || roundId === undefined) return;
 
-  const seats = await db.select().from(gamePlayers).where(eq(gamePlayers.gameId, gameId));
-  if (!seats.some((seat) => seat.playerId === playerId)) {
-    const seatIndex = seats.reduce((last, seat) => Math.max(last, seat.seatIndex), -1) + 1;
-    await db.insert(gamePlayers).values({ gameId, playerId, seatIndex });
-  }
+    const seats = db.select().from(gamePlayers).where(eq(gamePlayers.gameId, gameId)).all();
+    if (!seats.some((seat) => seat.playerId === playerId)) {
+      const seatIndex = seats.reduce((last, seat) => Math.max(last, seat.seatIndex), -1) + 1;
+      db.insert(gamePlayers).values({ gameId, playerId, seatIndex }).run();
+    }
 
-  const existing = await db
-    .select({ id: roundEntries.id })
-    .from(roundEntries)
-    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
-    .limit(1);
-  if (existing.length === 0) {
-    await db.insert(roundEntries).values({ roundId, playerId });
-  }
+    const existing = db
+      .select({ id: roundEntries.id })
+      .from(roundEntries)
+      .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
+      .limit(1)
+      .all();
+    if (existing.length === 0) {
+      db.insert(roundEntries).values({ roundId, playerId }).run();
+    }
 
-  await refreshCardsDealt(gameId, game.currentRound);
-  await persistScores(gameId);
+    refreshCardsDealt(gameId, game.currentRound);
+    persistScores(gameId);
+  });
 }
 
 /**
@@ -531,33 +604,35 @@ export async function addPlayerToGame(gameId: number, playerId: number): Promise
  * Butin comprises, dont la ligne miroir vit chez l'allié.
  */
 export async function removePlayerFromGame(gameId: number, playerId: number): Promise<void> {
-  const game = await getGame(gameId);
-  const roundId = await currentRoundId(gameId);
-  if (!game || roundId === undefined) return;
+  return atomically(() => {
+    const game = getGame(gameId);
+    const roundId = currentRoundId(gameId);
+    if (!game || roundId === undefined) return;
 
-  await db
-    .delete(bonusEvents)
-    .where(
-      and(
-        eq(bonusEvents.roundId, roundId),
-        or(eq(bonusEvents.playerId, playerId), eq(bonusEvents.allyPlayerId, playerId)),
-      ),
-    );
-  await db
-    .delete(roundEntries)
-    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)));
+    db.delete(bonusEvents)
+      .where(
+        and(
+          eq(bonusEvents.roundId, roundId),
+          or(eq(bonusEvents.playerId, playerId), eq(bonusEvents.allyPlayerId, playerId)),
+        ),
+      )
+      .run();
+    db.delete(roundEntries)
+      .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
+      .run();
 
-  await refreshCardsDealt(gameId, game.currentRound);
-  await persistScores(gameId);
+    refreshCardsDealt(gameId, game.currentRound);
+    persistScores(gameId);
+  });
 }
 
 export async function abandonGame(gameId: number): Promise<void> {
-  await db
-    .update(games)
+  db.update(games)
     .set({ status: 'abandoned', finishedAt: Date.now() })
-    .where(eq(games.id, gameId));
+    .where(eq(games.id, gameId))
+    .run();
 }
 
 export async function deleteGame(gameId: number): Promise<void> {
-  await db.delete(games).where(eq(games.id, gameId));
+  db.delete(games).where(eq(games.id, gameId)).run();
 }
