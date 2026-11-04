@@ -6,6 +6,7 @@ import {
   serializeBackup,
   type BackupDocument,
 } from '../backup-format';
+import { DEFAULT_RULESET } from '@/core';
 import { translator } from '@/i18n/translate';
 
 function document(overrides: Partial<BackupDocument> = {}): BackupDocument {
@@ -23,7 +24,7 @@ function document(overrides: Partial<BackupDocument> = {}): BackupDocument {
         createdAt: 1_699_000_000_000,
         finishedAt: 1_699_000_100_000,
         status: 'finished',
-        ruleset: { edition: 'current', roundsPlan: [1, 2] },
+        ruleset: { ...DEFAULT_RULESET, roundsPlan: [1, 2] },
         currentRound: 2,
         currentPhase: 'results',
         seats: [
@@ -143,6 +144,33 @@ describe('refus', () => {
     });
     expect(parseBackup(text).ok).toBe(false);
   });
+
+  /**
+   * L'import efface la base avant d'écrire : une partie que le moteur ne saurait
+   * pas décompter doit faire refuser tout le fichier, pas disparaître en route.
+   */
+  const rulesets: [string, unknown][] = [
+    ['absentes', undefined],
+    ['d’une édition inconnue', { edition: 'future', roundsPlan: [1, 2] }],
+    ['d’un décompte inconnu', { edition: 'current', scoring: 'hybrid', roundsPlan: [1, 2] }],
+    ['à une option illisible', { edition: 'current', expansion: 'yes', roundsPlan: [1, 2] }],
+    ['sans plan de manches', { edition: 'current' }],
+    ['à un plan de manches vide', { edition: 'current', roundsPlan: [] }],
+    ['à une manche sans carte', { edition: 'current', roundsPlan: [1, 0] }],
+  ];
+
+  it.each(rulesets)('refuse une partie aux règles %s', (_label, ruleset) => {
+    const source = document();
+    const text = JSON.stringify({
+      ...source,
+      games: [...source.games, { ...source.games[0], id: 8, ruleset }],
+    });
+
+    const result = parseBackup(text);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toMatch(/règles/);
+  });
 });
 
 describe('tolérance', () => {
@@ -155,6 +183,7 @@ describe('tolérance', () => {
         {
           id: 1,
           createdAt: 10,
+          ruleset: { edition: 'current', roundsPlan: [1] },
           seats: [{ playerId: 1, seatIndex: 0 }],
           rounds: [{ roundNumber: 1, cardsDealt: 1, entries: [{ playerId: 1 }] }],
         },
@@ -185,6 +214,40 @@ describe('tolérance', () => {
       cannonball: false,
       customBonus: 0,
     });
+  });
+
+  /**
+   * `expansion` manque aux parties d'avant la 1.1.0 : elle se lit éteinte, en
+   * base comme à l'import, et la règle relue reste celle qui a été exportée.
+   */
+  it('garde telles quelles les règles d’une partie d’avant l’extension', () => {
+    const source = document();
+    const ruleset = {
+      edition: 'legacy',
+      advancedCards: true,
+      scoring: 'rascal',
+      rascalCannonball: false,
+      pirateAbilities: true,
+      roundsPlan: [1, 2, 2],
+    };
+    const result = parseBackup(
+      JSON.stringify({ ...source, games: [{ ...source.games[0], ruleset }] }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.document.games[0].ruleset).toEqual(ruleset);
+  });
+
+  it('ramène un statut inconnu à une partie terminée', () => {
+    const source = document();
+    const result = parseBackup(
+      JSON.stringify({ ...source, games: [{ ...source.games[0], status: 'paused' }] }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.document.games[0].status).toBe('finished');
   });
 
   /**

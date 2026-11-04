@@ -7,7 +7,7 @@
  */
 
 import { BACKUP_APP, BACKUP_VERSION, type BackupDocument, type BackupGame } from '../backup-format';
-import { db, sqlite } from '../client';
+import { db } from '../client';
 import {
   bonusEvents,
   gamePlayers,
@@ -17,6 +17,7 @@ import {
   rounds,
   type BonusEventType,
 } from '../schema';
+import { atomically } from '../transaction';
 
 import { persistScores } from './game-repo';
 
@@ -99,39 +100,44 @@ export async function exportBackup(): Promise<BackupDocument> {
  *
  * Les identifiants de manche, eux, sont réattribués : ils n'ont aucun sens hors
  * de la base qui les a émis, et le format ne les transporte pas.
+ *
+ * Tout ou rien : effacement, réécriture et recalcul des scores partagent une
+ * seule transaction. Un import qui échoue en route ne coûte donc rien.
  */
 export async function importBackup(document: BackupDocument): Promise<void> {
-  await sqlite.withTransactionAsync(async () => {
-    await db.delete(bonusEvents);
-    await db.delete(roundEntries);
-    await db.delete(rounds);
-    await db.delete(gamePlayers);
-    await db.delete(games);
-    await db.delete(players);
+  atomically(() => {
+    db.delete(bonusEvents).run();
+    db.delete(roundEntries).run();
+    db.delete(rounds).run();
+    db.delete(gamePlayers).run();
+    db.delete(games).run();
+    db.delete(players).run();
 
     if (document.players.length > 0) {
-      await db.insert(players).values(document.players);
+      db.insert(players).values(document.players).run();
     }
 
     for (const game of document.games) {
-      await db.insert(games).values({
-        id: game.id,
-        createdAt: game.createdAt,
-        finishedAt: game.finishedAt,
-        status: game.status as 'in_progress' | 'finished' | 'abandoned',
-        ruleset: game.ruleset as never,
-        currentRound: game.currentRound,
-        currentPhase: game.currentPhase as 'bidding' | 'results',
-      });
+      db.insert(games)
+        .values({
+          id: game.id,
+          createdAt: game.createdAt,
+          finishedAt: game.finishedAt,
+          status: game.status,
+          ruleset: game.ruleset,
+          currentRound: game.currentRound,
+          currentPhase: game.currentPhase,
+        })
+        .run();
 
       if (game.seats.length > 0) {
-        await db
-          .insert(gamePlayers)
-          .values(game.seats.map((seat) => ({ gameId: game.id, ...seat })));
+        db.insert(gamePlayers)
+          .values(game.seats.map((seat) => ({ gameId: game.id, ...seat })))
+          .run();
       }
 
       for (const round of game.rounds) {
-        const [inserted] = await db
+        const [inserted] = db
           .insert(rounds)
           .values({
             gameId: game.id,
@@ -140,44 +146,49 @@ export async function importBackup(document: BackupDocument): Promise<void> {
             destroyedTricks: round.destroyedTricks,
             forced: round.forced,
           })
-          .returning({ id: rounds.id });
+          .returning({ id: rounds.id })
+          .all();
 
         if (round.entries.length > 0) {
-          await db
-            .insert(roundEntries)
-            .values(round.entries.map((entry) => ({ roundId: inserted.id, ...entry })));
+          db.insert(roundEntries)
+            .values(round.entries.map((entry) => ({ roundId: inserted.id, ...entry })))
+            .run();
         }
         if (round.bonusEvents.length > 0) {
-          await db.insert(bonusEvents).values(
-            round.bonusEvents.map((event) => ({
-              roundId: inserted.id,
-              playerId: event.playerId,
-              type: event.type as BonusEventType,
-              count: event.count,
-              allyPlayerId: event.allyPlayerId,
-            })),
-          );
+          db.insert(bonusEvents)
+            .values(
+              round.bonusEvents.map((event) => ({
+                roundId: inserted.id,
+                playerId: event.playerId,
+                type: event.type as BonusEventType,
+                count: event.count,
+                allyPlayerId: event.allyPlayerId,
+              })),
+            )
+            .run();
         }
       }
     }
-  });
 
-  // Les scores figés se reconstruisent depuis la saisie : une sauvegarde
-  // ancienne profite ainsi d'un barème corrigé entre-temps (§12.5).
-  for (const game of document.games) {
-    await persistScores(game.id);
-  }
+    // Les scores figés se reconstruisent depuis la saisie : une sauvegarde
+    // ancienne profite ainsi d'un barème corrigé entre-temps (§12.5, §13.10).
+    // Dans la transaction, et non après : si le moteur ne sait pas décompter
+    // une partie, tout est annulé et la base d'avant reste intacte.
+    for (const game of document.games) {
+      persistScores(game.id);
+    }
+  });
 }
 
 /** Vide la base — utilisé par l'écran de réglages, avec confirmation. */
 export async function eraseEverything(): Promise<void> {
-  await sqlite.withTransactionAsync(async () => {
-    await db.delete(bonusEvents);
-    await db.delete(roundEntries);
-    await db.delete(rounds);
-    await db.delete(gamePlayers);
-    await db.delete(games);
-    await db.delete(players);
+  atomically(() => {
+    db.delete(bonusEvents).run();
+    db.delete(roundEntries).run();
+    db.delete(rounds).run();
+    db.delete(gamePlayers).run();
+    db.delete(games).run();
+    db.delete(players).run();
   });
 }
 
