@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { Text } from '@/ui/text';
 
 import { createGame, addTiebreakRound } from '@/db/repositories/game-repo';
@@ -47,17 +47,24 @@ export default function GameEndScreen() {
   const podium = podiumSteps(settled.standings);
 
   async function rematch() {
-    // Une revanche redevient la dernière partie jouée : c'est de ses règles
-    // que partira la prochaine configuration.
-    await setSetting('lastRuleset', game.ruleset);
-    // La revanche rassemble la table de la **dernière manche**, pas tous ceux
-    // qui sont passés : celui qui est parti avant la fin garde sa place au
-    // classement, pas une chaise dans la partie suivante (PLAN.md §7.5).
-    const newGameId = await createGame(
-      activeSeats.map((seat) => seat.id),
-      game.ruleset,
-    );
-    router.replace({ pathname: '/game/[id]', params: { id: String(newGameId) } });
+    try {
+      // Une revanche redevient la dernière partie jouée : c'est de ses règles
+      // que partira la prochaine configuration.
+      await setSetting('lastRuleset', game.ruleset);
+      // La revanche rassemble la table de la **dernière manche**, pas tous ceux
+      // qui sont passés : celui qui est parti avant la fin garde sa place au
+      // classement, pas une chaise dans la partie suivante (PLAN.md §7.5).
+      const newGameId = await createGame(
+        activeSeats.map((seat) => seat.id),
+        game.ruleset,
+      );
+      router.replace({ pathname: '/game/[id]', params: { id: String(newGameId) } });
+    } catch (error) {
+      // `createGame` refuse une table hors des bornes des règles, et une
+      // ancienne partie a pu asseoir neuf joueurs sans l'extension : sans
+      // alerte, le bouton ne ferait rien.
+      Alert.alert(t('end.rematchFailed'), error instanceof Error ? error.message : String(error));
+    }
   }
 
   async function tiebreak() {

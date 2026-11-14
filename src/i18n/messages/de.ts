@@ -266,6 +266,7 @@ export const de: Record<MessageKey, string> = {
   'end.awards': 'Auszeichnungen',
   'end.ranking': 'Rangliste',
   'end.rematch': 'Revanche',
+  'end.rematchFailed': 'Revanche fehlgeschlagen',
   'end.detail': 'Details',
   'end.seeSheet': 'Punkteblatt ansehen',
 
