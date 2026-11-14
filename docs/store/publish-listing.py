@@ -54,6 +54,8 @@ MODIFIABLES = (
     "PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED",
 )
 
+# Champs dont les sauts de ligne comptent à l'affichage sur l'App Store.
+MULTILIGNES = ("description", "nouveautes")
 
 def fiche(langue: str) -> dict[str, str]:
     texte = (RACINE / f"docs/store/{langue}.md").read_text(encoding="utf-8")
@@ -61,7 +63,9 @@ def fiche(langue: str) -> dict[str, str]:
     valeurs = {}
     for nom, bloc in zip(CHAMPS, blocs):
         corps = bloc.strip()
-        valeurs[nom] = corps if nom == "description" else " ".join(corps.split())
+        # Les champs courts tiennent sur une ligne ; la description et les « Nouveautés » gardent
+        # leurs paragraphes — aplatis, les intitulés en capitales se collaient au texte (1.1.0).
+        valeurs[nom] = corps if nom in MULTILIGNES else " ".join(corps.split())
     return valeurs
 
 
