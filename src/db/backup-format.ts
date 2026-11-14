@@ -15,10 +15,10 @@
  *    photo complète : la relire remplace tout, elle ne fusionne pas.
  */
 
-import { BONUS_POINTS, type Ruleset, type ScoringVariant } from '@/core';
+import { ALL_BONUS_TYPES, BONUS_POINTS, type Ruleset, type ScoringVariant } from '@/core';
 import type { Translate } from '@/i18n';
 
-import type { Game } from './schema';
+import type { BonusEventType, Game } from './schema';
 
 export const BACKUP_APP = 'skull-scores';
 export const BACKUP_VERSION = 1;
@@ -44,7 +44,7 @@ export interface BackupEntry {
 
 export interface BackupBonusEvent {
   playerId: number;
-  type: string;
+  type: BonusEventType;
   count: number;
   allyPlayerId: number | null;
 }
@@ -140,6 +140,29 @@ function isReadableRuleset(value: unknown): value is Ruleset {
   );
 }
 
+/** Événements de bonus que le moteur sait décompter : les captures, plus le Butin. */
+const BONUS_EVENT_TYPES = new Set<string>([...ALL_BONUS_TYPES, 'loot'] satisfies BonusEventType[]);
+
+function isBonusEventType(value: unknown): value is BonusEventType {
+  return typeof value === 'string' && BONUS_EVENT_TYPES.has(value);
+}
+
+/**
+ * Vrai si une manche de la partie porte un bonus que le moteur ne connaît pas.
+ *
+ * Un bonus ajouté par une version plus récente de l'app serait ignoré au
+ * décompte : la partie s'importerait avec un score faux, sans le dire.
+ */
+function hasUnreadableBonus(game: unknown): boolean {
+  if (!isObject(game) || !Array.isArray(game.rounds)) return false;
+  return game.rounds.some(
+    (round: unknown) =>
+      isObject(round) &&
+      Array.isArray(round.bonusEvents) &&
+      round.bonusEvents.some((event: unknown) => isObject(event) && !isBonusEventType(event.type)),
+  );
+}
+
 /** Document prêt à écrire sur disque, indenté pour rester lisible à l'œil. */
 export function serializeBackup(document: BackupDocument): string {
   return JSON.stringify(document, null, 2);
@@ -164,7 +187,7 @@ function parseEntry(raw: unknown): BackupEntry | undefined {
 }
 
 function parseBonusEvent(raw: unknown): BackupBonusEvent | undefined {
-  if (!isObject(raw) || !isFiniteInteger(raw.playerId) || typeof raw.type !== 'string') {
+  if (!isObject(raw) || !isFiniteInteger(raw.playerId) || !isBonusEventType(raw.type)) {
     return undefined;
   }
   return {
@@ -251,8 +274,8 @@ function parsePlayer(raw: unknown): BackupPlayer | undefined {
  * Tolérante sur les détails — un champ optionnel manquant reprend sa valeur par
  * défaut — mais stricte sur ce qui rend un document exploitable : la signature
  * de l'app, une version qu'on sait lire, des joueurs identifiables, et des
- * règles que le moteur sait décompter. Mieux vaut refuser franchement
- * qu'importer une bouillie.
+ * règles et des bonus que le moteur sait décompter. Mieux vaut refuser
+ * franchement qu'importer une bouillie.
  */
 export function parseBackup(text: string): ParseResult {
   let raw: unknown;
@@ -292,6 +315,14 @@ export function parseBackup(text: string): ParseResult {
       ok: false,
       reason:
         'Cette sauvegarde contient des règles de partie que cette version de l’app ne sait pas lire. Si elle vient d’une version plus récente, mettez l’app à jour.',
+    };
+  }
+  // Même refus pour un bonus inconnu : la partie entrerait avec un score faux.
+  if (rawGames.some(hasUnreadableBonus)) {
+    return {
+      ok: false,
+      reason:
+        'Cette sauvegarde contient un bonus que cette version de l’app ne sait pas décompter. Si elle vient d’une version plus récente, mettez l’app à jour.',
     };
   }
 

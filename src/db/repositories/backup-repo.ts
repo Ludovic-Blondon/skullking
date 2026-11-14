@@ -8,15 +8,7 @@
 
 import { BACKUP_APP, BACKUP_VERSION, type BackupDocument, type BackupGame } from '../backup-format';
 import { db } from '../client';
-import {
-  bonusEvents,
-  gamePlayers,
-  games,
-  players,
-  roundEntries,
-  rounds,
-  type BonusEventType,
-} from '../schema';
+import { bonusEvents, gamePlayers, games, players, roundEntries, rounds } from '../schema';
 import { atomically } from '../transaction';
 
 import { persistScores } from './game-repo';
@@ -160,7 +152,7 @@ export async function importBackup(document: BackupDocument): Promise<void> {
               round.bonusEvents.map((event) => ({
                 roundId: inserted.id,
                 playerId: event.playerId,
-                type: event.type as BonusEventType,
+                type: event.type,
                 count: event.count,
                 allyPlayerId: event.allyPlayerId,
               })),

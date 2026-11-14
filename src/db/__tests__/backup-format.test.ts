@@ -6,7 +6,7 @@ import {
   serializeBackup,
   type BackupDocument,
 } from '../backup-format';
-import { DEFAULT_RULESET } from '@/core';
+import { ALL_BONUS_TYPES, DEFAULT_RULESET } from '@/core';
 import { translator } from '@/i18n/translate';
 
 function document(overrides: Partial<BackupDocument> = {}): BackupDocument {
@@ -111,6 +111,25 @@ describe('aller-retour', () => {
     if (!result.ok) return;
     expect(result.document.games[0].rounds[0]).toEqual(source.games[0].rounds[0]);
   });
+
+  /** Le refus des bonus inconnus ne doit écarter aucun de ceux que l'app écrit. */
+  it('relit tous les bonus que le moteur connaît, extension et Butin compris', () => {
+    const [game] = document().games;
+    const bonusEvents = [...ALL_BONUS_TYPES, 'loot' as const].map((type) => ({
+      playerId: 1,
+      type,
+      count: 1,
+      allyPlayerId: type === 'loot' ? 2 : null,
+    }));
+    const source = document({
+      games: [{ ...game, rounds: [{ ...game.rounds[0], bonusEvents }] }],
+    });
+
+    const result = parseBackup(serializeBackup(source));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.document.games[0].rounds[0].bonusEvents).toEqual(bonusEvents);
+  });
 });
 
 describe('refus', () => {
@@ -170,6 +189,34 @@ describe('refus', () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toMatch(/règles/);
+  });
+
+  /**
+   * Le moteur ignore un bonus qu'il ne connaît pas : la partie s'importerait
+   * avec un score faux. Même refus que pour les règles.
+   */
+  const bonuses: [string, unknown][] = [
+    ['d’un type inconnu', { playerId: 1, type: 'bonusDuFutur', count: 1 }],
+    ['sans type', { playerId: 1, count: 1 }],
+  ];
+
+  it.each(bonuses)('refuse une partie portant un bonus %s', (_label, event) => {
+    const source = document();
+    const [game] = source.games;
+    const text = JSON.stringify({
+      ...source,
+      games: [
+        {
+          ...game,
+          rounds: [{ ...game.rounds[0], bonusEvents: [...game.rounds[0].bonusEvents, event] }],
+        },
+      ],
+    });
+
+    const result = parseBackup(text);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.reason).toMatch(/bonus/);
   });
 });
 
