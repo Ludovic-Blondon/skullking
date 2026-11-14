@@ -252,6 +252,7 @@ export const en: Record<MessageKey, string> = {
   'end.awards': 'Honours',
   'end.ranking': 'Standings',
   'end.rematch': 'Rematch',
+  'end.rematchFailed': 'Rematch failed',
   'end.detail': 'Detail',
   'end.seeSheet': 'See the score sheet',
 

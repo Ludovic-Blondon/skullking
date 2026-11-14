@@ -271,6 +271,7 @@ export const fr = {
   'end.awards': 'Palmarès',
   'end.ranking': 'Classement',
   'end.rematch': 'Revanche',
+  'end.rematchFailed': 'Revanche impossible',
   'end.detail': 'Détail',
   'end.seeSheet': 'Voir la feuille de score',
 
