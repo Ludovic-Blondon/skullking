@@ -15,7 +15,10 @@
  *    photo complète : la relire remplace tout, elle ne fusionne pas.
  */
 
+import { ALL_BONUS_TYPES, BONUS_POINTS, type Ruleset, type ScoringVariant } from '@/core';
 import type { Translate } from '@/i18n';
+
+import type { BonusEventType, Game } from './schema';
 
 export const BACKUP_APP = 'skull-scores';
 export const BACKUP_VERSION = 1;
@@ -41,7 +44,7 @@ export interface BackupEntry {
 
 export interface BackupBonusEvent {
   playerId: number;
-  type: string;
+  type: BonusEventType;
   count: number;
   allyPlayerId: number | null;
 }
@@ -59,10 +62,10 @@ export interface BackupGame {
   id: number;
   createdAt: number;
   finishedAt: number | null;
-  status: string;
-  ruleset: unknown;
+  status: Game['status'];
+  ruleset: Ruleset;
   currentRound: number;
-  currentPhase: string;
+  currentPhase: Game['currentPhase'];
   seats: { playerId: number; seatIndex: number }[];
   rounds: BackupRound[];
 }
@@ -90,6 +93,76 @@ function nullableInteger(value: unknown): value is number | null {
   return value === null || isFiniteInteger(value);
 }
 
+/** Vrai si `value` est l'une des clés de `table` — table typée, donc exhaustive. */
+function isKeyOf<T extends object>(table: T, value: unknown): value is keyof T {
+  return typeof value === 'string' && Object.keys(table).includes(value);
+}
+
+const GAME_STATUSES: Record<Game['status'], true> = {
+  in_progress: true,
+  finished: true,
+  abandoned: true,
+};
+
+const SCORING_VARIANTS: Record<ScoringVariant, true> = { classic: true, rascal: true };
+
+const RULESET_SWITCHES = [
+  'advancedCards',
+  'rascalCannonball',
+  'pirateAbilities',
+  'expansion',
+] as const satisfies readonly (keyof Ruleset)[];
+
+/**
+ * Règles d'une partie que le moteur sait décompter.
+ *
+ * Ce sont elles qui décident du barème : une édition inconnue — une sauvegarde
+ * venue d'une version plus récente de l'app, typiquement — ferait planter le
+ * décompte (`BONUS_POINTS` n'a pas d'entrée pour elle) ; un décompte ou une
+ * option illisibles, eux, compteraient faux sans le dire.
+ *
+ * Une option absente se lit éteinte, exactement comme en base : `expansion`
+ * manque aux parties d'avant la 1.1.0 et doit le rester.
+ */
+function isReadableRuleset(value: unknown): value is Ruleset {
+  if (!isObject(value) || !isKeyOf(BONUS_POINTS, value.edition)) return false;
+  if (value.scoring !== undefined && !isKeyOf(SCORING_VARIANTS, value.scoring)) return false;
+  if (
+    !RULESET_SWITCHES.every((key) => value[key] === undefined || typeof value[key] === 'boolean')
+  ) {
+    return false;
+  }
+  // Pas de borne haute : une manche de départage allonge le plan d'une partie.
+  return (
+    Array.isArray(value.roundsPlan) &&
+    value.roundsPlan.length > 0 &&
+    value.roundsPlan.every((cards) => isFiniteInteger(cards) && cards > 0)
+  );
+}
+
+/** Événements de bonus que le moteur sait décompter : les captures, plus le Butin. */
+const BONUS_EVENT_TYPES = new Set<string>([...ALL_BONUS_TYPES, 'loot'] satisfies BonusEventType[]);
+
+function isBonusEventType(value: unknown): value is BonusEventType {
+  return typeof value === 'string' && BONUS_EVENT_TYPES.has(value);
+}
+
+/**
+ * Vrai si une manche de la partie porte un bonus que le moteur ne connaît pas.
+ *
+ * Un bonus ajouté par une version plus récente de l'app serait ignoré au
+ * décompte : la partie s'importerait avec un score faux, sans le dire.
+ */
+function hasUnreadableBonus(game: unknown): boolean {
+  if (!isObject(game) || !Array.isArray(game.rounds)) return false;
+  return game.rounds.some(
+    (round: unknown) =>
+      isObject(round) &&
+      Array.isArray(round.bonusEvents) &&
+      round.bonusEvents.some((event: unknown) => isObject(event) && !isBonusEventType(event.type)),
+  );
+}
+
 /** Document prêt à écrire sur disque, indenté pour rester lisible à l'œil. */
 export function serializeBackup(document: BackupDocument): string {
   return JSON.stringify(document, null, 2);
@@ -114,7 +187,7 @@ function parseEntry(raw: unknown): BackupEntry | undefined {
 }
 
 function parseBonusEvent(raw: unknown): BackupBonusEvent | undefined {
-  if (!isObject(raw) || !isFiniteInteger(raw.playerId) || typeof raw.type !== 'string') {
+  if (!isObject(raw) || !isFiniteInteger(raw.playerId) || !isBonusEventType(raw.type)) {
     return undefined;
   }
   return {
@@ -149,7 +222,12 @@ function parseRound(raw: unknown): BackupRound | undefined {
 }
 
 function parseGame(raw: unknown): BackupGame | undefined {
-  if (!isObject(raw) || !isFiniteInteger(raw.id) || !isFiniteInteger(raw.createdAt)) {
+  if (
+    !isObject(raw) ||
+    !isFiniteInteger(raw.id) ||
+    !isFiniteInteger(raw.createdAt) ||
+    !isReadableRuleset(raw.ruleset)
+  ) {
     return undefined;
   }
   const seats = Array.isArray(raw.seats)
@@ -168,7 +246,7 @@ function parseGame(raw: unknown): BackupGame | undefined {
     id: raw.id,
     createdAt: raw.createdAt,
     finishedAt: nullableInteger(raw.finishedAt) ? raw.finishedAt : null,
-    status: typeof raw.status === 'string' ? raw.status : 'finished',
+    status: isKeyOf(GAME_STATUSES, raw.status) ? raw.status : 'finished',
     ruleset: raw.ruleset,
     currentRound: isFiniteInteger(raw.currentRound) ? raw.currentRound : 1,
     currentPhase: raw.currentPhase === 'results' ? 'results' : 'bidding',
@@ -195,8 +273,9 @@ function parsePlayer(raw: unknown): BackupPlayer | undefined {
  *
  * Tolérante sur les détails — un champ optionnel manquant reprend sa valeur par
  * défaut — mais stricte sur ce qui rend un document exploitable : la signature
- * de l'app, une version qu'on sait lire, et des joueurs identifiables. Mieux
- * vaut refuser franchement qu'importer une bouillie.
+ * de l'app, une version qu'on sait lire, des joueurs identifiables, et des
+ * règles et des bonus que le moteur sait décompter. Mieux vaut refuser
+ * franchement qu'importer une bouillie.
  */
 export function parseBackup(text: string): ParseResult {
   let raw: unknown;
@@ -227,8 +306,28 @@ export function parseBackup(text: string): ParseResult {
     return { ok: false, reason: 'Cette sauvegarde ne contient aucun joueur lisible.' };
   }
 
+  const rawGames: unknown[] = Array.isArray(raw.games) ? raw.games : [];
+  // Une partie aux règles illisibles fait refuser tout le fichier plutôt que
+  // d'être laissée dehors : l'import efface la base, elle serait perdue sans
+  // que personne ne le sache.
+  if (rawGames.some((game) => isObject(game) && !isReadableRuleset(game.ruleset))) {
+    return {
+      ok: false,
+      reason:
+        'Cette sauvegarde contient des règles de partie que cette version de l’app ne sait pas lire. Si elle vient d’une version plus récente, mettez l’app à jour.',
+    };
+  }
+  // Même refus pour un bonus inconnu : la partie entrerait avec un score faux.
+  if (rawGames.some(hasUnreadableBonus)) {
+    return {
+      ok: false,
+      reason:
+        'Cette sauvegarde contient un bonus que cette version de l’app ne sait pas décompter. Si elle vient d’une version plus récente, mettez l’app à jour.',
+    };
+  }
+
   const known = new Set(players.map((player) => player.id));
-  const games = (Array.isArray(raw.games) ? raw.games : [])
+  const games = rawGames
     .map(parseGame)
     .filter((game): game is BackupGame => game !== undefined)
     // Une partie dont un joueur manque au roster ne se rejouerait pas : la

@@ -19,7 +19,7 @@ export default function NewGameScreen() {
   const tokens = useTokens();
   const t = useT();
   const { data: players } = useLiveQuery(activePlayersQuery());
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selection, setSelected] = useState<number[]>([]);
   const [name, setName] = useState('');
   // Les règles partent de la dernière partie (§7.4) : une table rejoue presque
   // toujours pareil. Les préférences arrivent de la base, donc après le premier
@@ -35,19 +35,23 @@ export default function NewGameScreen() {
   const summary = summarizeRuleset(ruleset, t);
   // L'extension agrandit le paquet : une place de plus à table (PLAN.md §4.6).
   const maxPlayers = maxPlayersFor(ruleset);
+  // Désactiver l'extension réduit la table à huit, à l'écran comme au lancement
+  // (PLAN.md §4.6). Toute interaction repart de cette sélection bornée.
+  const selected = selection.slice(0, maxPlayers);
   const enough = selected.length >= MIN_PLAYERS;
   const seated = selected
     .map((id) => players.find((player) => player.id === id))
     .filter((player): player is (typeof players)[number] => player !== undefined);
 
   function toggle(playerId: number) {
-    setSelected((current) =>
-      current.includes(playerId)
-        ? current.filter((id) => id !== playerId)
-        : current.length >= maxPlayers
-          ? current
-          : [...current, playerId],
-    );
+    setSelected((current) => {
+      const bounded = current.slice(0, maxPlayers);
+      return bounded.includes(playerId)
+        ? bounded.filter((id) => id !== playerId)
+        : bounded.length >= maxPlayers
+          ? bounded
+          : [...bounded, playerId];
+    });
   }
 
   async function addPlayer() {
@@ -56,7 +60,10 @@ export default function NewGameScreen() {
     try {
       const created = await createPlayer(trimmed);
       setName('');
-      setSelected((current) => (current.length >= maxPlayers ? current : [...current, created.id]));
+      setSelected((current) => {
+        const bounded = current.slice(0, maxPlayers);
+        return bounded.length >= maxPlayers ? bounded : [...bounded, created.id];
+      });
     } catch (error) {
       // Une écriture qui échoue en silence est le pire des cas : l'utilisateur
       // retape son prénom sans comprendre pourquoi rien ne se passe.
