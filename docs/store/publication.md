@@ -48,10 +48,9 @@ profil quand ils manquent ou ont expiré, sans mot de passe ni double authentifi
 survit aux mises à jour d'Xcode, qui peuvent déconnecter le compte.
 
 **Xcode 27 impose le cycle de vie UIScene.** Une app compilée avec le SDK iOS 27 sans scène est
-tuée au lancement par iOS 27, avant même le JavaScript. D'où `enableSceneSupport` dans la
-configuration d'`expo-build-properties` (`app.json`) : le SDK 57 ne l'adopte que sur demande. À
-retirer au passage au SDK 58, qui l'adopte d'office. Les simulateurs en iOS 26 ne reproduisent pas
-le plantage : seul un appareil en iOS 27 le montre.
+tuée au lancement par iOS 27, avant même le JavaScript. Le SDK 58 l'adopte d'office (le SDK 57
+demandait `enableSceneSupport` dans `expo-build-properties`, retiré depuis). Les simulateurs en
+iOS 26 ne reproduisent pas le plantage : seul un appareil en iOS 27 le montre.
 
 Sans `APP_VARIANT`, `app.config.js` renvoie `app.json` mot pour mot : les builds de production ne
 le voient pas passer. Le dossier `ios/`, lui, garde l'identité du dernier `prebuild` — repasser un

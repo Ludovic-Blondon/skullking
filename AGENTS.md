@@ -3,7 +3,7 @@
 ## Expo
 
 Expo évolue vite : lire la documentation **versionnée** correspondant au SDK du projet
-(actuellement SDK 57) avant d'écrire du code — https://docs.expo.dev/versions/v57.0.0/
+(actuellement SDK 58) avant d'écrire du code — https://docs.expo.dev/versions/v58.0.0/
 
 ## Le plan fait foi
 

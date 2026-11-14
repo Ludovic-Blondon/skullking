@@ -71,7 +71,9 @@ export default function SettingsScreen() {
       // celle du jour, et rien ne s'accumule dans le cache.
       if (file.exists) file.delete();
       file.create();
-      file.write(serializeBackup(document));
+      // Asynchrone depuis le SDK 58 : sans l'attente, le partage pourrait
+      // s'ouvrir sur un fichier encore incomplet.
+      await file.write(serializeBackup(document));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {

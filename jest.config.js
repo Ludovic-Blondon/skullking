@@ -1,6 +1,11 @@
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  // Reanimated 4.7 charge ses modules natifs jusque dans son propre mock : son
+  // resolver sert leur version web sous Jest, puis délègue à celui de Worklets.
+  // Il remplace celui de `@react-native/jest-preset`, sans effet depuis Jest 30
+  // (`packageFilter` n'y existe plus).
+  resolver: 'react-native-reanimated/jest/resolver',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   // Seuls les fichiers `*.test.ts(x)` sont des suites : les utilitaires posés
   // dans `__tests__/` restent des modules d'appoint.
