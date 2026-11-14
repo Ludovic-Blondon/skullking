@@ -158,6 +158,10 @@ export function seatedAtRound(gameId: number, roundNumber: number): number[] {
  * La table héritée est celle de la manche précédente, pas celle de la création
  * de la partie : c'est ce qui fait qu'un départ ou une arrivée entre deux
  * manches se propage tout seul aux manches suivantes (§7.5).
+ *
+ * L'écran de partie l'appelle à l'ouverture d'une partie en cours, sur sa
+ * manche courante : c'est ce qui répare une manche qu'une ancienne version a
+ * laissée vide ou n'a jamais créée (§5).
  */
 export async function ensureRound(gameId: number, roundNumber: number): Promise<number> {
   return atomically(() => ensureRoundRows(gameId, roundNumber));

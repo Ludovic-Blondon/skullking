@@ -1,12 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { Link, Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '@/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { hasBlockingIssues, maxDestroyedTricksFor, RASCAL_POINTS, scoreRound } from '@/core';
 import {
+  ensureRound,
   setDestroyedTricks,
   setPhase,
   updateEntry,
@@ -58,6 +60,19 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const t = useT();
   useKeepScreenAwake();
+
+  // Reprise d'une partie en cours : avant les écritures atomiques (PLAN.md §5),
+  // une création ou un départage interrompu pouvait laisser la manche courante
+  // sans lignes joueurs, voire sans manche du tout — l'écran s'ouvrait alors
+  // sur une table vide ou n'en finissait pas de charger. C'est ici que tout
+  // parcours rejoint la partie, « Reprendre » comme lien profond : la
+  // réparation part donc d'ici. Sur une manche déjà peuplée, elle ne lit
+  // qu'une ligne et n'écrit rien.
+  const resumable = view.ready && view.game?.status === 'in_progress';
+  const currentRound = view.game?.currentRound;
+  useEffect(() => {
+    if (resumable && currentRound !== undefined) void ensureRound(gameId, currentRound);
+  }, [gameId, resumable, currentRound]);
 
   if (!view.ready || !view.game || !view.current) {
     return (
