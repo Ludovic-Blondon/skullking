@@ -16,7 +16,9 @@ import {
   reopenRound,
   seatedAtRound,
   setCaptureBonus,
+  setDestroyedTricks,
   setPhase,
+  setRoundsCount,
   updateEntry,
   validateRound,
 } from '../game-repo';
@@ -177,13 +179,191 @@ it('valide, termine et recalcule en cascade une correction avec les mêmes trans
 
   await reopenRound(gameId, 1);
   await updateEntry(first.round.id, 1, { tricks: 0 });
-  await validateRound(gameId, 1);
+  // Partie rouverte depuis l'historique : la correction validée, elle passe à
+  // sa dernière manche pour être close, sans rejouer celles d'entre-deux.
+  expect(await validateRound(gameId, 1)).toEqual({ finished: false });
+  expect(getGame(gameId)).toMatchObject({
+    status: 'in_progress',
+    currentRound: 2,
+    currentPhase: 'results',
+  });
   expect(
     getStoredRounds(gameId).map((stored) => stored.entries.map((entry) => entry.scoreTotal)),
   ).toEqual([
     [-10, 10],
     [20, 20],
   ]);
+  expect(await validateRound(gameId, 2)).toEqual({ finished: true });
+});
+
+describe('reprise après la correction d’une manche passée', () => {
+  const THREE_ROUNDS = { ...RULES, roundsPlan: [1, 2, 3] };
+
+  /** Partie arrivée à la manche 3, les deux premières validées. */
+  async function gameAtRoundThree() {
+    const gameId = await createGame([1, 2], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    await validateRound(gameId, 2);
+    return { gameId, third: getStoredRounds(gameId)[2].round.id };
+  }
+
+  it('revient en Résultats sur la manche en cours, sans toucher à sa saisie', async () => {
+    const { gameId, third } = await gameAtRoundThree();
+    await setPhase(gameId, 'results');
+    await updateEntry(third, 1, { tricks: 2 });
+
+    await reopenRound(gameId, 1);
+    expect(await validateRound(gameId, 1)).toEqual({ finished: false });
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'results' });
+    // Les plis non saisis restent vides : la manche 3 n'est pas validée en passant.
+    expect(getStoredRound(third)?.entries.map((entry) => entry.tricks)).toEqual([2, null]);
+  });
+
+  it('revient en Annonces tant qu’elles ne sont pas toutes posées', async () => {
+    const { gameId, third } = await gameAtRoundThree();
+    await updateEntry(third, 1, { bid: 1 });
+
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'bidding' });
+    expect(getStoredRound(third)?.entries.map((entry) => entry.bid)).toEqual([1, null]);
+  });
+
+  it('repasse d’abord par une autre correction laissée incohérente en route', async () => {
+    const { gameId } = await gameAtRoundThree();
+    const second = getStoredRounds(gameId)[1].round.id;
+
+    // 2 + 1 plis pour 2 cartes : incohérent, même avec le fantôme à 2 joueurs.
+    await reopenRound(gameId, 2);
+    await updateEntry(second, 1, { tricks: 2 });
+    await updateEntry(second, 2, { tricks: 1 });
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 2, currentPhase: 'results' });
+
+    // Forcée, elle laisse enfin la partie reprendre là où elle en était.
+    await validateRound(gameId, 2, { forced: true });
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'bidding' });
+    expect(getStoredRound(second)?.round.forced).toBe(true);
+  });
+
+  it('y repasse aussi quand la correction suivante porte sur une manche postérieure', async () => {
+    const { gameId } = await gameAtRoundThree();
+    const first = getStoredRounds(gameId)[0].round.id;
+
+    await reopenRound(gameId, 1);
+    await updateEntry(first, 1, { tricks: 1 });
+    await updateEntry(first, 2, { tricks: 1 });
+    await reopenRound(gameId, 2);
+    await validateRound(gameId, 2);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 1, currentPhase: 'results' });
+  });
+
+  it('ne raccourcit pas la partie sous la dernière manche entamée', async () => {
+    const { gameId } = await gameAtRoundThree();
+    await reopenRound(gameId, 1);
+    await setPhase(gameId, 'bidding');
+    await setRoundsCount(gameId, 2);
+
+    expect(getGame(gameId)?.ruleset.roundsPlan).toEqual([1, 2, 3]);
+    await setPhase(gameId, 'results');
+    await validateRound(gameId, 1);
+    expect(getGame(gameId)?.currentRound).toBe(3);
+  });
+
+  /** Partie arrivée à la manche 3, la 2 forcée sur 2 + 1 plis pour 2 cartes. */
+  async function gameWithForcedSecondRound() {
+    const gameId = await createGame([1, 2], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    const second = getStoredRounds(gameId)[1].round.id;
+    await updateEntry(second, 1, { tricks: 2 });
+    await updateEntry(second, 2, { tricks: 1 });
+    await validateRound(gameId, 2, { forced: true });
+    return { gameId, second };
+  }
+
+  it('redemande de forcer une manche forcée qu’une correction a retouchée', async () => {
+    const { gameId, second } = await gameWithForcedSecondRound();
+
+    await reopenRound(gameId, 2);
+    await updateEntry(second, 2, { tricks: 2 });
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 2, currentPhase: 'results' });
+    expect(getStoredRound(second)?.round.forced).toBe(false);
+  });
+
+  it('laisse tranquille une manche forcée rouverte sans être retouchée', async () => {
+    const { gameId, second } = await gameWithForcedSecondRound();
+
+    await reopenRound(gameId, 2);
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)?.currentRound).toBe(3);
+    expect(getStoredRound(second)?.round.forced).toBe(true);
+  });
+
+  it('ne change pas la table pendant la correction d’une manche passée', async () => {
+    const gameId = await createGame([1, 2, 3], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    await validateRound(gameId, 2);
+    await reopenRound(gameId, 1);
+    await setPhase(gameId, 'bidding');
+    const before = contents();
+
+    await expect(removePlayerFromGame(gameId, 3)).rejects.toThrow('déjà jouée');
+    await expect(addPlayerToGame(gameId, 4)).rejects.toThrow('déjà jouée');
+    expect(contents()).toEqual(before);
+  });
+
+  it('ni celle de la dernière manche d’une partie terminée, rouverte depuis l’historique', async () => {
+    const gameId = await createGame([1, 2, 3], THREE_ROUNDS);
+    for (const round of [1, 2, 3]) await validateRound(gameId, round);
+    expect(getGame(gameId)?.status).toBe('finished');
+
+    // Son numéro est celui de la dernière manche créée : seuls ses plis, tous
+    // posés, disent qu'elle est déjà jouée.
+    await reopenRound(gameId, 3);
+    await setPhase(gameId, 'bidding');
+    const before = contents();
+
+    await expect(removePlayerFromGame(gameId, 3)).rejects.toThrow('déjà jouée');
+    await expect(addPlayerToGame(gameId, 4)).rejects.toThrow('déjà jouée');
+    expect(contents()).toEqual(before);
+  });
+
+  it('annule la correction entière si le retour à la manche en cours échoue', async () => {
+    const { gameId } = await gameAtRoundThree();
+    await reopenRound(gameId, 1);
+    const before = contents();
+    failOn('UPDATE ON games');
+
+    await expect(validateRound(gameId, 1)).rejects.toThrow('écriture interrompue');
+    expect(contents()).toEqual(before);
+  });
+});
+
+describe('retoucher une manche forcée lui retire son marquage', () => {
+  it.each([
+    ['ses plis', (roundId: number) => updateEntry(roundId, 1, { tricks: 1 })],
+    ['ses plis détruits', (roundId: number) => setDestroyedTricks(roundId, 1)],
+    ['un bonus', (roundId: number) => setCaptureBonus(roundId, 1, 'skullKingCapturesPirate', 1)],
+    ['une alliance de Butin', (roundId: number) => addLootAlliance(roundId, 1, 2)],
+  ])('%s', async (_, touch) => {
+    const gameId = await createGame([1, 2], RULES);
+    await validateRound(gameId, 1, { forced: true });
+    const first = getStoredRounds(gameId)[0].round.id;
+
+    await touch(first);
+
+    expect(getStoredRound(first)?.round.forced).toBe(false);
+  });
 });
 
 it('annule une arrivée si la ligne de manche échoue après l’ajout de sa place', async () => {

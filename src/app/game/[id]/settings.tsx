@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { Alert, Pressable, TextInput, View } from 'react-native';
 
 import { DEFAULT_ROUNDS_PLAN, maxPlayersFor, MIN_PLAYERS } from '@/core';
-import { addPlayerToGame, removePlayerFromGame, setRoundsCount } from '@/db/repositories/game-repo';
+import {
+  addPlayerToGame,
+  isRoundPlayed,
+  removePlayerFromGame,
+  setRoundsCount,
+} from '@/db/repositories/game-repo';
 import { activePlayersQuery, createPlayer } from '@/db/repositories/player-repo';
 import { summarizeRuleset } from '@/features/game/ruleset-summary';
 import { useGame } from '@/features/game/use-game';
@@ -34,14 +39,26 @@ export default function GameSettingsScreen() {
 
   if (!view.ready || !view.game) return <View className="flex-1 bg-surface" />;
 
-  const { game, activeSeats, settled } = view;
+  const { game, activeSeats, settled, storedRounds } = view;
   const rounds = game.ruleset.roundsPlan.length;
+  // Plancher : la dernière manche entamée, pas la manche courante — une
+  // correction ramène celle-ci en arrière, alors que les suivantes sont déjà
+  // jouées (voir `setRoundsCount`).
+  const floor = Math.max(
+    game.currentRound,
+    ...storedRounds.map((stored) => stored.round.roundNumber),
+  );
   const maxPlayers = maxPlayersFor(game.ruleset);
   // La table ne se change qu'entre deux manches : en Résultats, les plis sont
   // en train d'être posés.
   const betweenRounds = game.currentPhase === 'bidding';
-  const canRemove = betweenRounds && activeSeats.length > MIN_PLAYERS;
-  const canAdd = betweenRounds && activeSeats.length < maxPlayers;
+  // Ni sur une manche déjà jouée : rouverte pour correction — la dernière d'une
+  // partie terminée comprise — ou dont tous les plis sont posés (voir
+  // `isRoundPlayed`).
+  const played = isRoundPlayed(game.currentRound, floor, view.current?.stored.entries ?? []);
+  const canChangeTable = betweenRounds && !played;
+  const canRemove = canChangeTable && activeSeats.length > MIN_PLAYERS;
+  const canAdd = canChangeTable && activeSeats.length < maxPlayers;
 
   const benched = roster.filter((player) => !activeSeats.some((seat) => seat.id === player.id));
 
@@ -83,29 +100,29 @@ export default function GameSettingsScreen() {
         <View className="flex-1">
           <Text className="font-semi text-caption text-content">{t('rules.rounds')}</Text>
           <Text className="font-body text-micro text-content-muted">
-            {t('gset.roundsHint', { round: game.currentRound })}
+            {t('gset.roundsHint', { round: floor })}
           </Text>
         </View>
         <Stepper
           value={rounds}
           onChange={(count) => void setRoundsCount(gameId, count)}
-          min={game.currentRound}
+          min={floor}
           max={Math.max(DEFAULT_ROUNDS_PLAN.length, rounds)}
           size="sm"
           label={t('rules.rounds')}
           testID="rounds-count"
         />
       </View>
-      {rounds === game.currentRound && (
+      {rounds === floor && (
         <Text className="px-1 font-body text-micro text-content-muted">
           {t('gset.lastRound', { round: rounds })}
         </Text>
       )}
 
       <SectionLabel>{t('gset.players')}</SectionLabel>
-      {!betweenRounds && (
+      {!canChangeTable && (
         <Text className="px-1 font-body text-micro text-content-muted">
-          {t('gset.duringRound')}
+          {played ? t('gset.roundPlayed', { round: game.currentRound }) : t('gset.duringRound')}
         </Text>
       )}
       <View className="gap-2">
@@ -133,11 +150,13 @@ export default function GameSettingsScreen() {
           </View>
         ))}
       </View>
-      <Text className="px-1 font-body text-micro text-content-muted">
-        {canAdd
-          ? t('gset.playersHint', { min: MIN_PLAYERS, max: maxPlayers })
-          : t('gset.tableFull', { max: maxPlayers })}
-      </Text>
+      {canChangeTable && (
+        <Text className="px-1 font-body text-micro text-content-muted">
+          {canAdd
+            ? t('gset.playersHint', { min: MIN_PLAYERS, max: maxPlayers })
+            : t('gset.tableFull', { max: maxPlayers })}
+        </Text>
+      )}
 
       {canAdd && (
         <>

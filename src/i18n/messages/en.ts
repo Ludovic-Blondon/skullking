@@ -115,6 +115,7 @@ export const en: Record<MessageKey, string> = {
   'gset.lastRound': 'Round {round} will be the last one: validating it ends the game.',
   'gset.players': 'Players at the table',
   'gset.duringRound': 'The round is under way — go back to bids to change the table.',
+  'gset.roundPlayed': 'Round {round} has already been played — its table can no longer change.',
   'gset.playersHint': '{min} to {max} players. Someone who leaves keeps their points and rank.',
   'gset.tableFull': 'Table full — {max} players',
   'gset.remove': 'Remove',
@@ -236,8 +237,10 @@ export const en: Record<MessageKey, string> = {
   'bonus.lostToMiss': '{points} pts wiped by the missed bid',
 
   'sheet.correctTitle': 'Correct round {round}?',
-  'sheet.correctBody': 'The game returns to this round and every later total is recomputed.',
-  'sheet.correctBodyHistory': 'The game reopens at this round and every later total is recomputed.',
+  'sheet.correctBody':
+    'The game returns to this round, then picks up where it left off. Every later total is recomputed.',
+  'sheet.correctBodyHistory':
+    'The game reopens at this round, then moves to the last one to be closed. Every later total is recomputed.',
   'sheet.correct': 'Correct',
   'sheet.correctRound': 'Correct round {round}',
   'sheet.hint': 'Tap a round to correct it — the later totals recompute on their own.',

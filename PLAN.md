@@ -327,7 +327,7 @@ stateDiagram-v2
 - **Phase Résultats** : mêmes cartes joueur : stepper **plis remportés** + pastille **bonus** (affiche le total courant, ex. « +40 ») ouvrant la bottom sheet (§7.3). Contrôle de manche : compteur « pli détruit (Kraken/Baleine) » 0-2 ; à 2 joueurs, ligne fantôme « Barbe Grise » en lecture seule qui absorbe le solde. Les plis restent « pas encore saisis » tant que personne ne touche leur compteur : la carte d'un joueur n'affiche ni liseré ni delta avant, et **rien n'est décompté sur la seule foi des annonces** — pendant que le pli se joue, la table lit toujours le score de la manche précédente.
 - **Barre de validation** : « Σ plis 3 + 1 détruit = 4 ✓ » — le bouton « Valider la manche » ne s'active que si c'est cohérent ; échappatoire « forcer » (avec marquage de la manche) pour les cas de table insolubles.
 - **Validation** → c'est **elle seule** qui fait avancer les totaux : animation courte des deltas de score + haptique, puis phase Annonces de la manche suivante. Saisie complète d'une manche à 4 joueurs : **objectif < 30 s**.
-- **Feuille de score** (tiroir tirable) : façon carnet papier — colonnes joueurs, lignes 1-10 avec delta par manche, total courant, rang. **Taper une ligne = rouvrir cette manche** pour correction (recalcul en cascade automatique).
+- **Feuille de score** (tiroir tirable) : façon carnet papier — colonnes joueurs, lignes 1-10 avec delta par manche, total courant, rang. **Taper une ligne = rouvrir cette manche** pour correction (recalcul en cascade automatique). Une fois la manche corrigée validée, la partie retourne directement à la manche où elle en était, sans faire revalider celles d'entre-deux : chacune se valide seule (§4.4). Seule exception : une autre correction quittée sans validation et devenue incohérente — la partie y retourne d'abord, pour la rendre cohérente ou la forcer. Le marquage d'une manche forcée tombe dès qu'on la retouche : il valait pour la saisie d'alors.
 - Écran maintenu allumé (keep-awake), portrait et paysage, lisible à 8 joueurs.
 
 ### 7.3 Saisie des bonus — le point clé UX
@@ -363,8 +363,8 @@ Une vraie soirée ne se déroule pas comme la configuration de départ : quelqu'
 
 Il s'ouvre depuis l'en-tête de la partie, **en phase Annonces** : le bouton prend la place que « revenir aux annonces » y laisse libre, ce qui évite un cinquième bouton dans une barre où le titre manque déjà de largeur — et c'est de toute façon entre deux manches que ces réglages ont un sens.
 
-- **Nombre de manches** : stepper borné à `[manche en cours, 10]`. Le ramener sur la manche en cours en fait la dernière : la valider termine la partie.
-- **Joueurs** : retirer un joueur ou en ajouter un, dans les bornes de `[2, max joueurs]` (§4.6 pour le maximum).
+- **Nombre de manches** : stepper borné à `[manche en cours, 10]`. Le ramener sur la manche en cours en fait la dernière : la valider termine la partie. Pendant la correction d'une manche passée, le plancher reste la dernière manche entamée : les suivantes sont déjà jouées.
+- **Joueurs** : retirer un joueur ou en ajouter un, dans les bornes de `[2, max joueurs]` (§4.6 pour le maximum). Jamais sur une manche déjà jouée — rouverte pour correction, dernière manche d'une partie terminée comprise, ou dont tous les plis sont posés : un départ y effacerait les résultats du partant, une arrivée y compterait un absent.
   - Un joueur **retiré est gelé** : ses manches passées restent sur la feuille, son total ne bouge plus, il figure au classement final. Rien n'est effacé — la partie s'est vraiment jouée comme ça.
   - Un joueur **ajouté démarre à 0**, sans ligne sur les manches passées.
 - **Modélisation** : c'est la **présence d'une ligne `round_entries` qui dit qui est à table à cette manche** ; `game_players` garde l'ordre des places et le roster complet de la partie. Aucune colonne ajoutée, et le moteur n'a rien à connaître de tout ça — `computeGame()` reçoit déjà un roster et tolère un joueur absent d'une manche.

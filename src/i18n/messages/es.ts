@@ -124,6 +124,7 @@ export const es: Record<MessageKey, string> = {
   'gset.lastRound': 'La ronda {round} será la última: validarla terminará la partida.',
   'gset.players': 'Jugadores en la mesa',
   'gset.duringRound': 'La ronda está en juego: vuelve a las apuestas para cambiar la mesa.',
+  'gset.roundPlayed': 'La ronda {round} ya se jugó: su mesa ya no cambia.',
   'gset.playersHint': 'De {min} a {max} jugadores. Quien se va conserva sus puntos y su puesto.',
   'gset.tableFull': 'Mesa completa — {max} jugadores',
   'gset.remove': 'Quitar',
@@ -248,9 +249,9 @@ export const es: Record<MessageKey, string> = {
 
   'sheet.correctTitle': '¿Corregir la ronda {round}?',
   'sheet.correctBody':
-    'La partida vuelve a esta ronda y todos los totales siguientes se recalculan.',
+    'La partida vuelve a esta ronda y luego sigue donde estaba. Los totales siguientes se recalculan.',
   'sheet.correctBodyHistory':
-    'La partida se reabre en esta ronda y todos los totales siguientes se recalculan.',
+    'La partida se reabre en esta ronda y luego pasa a la última para cerrarse. Los totales siguientes se recalculan.',
   'sheet.correct': 'Corregir',
   'sheet.correctRound': 'Corregir la ronda {round}',
   'sheet.hint': 'Toca una ronda para corregirla: los totales siguientes se recalculan solos.',
