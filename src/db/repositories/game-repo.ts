@@ -375,8 +375,42 @@ export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Pr
 }
 
 /**
+ * Dernière manche créée, et la phase où elle en était.
+ *
+ * Une manche n'est créée qu'à la validation de la précédente : la dernière est
+ * donc celle où en était la partie quand on a rouvert une manche passée. C'est
+ * la manche en cours de saisie, ou la dernière de la partie si elle était
+ * terminée.
+ *
+ * La phase se déduit des annonces, que le passage en Résultats remplit toutes
+ * (`setPhase`). Une table qui les a toutes saisies sans quitter les Annonces
+ * arrive donc en Résultats : elle peut revenir aux Annonces, rien n'est perdu.
+ */
+function lastStartedRound(
+  gameId: number,
+): { roundNumber: number; phase: 'bidding' | 'results' } | undefined {
+  const [last] = db
+    .select({ id: rounds.id, roundNumber: rounds.roundNumber })
+    .from(rounds)
+    .where(eq(rounds.gameId, gameId))
+    .orderBy(desc(rounds.roundNumber))
+    .limit(1)
+    .all();
+  if (!last) return undefined;
+
+  const bids = db
+    .select({ bid: roundEntries.bid })
+    .from(roundEntries)
+    .where(eq(roundEntries.roundId, last.id))
+    .all();
+  const allBid = bids.length > 0 && bids.every((entry) => entry.bid !== null);
+  return { roundNumber: last.roundNumber, phase: allBid ? 'results' : 'bidding' };
+}
+
+/**
  * Valide la manche courante : fige les scores, puis ouvre la suivante ou
- * termine la partie.
+ * termine la partie. Après la correction d'une manche passée, la partie
+ * retourne directement à la manche où elle en était.
  */
 export async function validateRound(
   gameId: number,
@@ -406,6 +440,18 @@ export async function validateRound(
 
     persistScores(gameId);
 
+    // Correction d'une manche passée : celles qui la suivent sont déjà jouées,
+    // et chacune se valide seule (§4.4). Les faire revalider une à une ne
+    // changerait rien, puisque `persistScores` vient de tout recalculer.
+    const resume = lastStartedRound(gameId);
+    if (resume && resume.roundNumber > roundNumber) {
+      db.update(games)
+        .set({ currentRound: resume.roundNumber, currentPhase: resume.phase })
+        .where(eq(games.id, gameId))
+        .run();
+      return { finished: false };
+    }
+
     const isLastRound = roundNumber >= game.ruleset.roundsPlan.length;
     if (isLastRound) {
       db.update(games)
@@ -426,7 +472,8 @@ export async function validateRound(
 
 /**
  * Rouvre une manche passée pour correction. Le recalcul en cascade est assuré
- * par `persistScores`, qui repasse par `computeGame` (PLAN.md §12.5).
+ * par `persistScores`, qui repasse par `computeGame` (PLAN.md §12.5) ; à sa
+ * validation, la partie retourne à la manche où elle en était.
  */
 export async function reopenRound(gameId: number, roundNumber: number): Promise<void> {
   db.update(games)

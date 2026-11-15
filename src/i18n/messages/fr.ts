@@ -253,9 +253,9 @@ export const fr = {
 
   'sheet.correctTitle': 'Corriger la manche {round} ?',
   'sheet.correctBody':
-    'La partie revient à cette manche et tous les totaux suivants sont recalculés.',
+    'La partie revient à cette manche, puis reprend là où elle en était. Les totaux suivants sont recalculés.',
   'sheet.correctBodyHistory':
-    'La partie est rouverte à cette manche et tous les totaux suivants sont recalculés.',
+    'La partie est rouverte à cette manche, puis passe à la dernière pour être close. Les totaux suivants sont recalculés.',
   'sheet.correct': 'Corriger',
   'sheet.correctRound': 'Corriger la manche {round}',
   'sheet.hint':

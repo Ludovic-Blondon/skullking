@@ -28,8 +28,8 @@ export interface SettledScores {
  * feuille : corriger une manche passée la rouvre (§7.2), et la table la
  * rejoue comme n'importe quelle autre — ses points ne sont donc acquis qu'à
  * sa revalidation. La repérer à sa position, elle, se trompait dès la
- * première correction : après avoir revalidé la manche 1, la partie repart à
- * la manche 2 alors que la dernière manche stockée est la 10.
+ * première correction : rouvrir la manche 1 d'une partie arrivée à la 10 en
+ * fait la manche courante, alors que la dernière manche stockée est la 10.
  */
 export function pendingRoundOf(game: Game, storedRounds: StoredRound[]): number | undefined {
   if (game.status === 'finished') return undefined;

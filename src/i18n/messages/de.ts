@@ -248,9 +248,9 @@ export const de: Record<MessageKey, string> = {
 
   'sheet.correctTitle': 'Runde {round} korrigieren?',
   'sheet.correctBody':
-    'Die Partie kehrt zu dieser Runde zurück und alle folgenden Summen werden neu berechnet.',
+    'Die Partie kehrt zu dieser Runde zurück und geht danach dort weiter, wo sie war. Alle folgenden Summen werden neu berechnet.',
   'sheet.correctBodyHistory':
-    'Die Partie wird bei dieser Runde wieder geöffnet und alle folgenden Summen werden neu berechnet.',
+    'Die Partie wird bei dieser Runde wieder geöffnet und springt danach zur letzten Runde, um abgeschlossen zu werden. Alle folgenden Summen werden neu berechnet.',
   'sheet.correct': 'Korrigieren',
   'sheet.correctRound': 'Runde {round} korrigieren',
   'sheet.hint':

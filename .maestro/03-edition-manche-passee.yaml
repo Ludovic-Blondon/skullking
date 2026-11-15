@@ -3,8 +3,9 @@
 #
 # C'est l'invariant du §5 vu de l'écran : une correction ne rattrape jamais un
 # total par un delta, elle repasse la partie entière dans `computeGame`. Le
-# scénario déplace un pli d'Alice vers Bob en manche 1, et vérifie que les deux
-# cumuls de fin de manche 2 ont changé.
+# scénario déplace un pli d'Alice vers Bob en manche 1, vérifie que la partie
+# reprend directement à la manche 3, puis que les deux cumuls de fin de manche 2
+# ont changé.
 #
 #   maestro test .maestro/03-edition-manche-passee.yaml
 appId: com.lblondon.skullscores
@@ -86,6 +87,12 @@ appId: com.lblondon.skullscores
     id: "tricks-2-plus"
 - tapOn:
     id: "round-action"
+
+# — Retour direct à la manche 3, où en était la partie : la manche 2, déjà
+# jouée, n'a pas à être revalidée ————————————————————————————————————————
+- extendedWaitUntil:
+    visible: "Manche 3/10.*"
+    timeout: 20000
 
 # — La cascade : Alice rate son annonce (−10), Bob rate sa mise 0 (−10) —
 # Alice : −10 + 40 = 30. Bob : −10 + 20 = 10.

@@ -177,13 +177,67 @@ it('valide, termine et recalcule en cascade une correction avec les mêmes trans
 
   await reopenRound(gameId, 1);
   await updateEntry(first.round.id, 1, { tricks: 0 });
-  await validateRound(gameId, 1);
+  // Partie rouverte depuis l'historique : la correction validée, elle passe à
+  // sa dernière manche pour être close, sans rejouer celles d'entre-deux.
+  expect(await validateRound(gameId, 1)).toEqual({ finished: false });
+  expect(getGame(gameId)).toMatchObject({
+    status: 'in_progress',
+    currentRound: 2,
+    currentPhase: 'results',
+  });
   expect(
     getStoredRounds(gameId).map((stored) => stored.entries.map((entry) => entry.scoreTotal)),
   ).toEqual([
     [-10, 10],
     [20, 20],
   ]);
+  expect(await validateRound(gameId, 2)).toEqual({ finished: true });
+});
+
+describe('reprise après la correction d’une manche passée', () => {
+  const THREE_ROUNDS = { ...RULES, roundsPlan: [1, 2, 3] };
+
+  /** Partie arrivée à la manche 3, les deux premières validées. */
+  async function gameAtRoundThree() {
+    const gameId = await createGame([1, 2], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    await validateRound(gameId, 2);
+    return { gameId, third: getStoredRounds(gameId)[2].round.id };
+  }
+
+  it('revient en Résultats sur la manche en cours, sans toucher à sa saisie', async () => {
+    const { gameId, third } = await gameAtRoundThree();
+    await setPhase(gameId, 'results');
+    await updateEntry(third, 1, { tricks: 2 });
+
+    await reopenRound(gameId, 1);
+    expect(await validateRound(gameId, 1)).toEqual({ finished: false });
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'results' });
+    // Les plis non saisis restent vides : la manche 3 n'est pas validée en passant.
+    expect(getStoredRound(third)?.entries.map((entry) => entry.tricks)).toEqual([2, null]);
+  });
+
+  it('revient en Annonces tant qu’elles ne sont pas toutes posées', async () => {
+    const { gameId, third } = await gameAtRoundThree();
+    await updateEntry(third, 1, { bid: 1 });
+
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'bidding' });
+    expect(getStoredRound(third)?.entries.map((entry) => entry.bid)).toEqual([1, null]);
+  });
+
+  it('annule la correction entière si le retour à la manche en cours échoue', async () => {
+    const { gameId } = await gameAtRoundThree();
+    await reopenRound(gameId, 1);
+    const before = contents();
+    failOn('UPDATE ON games');
+
+    await expect(validateRound(gameId, 1)).rejects.toThrow('écriture interrompue');
+    expect(contents()).toEqual(before);
+  });
 });
 
 it('annule une arrivée si la ligne de manche échoue après l’ajout de sa place', async () => {
