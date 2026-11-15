@@ -17,9 +17,11 @@ import {
   cardsDealtFor,
   computeGame,
   DEFAULT_ROUNDS_PLAN,
+  hasBlockingIssues,
   maxPlayersFor,
   MIN_PLAYERS,
   type Ruleset,
+  validateRound as roundIssues,
 } from '@/core';
 
 import { db } from '../client';
@@ -375,12 +377,26 @@ export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Pr
 }
 
 /**
- * Dernière manche créée, et la phase où elle en était.
+ * Dernière manche créée de la partie.
  *
  * Une manche n'est créée qu'à la validation de la précédente : la dernière est
- * donc celle où en était la partie quand on a rouvert une manche passée. C'est
- * la manche en cours de saisie, ou la dernière de la partie si elle était
- * terminée.
+ * donc celle où en était la partie, même quand une correction a ramené la
+ * manche courante en arrière. C'est la manche en cours de saisie, ou la
+ * dernière de la partie si elle était terminée.
+ */
+function lastRound(gameId: number): { id: number; roundNumber: number } | undefined {
+  const [last] = db
+    .select({ id: rounds.id, roundNumber: rounds.roundNumber })
+    .from(rounds)
+    .where(eq(rounds.gameId, gameId))
+    .orderBy(desc(rounds.roundNumber))
+    .limit(1)
+    .all();
+  return last;
+}
+
+/**
+ * Dernière manche créée, et la phase où elle en était.
  *
  * La phase se déduit des annonces, que le passage en Résultats remplit toutes
  * (`setPhase`). Une table qui les a toutes saisies sans quitter les Annonces
@@ -389,13 +405,7 @@ export async function setPhase(gameId: number, phase: 'bidding' | 'results'): Pr
 function lastStartedRound(
   gameId: number,
 ): { roundNumber: number; phase: 'bidding' | 'results' } | undefined {
-  const [last] = db
-    .select({ id: rounds.id, roundNumber: rounds.roundNumber })
-    .from(rounds)
-    .where(eq(rounds.gameId, gameId))
-    .orderBy(desc(rounds.roundNumber))
-    .limit(1)
-    .all();
+  const last = lastRound(gameId);
   if (!last) return undefined;
 
   const bids = db
@@ -408,9 +418,38 @@ function lastStartedRound(
 }
 
 /**
+ * Correction laissée en route : une manche passée rouverte, rendue
+ * incohérente, puis quittée pour en rouvrir une autre sans être validée.
+ *
+ * La saisie s'écrit au fil de l'eau (§7.2) : en base, rien ne distingue cette
+ * manche d'une manche validée, sinon qu'elle ne passerait plus le contrôle de
+ * cohérence (§4.4). C'est donc ce contrôle qui la retrouve. Une manche forcée
+ * l'a déjà franchi, avec son marquage.
+ *
+ * On écarte la manche qu'on vient de valider, et la dernière, qui se joue
+ * encore : ses plis vides ne sont pas une incohérence.
+ */
+function unsettledCorrection(
+  gameId: number,
+  ruleset: Ruleset,
+  validated: number,
+  last: number,
+): number | undefined {
+  const unsettled = getStoredRounds(gameId).find(
+    (stored) =>
+      stored.round.roundNumber < last &&
+      stored.round.roundNumber !== validated &&
+      !stored.round.forced &&
+      hasBlockingIssues(roundIssues(toRoundInput(stored), ruleset)),
+  );
+  return unsettled?.round.roundNumber;
+}
+
+/**
  * Valide la manche courante : fige les scores, puis ouvre la suivante ou
  * termine la partie. Après la correction d'une manche passée, la partie
- * retourne directement à la manche où elle en était.
+ * retourne directement à la manche où elle en était — ou d'abord à une autre
+ * correction laissée incohérente en route.
  */
 export async function validateRound(
   gameId: number,
@@ -443,10 +482,18 @@ export async function validateRound(
     // Correction d'une manche passée : celles qui la suivent sont déjà jouées,
     // et chacune se valide seule (§4.4). Les faire revalider une à une ne
     // changerait rien, puisque `persistScores` vient de tout recalculer.
+    //
+    // Sauf une autre correction quittée sans validation : la table y retourne
+    // d'abord, pour la rendre cohérente ou la forcer.
     const resume = lastStartedRound(gameId);
     if (resume && resume.roundNumber > roundNumber) {
+      const unsettled = unsettledCorrection(gameId, game.ruleset, roundNumber, resume.roundNumber);
       db.update(games)
-        .set({ currentRound: resume.roundNumber, currentPhase: resume.phase })
+        .set(
+          unsettled !== undefined
+            ? { currentRound: unsettled, currentPhase: 'results' }
+            : { currentRound: resume.roundNumber, currentPhase: resume.phase },
+        )
         .where(eq(games.id, gameId))
         .run();
       return { finished: false };
@@ -567,8 +614,10 @@ export async function addTiebreakRound(gameId: number): Promise<void> {
 /**
  * Change le nombre de manches d'une partie déjà commencée.
  *
- * Le plancher est la manche en cours : raccourcir une partie ne peut pas
- * effacer ce qui s'est joué. Le format des manches déjà prévues est conservé —
+ * Le plancher est la dernière manche entamée : raccourcir une partie ne peut
+ * pas effacer ce qui s'est joué. Ce n'est pas forcément la manche courante —
+ * corriger une manche passée ramène celle-ci en arrière, alors que les
+ * suivantes sont déjà jouées. Le format des manches déjà prévues est conservé —
  * une manche de départage ajoutée par `addTiebreakRound()` garde le sien.
  */
 export async function setRoundsCount(gameId: number, count: number): Promise<void> {
@@ -576,7 +625,7 @@ export async function setRoundsCount(gameId: number, count: number): Promise<voi
     const game = getGame(gameId);
     if (!game) return;
 
-    const target = Math.max(count, game.currentRound);
+    const target = Math.max(count, game.currentRound, lastRound(gameId)?.roundNumber ?? 0);
     const current = game.ruleset.roundsPlan;
     const roundsPlan = Array.from(
       { length: target },

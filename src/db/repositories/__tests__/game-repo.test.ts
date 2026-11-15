@@ -17,6 +17,7 @@ import {
   seatedAtRound,
   setCaptureBonus,
   setPhase,
+  setRoundsCount,
   updateEntry,
   validateRound,
 } from '../game-repo';
@@ -227,6 +228,50 @@ describe('reprise après la correction d’une manche passée', () => {
 
     expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'bidding' });
     expect(getStoredRound(third)?.entries.map((entry) => entry.bid)).toEqual([1, null]);
+  });
+
+  it('repasse d’abord par une autre correction laissée incohérente en route', async () => {
+    const { gameId } = await gameAtRoundThree();
+    const second = getStoredRounds(gameId)[1].round.id;
+
+    // 2 + 1 plis pour 2 cartes : incohérent, même avec le fantôme à 2 joueurs.
+    await reopenRound(gameId, 2);
+    await updateEntry(second, 1, { tricks: 2 });
+    await updateEntry(second, 2, { tricks: 1 });
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 2, currentPhase: 'results' });
+
+    // Forcée, elle laisse enfin la partie reprendre là où elle en était.
+    await validateRound(gameId, 2, { forced: true });
+    expect(getGame(gameId)).toMatchObject({ currentRound: 3, currentPhase: 'bidding' });
+    expect(getStoredRound(second)?.round.forced).toBe(true);
+  });
+
+  it('y repasse aussi quand la correction suivante porte sur une manche postérieure', async () => {
+    const { gameId } = await gameAtRoundThree();
+    const first = getStoredRounds(gameId)[0].round.id;
+
+    await reopenRound(gameId, 1);
+    await updateEntry(first, 1, { tricks: 1 });
+    await updateEntry(first, 2, { tricks: 1 });
+    await reopenRound(gameId, 2);
+    await validateRound(gameId, 2);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 1, currentPhase: 'results' });
+  });
+
+  it('ne raccourcit pas la partie sous la dernière manche entamée', async () => {
+    const { gameId } = await gameAtRoundThree();
+    await reopenRound(gameId, 1);
+    await setPhase(gameId, 'bidding');
+    await setRoundsCount(gameId, 2);
+
+    expect(getGame(gameId)?.ruleset.roundsPlan).toEqual([1, 2, 3]);
+    await setPhase(gameId, 'results');
+    await validateRound(gameId, 1);
+    expect(getGame(gameId)?.currentRound).toBe(3);
   });
 
   it('annule la correction entière si le retour à la manche en cours échoue', async () => {

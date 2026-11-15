@@ -34,8 +34,15 @@ export default function GameSettingsScreen() {
 
   if (!view.ready || !view.game) return <View className="flex-1 bg-surface" />;
 
-  const { game, activeSeats, settled } = view;
+  const { game, activeSeats, settled, storedRounds } = view;
   const rounds = game.ruleset.roundsPlan.length;
+  // Plancher : la dernière manche entamée, pas la manche courante — une
+  // correction ramène celle-ci en arrière, alors que les suivantes sont déjà
+  // jouées (voir `setRoundsCount`).
+  const floor = Math.max(
+    game.currentRound,
+    ...storedRounds.map((stored) => stored.round.roundNumber),
+  );
   const maxPlayers = maxPlayersFor(game.ruleset);
   // La table ne se change qu'entre deux manches : en Résultats, les plis sont
   // en train d'être posés.
@@ -83,20 +90,20 @@ export default function GameSettingsScreen() {
         <View className="flex-1">
           <Text className="font-semi text-caption text-content">{t('rules.rounds')}</Text>
           <Text className="font-body text-micro text-content-muted">
-            {t('gset.roundsHint', { round: game.currentRound })}
+            {t('gset.roundsHint', { round: floor })}
           </Text>
         </View>
         <Stepper
           value={rounds}
           onChange={(count) => void setRoundsCount(gameId, count)}
-          min={game.currentRound}
+          min={floor}
           max={Math.max(DEFAULT_ROUNDS_PLAN.length, rounds)}
           size="sm"
           label={t('rules.rounds')}
           testID="rounds-count"
         />
       </View>
-      {rounds === game.currentRound && (
+      {rounds === floor && (
         <Text className="px-1 font-body text-micro text-content-muted">
           {t('gset.lastRound', { round: rounds })}
         </Text>
