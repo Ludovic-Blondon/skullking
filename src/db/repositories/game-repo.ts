@@ -249,19 +249,45 @@ type EntryPatch = Partial<{
   customBonus: number;
 }>;
 
+/**
+ * Retire le marquage « forcée » d'une manche qu'on retouche.
+ *
+ * Forcer une manche, c'est accepter *cette* saisie-là malgré son incohérence
+ * (§7.2). Une correction qui la modifie doit repasser le contrôle (§4.4), ou
+ * être forcée à nouveau. Une manche forcée qu'on rouvre sans y toucher garde,
+ * elle, son marquage.
+ *
+ * Le filtre sur `forced` évite d'écrire dans `rounds` — et de rafraîchir les
+ * requêtes live qui la lisent — à chaque pression d'un stepper.
+ */
+function withdrawForcing(roundId: number): void {
+  db.update(rounds)
+    .set({ forced: false })
+    .where(and(eq(rounds.id, roundId), eq(rounds.forced, true)))
+    .run();
+}
+
 export async function updateEntry(
   roundId: number,
   playerId: number,
   patch: EntryPatch,
 ): Promise<void> {
-  db.update(roundEntries)
-    .set(patch)
-    .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
-    .run();
+  return atomically(() => {
+    db.update(roundEntries)
+      .set(patch)
+      .where(and(eq(roundEntries.roundId, roundId), eq(roundEntries.playerId, playerId)))
+      .run();
+    withdrawForcing(roundId);
+  });
 }
 
 export async function setDestroyedTricks(roundId: number, count: number): Promise<void> {
-  db.update(rounds).set({ destroyedTricks: count }).where(eq(rounds.id, roundId)).run();
+  // La ligne de manche s'écrit de toute façon : le marquage tombe avec (voir
+  // `withdrawForcing`).
+  db.update(rounds)
+    .set({ destroyedTricks: count, forced: false })
+    .where(eq(rounds.id, roundId))
+    .run();
 }
 
 /**
@@ -287,6 +313,7 @@ export async function setCaptureBonus(
     if (count > 0) {
       db.insert(bonusEvents).values({ roundId, playerId, type, count }).run();
     }
+    withdrawForcing(roundId);
   });
 }
 
@@ -296,12 +323,15 @@ export async function addLootAlliance(
   playerId: number,
   allyId: number,
 ): Promise<void> {
-  db.insert(bonusEvents)
-    .values([
-      { roundId, playerId, type: 'loot', count: 1, allyPlayerId: allyId },
-      { roundId, playerId: allyId, type: 'loot', count: 1, allyPlayerId: playerId },
-    ])
-    .run();
+  return atomically(() => {
+    db.insert(bonusEvents)
+      .values([
+        { roundId, playerId, type: 'loot', count: 1, allyPlayerId: allyId },
+        { roundId, playerId: allyId, type: 'loot', count: 1, allyPlayerId: playerId },
+      ])
+      .run();
+    withdrawForcing(roundId);
+  });
 }
 
 export async function removeLootAlliance(
@@ -323,6 +353,7 @@ export async function removeLootAlliance(
 
     if (toDelete.length > 0) {
       db.delete(bonusEvents).where(inArray(bonusEvents.id, toDelete)).run();
+      withdrawForcing(roundId);
     }
   });
 }
@@ -424,7 +455,8 @@ function lastStartedRound(
  * La saisie s'écrit au fil de l'eau (§7.2) : en base, rien ne distingue cette
  * manche d'une manche validée, sinon qu'elle ne passerait plus le contrôle de
  * cohérence (§4.4). C'est donc ce contrôle qui la retrouve. Une manche forcée
- * l'a déjà franchi, avec son marquage.
+ * l'a déjà franchi, avec son marquage — que la moindre retouche lui retire
+ * (`withdrawForcing`).
  *
  * On écarte la manche qu'on vient de valider, et la dernière, qui se joue
  * encore : ses plis vides ne sont pas une incohérence.

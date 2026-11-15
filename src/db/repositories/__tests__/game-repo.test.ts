@@ -16,6 +16,7 @@ import {
   reopenRound,
   seatedAtRound,
   setCaptureBonus,
+  setDestroyedTricks,
   setPhase,
   setRoundsCount,
   updateEntry,
@@ -274,6 +275,40 @@ describe('reprise après la correction d’une manche passée', () => {
     expect(getGame(gameId)?.currentRound).toBe(3);
   });
 
+  /** Partie arrivée à la manche 3, la 2 forcée sur 2 + 1 plis pour 2 cartes. */
+  async function gameWithForcedSecondRound() {
+    const gameId = await createGame([1, 2], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    const second = getStoredRounds(gameId)[1].round.id;
+    await updateEntry(second, 1, { tricks: 2 });
+    await updateEntry(second, 2, { tricks: 1 });
+    await validateRound(gameId, 2, { forced: true });
+    return { gameId, second };
+  }
+
+  it('redemande de forcer une manche forcée qu’une correction a retouchée', async () => {
+    const { gameId, second } = await gameWithForcedSecondRound();
+
+    await reopenRound(gameId, 2);
+    await updateEntry(second, 2, { tricks: 2 });
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)).toMatchObject({ currentRound: 2, currentPhase: 'results' });
+    expect(getStoredRound(second)?.round.forced).toBe(false);
+  });
+
+  it('laisse tranquille une manche forcée rouverte sans être retouchée', async () => {
+    const { gameId, second } = await gameWithForcedSecondRound();
+
+    await reopenRound(gameId, 2);
+    await reopenRound(gameId, 1);
+    await validateRound(gameId, 1);
+
+    expect(getGame(gameId)?.currentRound).toBe(3);
+    expect(getStoredRound(second)?.round.forced).toBe(true);
+  });
+
   it('annule la correction entière si le retour à la manche en cours échoue', async () => {
     const { gameId } = await gameAtRoundThree();
     await reopenRound(gameId, 1);
@@ -282,6 +317,23 @@ describe('reprise après la correction d’une manche passée', () => {
 
     await expect(validateRound(gameId, 1)).rejects.toThrow('écriture interrompue');
     expect(contents()).toEqual(before);
+  });
+});
+
+describe('retoucher une manche forcée lui retire son marquage', () => {
+  it.each([
+    ['ses plis', (roundId: number) => updateEntry(roundId, 1, { tricks: 1 })],
+    ['ses plis détruits', (roundId: number) => setDestroyedTricks(roundId, 1)],
+    ['un bonus', (roundId: number) => setCaptureBonus(roundId, 1, 'skullKingCapturesPirate', 1)],
+    ['une alliance de Butin', (roundId: number) => addLootAlliance(roundId, 1, 2)],
+  ])('%s', async (_, touch) => {
+    const gameId = await createGame([1, 2], RULES);
+    await validateRound(gameId, 1, { forced: true });
+    const first = getStoredRounds(gameId)[0].round.id;
+
+    await touch(first);
+
+    expect(getStoredRound(first)?.round.forced).toBe(false);
   });
 });
 
