@@ -129,6 +129,7 @@ export const fr = {
   'gset.lastRound': 'La manche {round} sera la dernière : la valider terminera la partie.',
   'gset.players': 'Joueurs à table',
   'gset.duringRound': 'La manche est lancée : reviens aux annonces pour changer la table.',
+  'gset.roundPlayed': 'La manche {round} est déjà jouée : sa table ne change plus.',
   'gset.playersHint': 'De {min} à {max} joueurs. Un partant garde ses points et son rang.',
   'gset.tableFull': 'Table complète — {max} joueurs',
   'gset.remove': 'Retirer',

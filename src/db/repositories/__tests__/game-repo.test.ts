@@ -309,6 +309,35 @@ describe('reprise après la correction d’une manche passée', () => {
     expect(getStoredRound(second)?.round.forced).toBe(true);
   });
 
+  it('ne change pas la table pendant la correction d’une manche passée', async () => {
+    const gameId = await createGame([1, 2, 3], THREE_ROUNDS);
+    await validateRound(gameId, 1);
+    await validateRound(gameId, 2);
+    await reopenRound(gameId, 1);
+    await setPhase(gameId, 'bidding');
+    const before = contents();
+
+    await expect(removePlayerFromGame(gameId, 3)).rejects.toThrow('déjà jouée');
+    await expect(addPlayerToGame(gameId, 4)).rejects.toThrow('déjà jouée');
+    expect(contents()).toEqual(before);
+  });
+
+  it('ni celle de la dernière manche d’une partie terminée, rouverte depuis l’historique', async () => {
+    const gameId = await createGame([1, 2, 3], THREE_ROUNDS);
+    for (const round of [1, 2, 3]) await validateRound(gameId, round);
+    expect(getGame(gameId)?.status).toBe('finished');
+
+    // Son numéro est celui de la dernière manche créée : seuls ses plis, tous
+    // posés, disent qu'elle est déjà jouée.
+    await reopenRound(gameId, 3);
+    await setPhase(gameId, 'bidding');
+    const before = contents();
+
+    await expect(removePlayerFromGame(gameId, 3)).rejects.toThrow('déjà jouée');
+    await expect(addPlayerToGame(gameId, 4)).rejects.toThrow('déjà jouée');
+    expect(contents()).toEqual(before);
+  });
+
   it('annule la correction entière si le retour à la manche en cours échoue', async () => {
     const { gameId } = await gameAtRoundThree();
     await reopenRound(gameId, 1);

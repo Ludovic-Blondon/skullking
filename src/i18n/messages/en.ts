@@ -115,6 +115,7 @@ export const en: Record<MessageKey, string> = {
   'gset.lastRound': 'Round {round} will be the last one: validating it ends the game.',
   'gset.players': 'Players at the table',
   'gset.duringRound': 'The round is under way — go back to bids to change the table.',
+  'gset.roundPlayed': 'Round {round} has already been played — its table can no longer change.',
   'gset.playersHint': '{min} to {max} players. Someone who leaves keeps their points and rank.',
   'gset.tableFull': 'Table full — {max} players',
   'gset.remove': 'Remove',

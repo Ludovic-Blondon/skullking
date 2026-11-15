@@ -35,6 +35,7 @@ import {
   rounds,
   type BonusEventType,
   type Game,
+  type RoundEntry,
 } from '../schema';
 import { atomically } from '../transaction';
 
@@ -694,6 +695,37 @@ function refreshCardsDealt(gameId: number, roundNumber: number): void {
 }
 
 /**
+ * Vrai si la manche courante est déjà jouée : sa table ne change plus.
+ *
+ * Arrivées et départs visent la manche qui va se jouer (§7.5). Une manche déjà
+ * jouée a ses résultats : un départ y effacerait ceux du partant, une arrivée y
+ * marquerait des points à un joueur absent.
+ *
+ * Deux signes, parce que le numéro seul ne suffit pas :
+ * - une manche antérieure à la dernière créée est rouverte pour correction ;
+ * - une manche dont tous les plis sont posés a été jouée, validée ou non. C'est
+ *   le seul signe de la dernière manche d'une partie terminée qu'on rouvre :
+ *   son numéro est alors celui de la dernière manche créée.
+ *
+ * Pure, pour que l'écran des réglages et le repository jugent pareil.
+ */
+export function isRoundPlayed(
+  currentRound: number,
+  lastRoundNumber: number,
+  entries: RoundEntry[],
+): boolean {
+  return currentRound < lastRoundNumber || (entries.length > 0 && entries.every(isEntryPlayed));
+}
+
+function assertTableCanChange(gameId: number, game: Game, roundId: number): void {
+  const entries = db.select().from(roundEntries).where(eq(roundEntries.roundId, roundId)).all();
+  const last = lastRound(gameId)?.roundNumber ?? game.currentRound;
+  if (isRoundPlayed(game.currentRound, last, entries)) {
+    throw new Error('La table d’une manche déjà jouée ne change plus');
+  }
+}
+
+/**
  * Assoit un joueur à partir de la manche en cours.
  *
  * Il démarre à 0 : aucune ligne n'est créée sur les manches passées, donc le
@@ -705,6 +737,7 @@ export async function addPlayerToGame(gameId: number, playerId: number): Promise
     const game = getGame(gameId);
     const roundId = currentRoundId(gameId);
     if (!game || roundId === undefined) return;
+    assertTableCanChange(gameId, game, roundId);
 
     const seats = db.select().from(gamePlayers).where(eq(gamePlayers.gameId, gameId)).all();
     if (!seats.some((seat) => seat.playerId === playerId)) {
@@ -740,6 +773,7 @@ export async function removePlayerFromGame(gameId: number, playerId: number): Pr
     const game = getGame(gameId);
     const roundId = currentRoundId(gameId);
     if (!game || roundId === undefined) return;
+    assertTableCanChange(gameId, game, roundId);
 
     db.delete(bonusEvents)
       .where(

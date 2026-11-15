@@ -122,6 +122,7 @@ export const de: Record<MessageKey, string> = {
   'gset.lastRound': 'Runde {round} wird die letzte: mit ihr endet die Partie.',
   'gset.players': 'Spieler am Tisch',
   'gset.duringRound': 'Die Runde läuft — zurück zu den Ansagen, um den Tisch zu ändern.',
+  'gset.roundPlayed': 'Runde {round} ist schon gespielt — ihr Tisch ändert sich nicht mehr.',
   'gset.playersHint': '{min} bis {max} Spieler. Wer geht, behält Punkte und Platz.',
   'gset.tableFull': 'Tisch voll — {max} Spieler',
   'gset.remove': 'Entfernen',
