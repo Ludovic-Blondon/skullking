@@ -8,7 +8,7 @@
 <p align="center">
   <img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-E8785A">
   <img alt="Plateformes iOS et Android" src="https://img.shields.io/badge/plateformes-iOS%20%C2%B7%20Android-2E3A4D">
-  <img alt="Expo SDK 57" src="https://img.shields.io/badge/Expo-SDK%2057-2E3A4D">
+  <img alt="Expo SDK 58" src="https://img.shields.io/badge/Expo-SDK%2058-2E3A4D">
 </p>
 
 ---
@@ -53,8 +53,8 @@ npm run ios       # build de développement iOS
 npm run android   # build de développement Android
 ```
 
-Le projet tourne sur **Expo SDK 57**. La documentation d'Expo évolue vite : consulte la
-[version correspondante](https://docs.expo.dev/versions/v57.0.0/), pas `latest`.
+Le projet tourne sur **Expo SDK 58**. La documentation d'Expo évolue vite : consulte la
+[version correspondante](https://docs.expo.dev/versions/v58.0.0/), pas `latest`.
 
 ## Scripts
 

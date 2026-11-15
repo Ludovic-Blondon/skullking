@@ -44,15 +44,7 @@
         }
       ],
       "expo-sqlite",
-      "expo-sharing",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "enableSceneSupport": true
-          }
-        }
-      ]
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

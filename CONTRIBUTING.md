@@ -16,8 +16,8 @@ npm run ios       # build de développement iOS (Xcode requis)
 npm run android   # build de développement Android (Android Studio requis)
 ```
 
-Le projet tourne sur **Expo SDK 57**. La documentation d'Expo évolue vite : réfère-toi à la
-version correspondante, <https://docs.expo.dev/versions/v57.0.0/>, et non à `latest`.
+Le projet tourne sur **Expo SDK 58**. La documentation d'Expo évolue vite : réfère-toi à la
+version correspondante, <https://docs.expo.dev/versions/v58.0.0/>, et non à `latest`.
 
 ## Vérifications
 

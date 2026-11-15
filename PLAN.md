@@ -69,7 +69,7 @@ Enseignement de marque : **« Skull King » est une marque de Grandpa Beck's Gam
 - **Expo SDK 57** (RN 0.86, React 19.2) : New Architecture désormais seule architecture, Hermes V1, cadence d'upgrade sans breaking changes. Builds locaux gratuits illimités, free tier EAS 15+15 builds/mois.
 - **Flutter 3.47** : sain mais équipe Google réduite (~50 ing.) ; impose Dart.
 - **expo-sqlite + Drizzle ORM** : intégration documentée officiellement des deux côtés (migrations versionnées, `useLiveQuery`).
-- Maestro (E2E) gratuit en local ; jest-expo (SDK 57) + Jest 29 + RNTL stables — jest-expo n'est pas encore compatible Jest 30.
+- Maestro (E2E) gratuit en local ; jest-expo (SDK 57) + Jest 29 + RNTL stables — jest-expo n'est pas encore compatible Jest 30 (levé en novembre 2026 : jest-expo 58 tourne sous Jest 30, adopté avec le SDK 58).
 - Stores : Apple 99 $/an + build Xcode 26 obligatoire ; Google 25 $ une fois + **règle des 12 testeurs × 14 jours** pour les comptes personnels + target API 36 au 31/08/2026 (SDK 57 conforme). Privacy policy obligatoire même pour une app 100 % offline ; déclaration DSA « non-commerçant » pour l'UE.
 
 ---
@@ -106,7 +106,7 @@ Flutter serait un choix défendable pour un dev indifférent au langage ; ici, l
 | Graphiques  | **victory-native (XL)** sur Skia                                                 | Courbes d'évolution et stats ; maintenu, GPU                                                                  |
 | i18n        | i18next + expo-localization, FR + EN                                             | Le FR est quasi vierge chez les concurrents                                                                   |
 | Divers      | expo-keep-awake (écran allumé en partie), expo-sharing (export JSON)             | Usage réel à table ; filet de sécurité données                                                                |
-| Tests       | Jest 29 + jest-expo, RNTL, **Maestro** (E2E local gratuit)                       | §9                                                                                                            |
+| Tests       | Jest 30 + jest-expo, RNTL, **Maestro** (E2E local gratuit)                       | §9                                                                                                            |
 | CI          | GitHub Actions : typecheck + lint + tests sur PR                                 | Le repo est hébergé sur GitHub (décision du 18/08, §13.7)                                                     |
 | Builds      | Locaux (gratuits) + free tier EAS ; EAS Submit pour publier                      | 15+15 builds/mois suffisent en solo                                                                           |
 
